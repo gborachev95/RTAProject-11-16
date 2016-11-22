@@ -1,5 +1,4 @@
-#pragma once
-#include "includes.h"
+#include "Application.h"
 
 // Constructor
 Application::Application(HINSTANCE _hinst, WNDPROC _proc)
@@ -16,6 +15,24 @@ Application::~Application()
 bool Application::Run()
 {
 	return true;
+}
+
+// Runs input
+void Application::Input()
+{
+
+}
+
+// Updates the scene
+void Application::Update()
+{
+
+}
+
+// Renders the scene
+void Application::Render()
+{
+
 }
 
 // Terminates the application
@@ -36,7 +53,7 @@ void Application::CreateAppWindow(HINSTANCE _hinst, WNDPROC _proc)
 	wndClass.lpfnWndProc = m_appWndProc;
 	wndClass.hInstance = m_application;
 	wndClass.cbSize = sizeof(WNDCLASSEX);
-	wndClass.hIcon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_WINLOGO));
+	//wndClass.hIcon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_WINLOGO));
 	wndClass.hIconSm = wndClass.hIcon;
 	wndClass.lpszClassName = L"RTAProject";
 	wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);

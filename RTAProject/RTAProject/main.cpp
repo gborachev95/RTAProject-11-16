@@ -1,5 +1,5 @@
 #include "includes.h"
-
+#include "Application.h"
 // Prototypes
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
