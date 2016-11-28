@@ -1,20 +1,31 @@
 #pragma once	
 #include "includes.h"
+#include "Object.h"
 
 	class Application
 	{
 	private:
 		// Window handles
-		HWND					     m_window;			  
-		HINSTANCE				     m_application;
-		WNDPROC						 m_appWndProc;
+		HWND							  m_window;			  
+		HINSTANCE				          m_application;
+		WNDPROC						      m_appWndProc;
 		// Graphics handles
-		CComPtr<IDXGISwapChain>      m_swapChain = NULL;
-		CComPtr<ID3D11Device>        m_device = NULL;
-		CComPtr<ID3D11DeviceContext> m_deviceContext = NULL;
-		D3D11_VIEWPORT               m_viewPort;
-        
-		//std::vector
+		CComPtr<IDXGISwapChain>			  m_swapChain = NULL;
+		CComPtr<ID3D11Device>			  m_device = NULL;
+		CComPtr<ID3D11DeviceContext>	  m_deviceContext = NULL;
+		CComPtr<ID3D11Texture2D>		  m_depthBuffer = NULL;
+		CComPtr<ID3D11DepthStencilView>   m_depthView = NULL;
+		CComPtr<ID3D11RenderTargetView>   m_renderTargetViewToTexture = NULL;
+		D3D11_VIEWPORT					  m_viewPort;
+		CComPtr<ID3D11VertexShader>       m_VS_OBJECT;
+		CComPtr<ID3D11PixelShader>        m_PS_OBJECT;
+		CComPtr<ID3D11InputLayout>        m_inputLayoutObject;
+		CComPtr<ID3D11SamplerState>       m_samplerState;
+		CComPtr<ID3D11Buffer>             m_constBufferScene;
+
+        // Test variables
+		Object                            m_testObject;
+		SCENE_TO_VRAM				      m_viewToShader;
 		// Private methods that are called only inside of the class
 	private:
 		// Creates the window
@@ -22,7 +33,16 @@
 		void Input();
 		void Update();
 		void Render();
-
+		void ClearScreen(COLOR _color);
+		void CreateDepthBuffer();
+		void InitGraphics();
+		void CreateViewPorts();
+		void CreateLayouts();
+		void CreateShaders();
+		void CreateSamplerState();
+		void LoadObjects();
+		void InitializeToShader();
+		void CreateConstBuffers();
 		// Public methods that are called outside of the class
 	public:
 		// Application Methods

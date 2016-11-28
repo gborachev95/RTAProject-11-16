@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RTAProject", "RTAProject\RTAProject.vcxproj", "{78AA494C-BD23-4E22-955C-B0B4CAF21122}"
 EndProject
@@ -13,6 +13,7 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{78AA494C-BD23-4E22-955C-B0B4CAF21122}.Debug|Win32.ActiveCfg = Debug|Win32
 		{78AA494C-BD23-4E22-955C-B0B4CAF21122}.Debug|Win32.Build.0 = Debug|Win32
+		{78AA494C-BD23-4E22-955C-B0B4CAF21122}.Debug|Win32.Deploy.0 = Debug|Win32
 		{78AA494C-BD23-4E22-955C-B0B4CAF21122}.Release|Win32.ActiveCfg = Release|Win32
 		{78AA494C-BD23-4E22-955C-B0B4CAF21122}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
