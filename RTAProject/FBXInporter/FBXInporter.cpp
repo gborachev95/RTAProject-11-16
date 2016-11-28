@@ -47,5 +47,7 @@ namespace FBXInporter
 
 		// The file is imported, so get rid of the importer.
 		lImporter->Destroy();
+
+		return 0;
 	}
 }
