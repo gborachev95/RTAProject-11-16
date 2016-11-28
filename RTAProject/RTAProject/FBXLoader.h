@@ -1,10 +1,10 @@
-#pragma once
-#include "fbxsdk.h"
-
-class FBXLoader
-{
-public:
-	FBXLoader();
-	~FBXLoader();
-};
+//#pragma once
+//#include "fbxsdk.h"
+//
+//class FBXLoader
+//{
+//public:
+//	FBXLoader();
+//	~FBXLoader();
+//};
 
