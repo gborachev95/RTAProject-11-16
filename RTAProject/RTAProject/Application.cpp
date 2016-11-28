@@ -1,9 +1,11 @@
 #include "Application.h"
+#include "FBXLoader.h"
 
 // Constructor
 Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 {
 	CreateAppWindow(_hinst, _proc);
+	FBXLoader testLoader;
 }
 
 // Destructor
