@@ -78,14 +78,12 @@
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
-    <ClCompile Include="FBXLoader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Object.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="DDSTextureLoader.h" />
-    <ClInclude Include="FBXLoader.h" />
     <ClInclude Include="includes.h" />
     <ClInclude Include="Object.h" />
   </ItemGroup>
