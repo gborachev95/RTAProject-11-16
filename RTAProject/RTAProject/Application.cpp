@@ -1,4 +1,6 @@
 #include "Application.h"
+#include  "OBJECT_VS.csh"
+#include  "OBJECT_PS.csh"
 
 // Constructor
 Application::Application(HINSTANCE _hinst, WNDPROC _proc)

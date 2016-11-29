@@ -13,8 +13,7 @@
 
 #include "DDSTextureLoader.h"
 // Application includes
-#include  "OBJECT_VS.csh"
-#include  "OBJECT_PS.csh"
+
 
 // Defines
 #define WINDOW_HEIGHT 700
