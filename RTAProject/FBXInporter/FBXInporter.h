@@ -1,21 +1,21 @@
 #pragma once  
-
 #include "fbxsdk.h"
 #include <DirectXMath.h>
 #include <vector>
-// For smart pointers
-#include <atlbase.h>
 
-#ifdef FBXInporter_EXPORTS  
-#define FBXInporter_API __declspec(dllexport)   
+#ifdef FBXImorter_EXPORTS  
+#define FBXImporter_API __declspec(dllexport)   
 #else  
-#define FBXInporter_API __declspec(dllimport)   
+#define FBXImporter_API __declspec(dllimport)   
 #endif  
 
 using namespace DirectX;
+using namespace std;
 
-namespace FBXInporter
+namespace FBXImporter
 {
+	FbxScene * n_fbxScene;
+
 	struct VERTEX
 	{
 		XMFLOAT3 transform;
@@ -37,15 +37,14 @@ namespace FBXInporter
 		VERTEX vertecies[3];
 	};
 
-	FbxScene * n_fbxScene;
 
 	class Functions
 	{
-		static void TraverseScene(FbxNode* _node, std::vector<VERTEX>& _vertecies, std::vector<int>& _indices, std::vector<TRANSFORM_NODE>& _transformHierarchy);
-		static int GetDataFromMesh(FbxNode* inNode, std::vector<VERTEX>& _vertecies, std::vector<int>& _indices);
+		static void TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies,vector<int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy);
+		static int GetDataFromMesh(FbxNode* inNode, vector<VERTEX>& _vertecies, vector<int>& _indices);
 		//static void GetDataFromSkeleton(FbxNode* _inNode, std::vector<TRANSFORM_NODE>& _transformHierarchy);		
 	public:
-		static FBXInporter_API int LoadFBXFile(const std::string & _fileName, std::vector<VERTEX>& _vertecies, std::vector<int>& _indices, std::vector<TRANSFORM_NODE>& _transformHierarchy);
+		static FBXImporter_API int LoadFBXFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy);
 
 	};
 

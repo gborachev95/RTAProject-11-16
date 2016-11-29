@@ -1,10 +1,12 @@
 #include "Application.h"
-#include  "OBJECT_VS.csh"
-#include  "OBJECT_PS.csh"
+#include "OBJECT_VS.csh"
+#include "OBJECT_PS.csh"
+//#include "FBXLib.h"
 
 // Constructor
 Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 {
+	
 	// Creates the window
 	CreateAppWindow(_hinst, _proc);
 

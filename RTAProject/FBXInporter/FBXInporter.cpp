@@ -1,20 +1,15 @@
 // FBXInporter.cpp : Defines the exported functions for the DLL application.
-//
-
 #include "stdafx.h"  
 #include "FBXInporter.h"
-#include "fbxsdk.h"
+#include "FBXLib.h"
 
-using namespace std;
-
-
-namespace FBXInporter
+namespace FBXImporter
 {
 	/* [out] Test nmodels provided will only have one mesh, but other assets may have multiple
 	meshes using the same rig to create a model
 	[out] A container of all the joint transforms found. As these will all be in the same
 	hierarchy, you may only need the root instead of a list of all nodes.*/
-	int Functions::LoadFBXFile(const std::string & _fileName, std::vector<VERTEX>& _vertecies, std::vector<int>& _indices, std::vector<TRANSFORM_NODE>& _transformHierarchy)
+	int Functions::LoadFBXFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy)
 	{
 		// Change the following filename to a suitable filename value.
 		const char* lFilename = _fileName.c_str();//"file.fbx";
@@ -63,7 +58,7 @@ namespace FBXInporter
 		return 0;
 	}
 
-	void Functions::TraverseScene(FbxNode* _node, std::vector<VERTEX>& _vertecies, std::vector<int>& _indices, std::vector<TRANSFORM_NODE>& _transformHierarchy)
+	void Functions::TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies, vector<int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy)
 	{
 		int childCount = 0;
 		// Exit Contidion
@@ -87,7 +82,7 @@ namespace FBXInporter
 		}
 	}
 
-	int Functions::GetDataFromMesh(FbxNode* _inNode, std::vector<VERTEX>& _vertecies, std::vector<int>& _indicies)
+	int Functions::GetDataFromMesh(FbxNode* _inNode, vector<VERTEX>& _vertecies, vector<int>& _indicies)
 	{
 
 		FbxMesh* currMesh = _inNode->GetMesh();
