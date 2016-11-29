@@ -7,19 +7,20 @@ Object::Object()
 // Destructor
 Object::~Object()
 {
-		//delete m_vertecies;
-        //delete m_indexList;
+		delete m_vertecies;
+        delete m_indexList;
 }
 
 // Instantiates the object using his buffers
 void Object::InstantiateModel(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position, float _shine)
 {
-	bool result = ReadObject(_filePath, _shine);
+	ReadObject(_filePath, _shine);
 	CreateVertexBuffer(_device);
 	CreateIndexBuffer(_device);
-	CreateConstBuffer(_device);
 	m_worldToShader.worldMatrix = XMMatrixIdentity();
-	m_worldToShader.worldMatrix.r[3] = { _position.x,_position.y, _position.z,1};
+	m_worldToShader.worldMatrix.r[3].m128_f32[0] = _position.x;
+	m_worldToShader.worldMatrix.r[3].m128_f32[1] = _position.y;
+	m_worldToShader.worldMatrix.r[3].m128_f32[2] = _position.z;
 }
 
 // Instantiates the object using an FBX file
@@ -29,36 +30,30 @@ void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOA
 }
 
 // Draws the object to the screen
-void Object::Render(ID3D11DeviceContext* _context, CComPtr<ID3D11ShaderResourceView> _shader)
+void Object::Render(ID3D11DeviceContext* _context, ID3D11Buffer* _constBuffer, CComPtr<ID3D11ShaderResourceView> _shader)
 {
+	// Set the index buffer
 	unsigned int stride = sizeof(VERTEX);
 	unsigned int offset = 0;
-	
-	// Set the buffers for the current object
 	_context->IASetVertexBuffers(0, 1, &m_vertexBuffer.p, &stride, &offset);
-	_context->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
 	// Set the shader resource - for the texture
 	_context->PSSetShaderResources(0, 1,&m_shaderResourceView.p);
 	
-	// If there is normal mapping, set it as well
 	if (_shader.p != nullptr)
 		_context->PSSetShaderResources(1, 1, &_shader.p);
 	
-	// Setting the object const buffer
-	_context->VSSetConstantBuffers(0, 1, &m_constBuffer.p);
-	_context->PSSetConstantBuffers(0, 1, &m_constBuffer.p);
-
 	// Constant buffer mapping
 	D3D11_MAPPED_SUBRESOURCE mapSubresource;
 	ZeroMemory(&mapSubresource, sizeof(mapSubresource));
-	_context->Map(m_constBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mapSubresource);
+	_context->Map(_constBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mapSubresource);
 	memcpy(mapSubresource.pData, &m_worldToShader, sizeof(OBJECT_TO_VRAM));
-	_context->Unmap(m_constBuffer, NULL);
+	_context->Unmap(_constBuffer, NULL);
+    // Setsampler
 	
-
-    // Draw the object
+	// Set the index buffer
+	_context->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	_context->DrawIndexed(m_numIndicies, 0, 0);
 }
 
@@ -107,108 +102,108 @@ Followed http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loa
 bool Object::ReadObject(std::string _filePath,float _shine)
 {
 	// Local variables
-	vector<unsigned int> vertexIndices, uvIndices, normalIndices;
-	vector<XMFLOAT3> temp_vertices;
-	vector<XMFLOAT3> temp_normals;
-	vector<XMFLOAT2> temp_uvs;
-	FILE *file;
-	
-	// Opening file - "r" -> read in
-	fopen_s(&file, _filePath.c_str(), "r");
-	// Check if file opened
-	if (file == NULL)
-		return false;
-	
-	// Looping until the file finishes
-	while (true)
-	{
-		// Read the first word of the line
-		char lineHeader[128];
-		int res = fscanf_s(file, "%s", lineHeader, _countof(lineHeader));
-	
-		// Check if the file has finished
-		if (res == EOF)
-			break;
-	
-		// Check if the line is a vertex
-		if (strcmp(lineHeader, "v") == 0)
-		{
-			XMFLOAT3 vertex;
-			fscanf_s(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-			temp_vertices.push_back(vertex);
-		}
-		// Check if the line is a UV
-		else if (strcmp(lineHeader, "vt") == 0)
-		{
-			XMFLOAT2 uv;
-			fscanf_s(file, "%f %f\n", &uv.x, &uv.y);
-			temp_uvs.push_back(uv);
-		}
-		// Check if the line is a normal
-		else if (strcmp(lineHeader, "vn") == 0)
-		{
-			XMFLOAT3 normal;
-			fscanf_s(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
-			temp_normals.push_back(normal);
-		}
-		// Check if the line is a index
-		else if (strcmp(lineHeader, "f") == 0)
-		{
-			std::string vertex1, vertex2, vertex3;
-			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
-			int matches = fscanf_s(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
-			if (matches != 9)
-				return false;
-	
-			// Setting the indicies for the vertecies
-			vertexIndices.push_back(vertexIndex[0] - 1);
-			vertexIndices.push_back(vertexIndex[1] - 1);
-			vertexIndices.push_back(vertexIndex[2] - 1);
-	
-			// Setting the indicies for the UVs
-			uvIndices.push_back(uvIndex[0] - 1);
-			uvIndices.push_back(uvIndex[1] - 1);
-			uvIndices.push_back(uvIndex[2] - 1);
-	
-			// Setting the indicies for the normals
-			normalIndices.push_back(normalIndex[0] - 1);
-			normalIndices.push_back(normalIndex[1] - 1);
-			normalIndices.push_back(normalIndex[2] - 1);
-		}
-	}
-	
-	// Setting vertecies member
-	m_numVerts = vertexIndices.size();
-	m_vertecies = new VERTEX[m_numVerts];
-	for (unsigned int i = 0; i < m_numVerts; ++i)
-	{
-		// Setting vertecies
-		m_vertecies[i].transform = temp_vertices[vertexIndices[i]];
-		// Setting normals
-		m_vertecies[i].normals = temp_normals[normalIndices[i]];
-		// Setting UVs
-		m_vertecies[i].uv.x = temp_uvs[uvIndices[i]].x;
-		m_vertecies[i].uv.y = temp_uvs[uvIndices[i]].y;
-		m_vertecies[i].uv.z = 0;
-		m_vertecies[i].shine.x = _shine;
-	}
-	
-	// Computing the tangents and bitangents
-	ComputeTangents();
-	// Setting indecies member
-	m_numIndicies = vertexIndices.size();
-	m_indexList = new unsigned int[m_numIndicies];
-	for (unsigned int i = 0; i < m_numIndicies; ++i)
-		m_indexList[i] = i;
-	
-	// Return true if everything went right
+	//vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+	//vector<XMFLOAT3> temp_vertices;
+	//vector<XMFLOAT3> temp_normals;
+	//vector<XMFLOAT2> temp_uvs;
+	//FILE *file;
+	//
+	//// Opening file - "r" -> read in
+	//fopen_s(&file, _filePath.c_str(), "r");
+	//// Check if file opened
+	//if (file == NULL)
+	//	return false;
+	//
+	//// Looping until the file finishes
+	//while (true)
+	//{
+	//	// Read the first word of the line
+	//	char lineHeader[128];
+	//	int res = fscanf_s(file, "%s", lineHeader, _countof(lineHeader));
+	//
+	//	// Check if the file has finished
+	//	if (res == EOF)
+	//		break;
+	//
+	//	// Check if the line is a vertex
+	//	if (strcmp(lineHeader, "v") == 0)
+	//	{
+	//		XMFLOAT3 vertex;
+	//		fscanf_s(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+	//		temp_vertices.push_back(vertex);
+	//	}
+	//	// Check if the line is a UV
+	//	else if (strcmp(lineHeader, "vt") == 0)
+	//	{
+	//		XMFLOAT2 uv;
+	//		fscanf_s(file, "%f %f\n", &uv.x, &uv.y);
+	//		temp_uvs.push_back(uv);
+	//	}
+	//	// Check if the line is a normal
+	//	else if (strcmp(lineHeader, "vn") == 0)
+	//	{
+	//		XMFLOAT3 normal;
+	//		fscanf_s(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+	//		temp_normals.push_back(normal);
+	//	}
+	//	// Check if the line is a index
+	//	else if (strcmp(lineHeader, "f") == 0)
+	//	{
+	//		std::string vertex1, vertex2, vertex3;
+	//		unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+	//		int matches = fscanf_s(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+	//		if (matches != 9)
+	//			return false;
+	//
+	//		// Setting the indicies for the vertecies
+	//		vertexIndices.push_back(vertexIndex[0] - 1);
+	//		vertexIndices.push_back(vertexIndex[1] - 1);
+	//		vertexIndices.push_back(vertexIndex[2] - 1);
+	//
+	//		// Setting the indicies for the UVs
+	//		uvIndices.push_back(uvIndex[0] - 1);
+	//		uvIndices.push_back(uvIndex[1] - 1);
+	//		uvIndices.push_back(uvIndex[2] - 1);
+	//
+	//		// Setting the indicies for the normals
+	//		normalIndices.push_back(normalIndex[0] - 1);
+	//		normalIndices.push_back(normalIndex[1] - 1);
+	//		normalIndices.push_back(normalIndex[2] - 1);
+	//	}
+	//}
+	//
+	//// Setting vertecies member
+	//m_numVerts = vertexIndices.size();
+	//m_vertecies = new Vector[m_numVerts];
+	//for (unsigned int i = 0; i < m_numVerts; ++i)
+	//{
+	//	// Setting vertecies
+	//	m_vertecies[i].transform = temp_vertices[vertexIndices[i]];
+	//	// Setting normals
+	//	m_vertecies[i].normals = temp_normals[normalIndices[i]];
+	//	// Setting UVs
+	//	m_vertecies[i].uv.x = temp_uvs[uvIndices[i]].x;
+	//	m_vertecies[i].uv.y = temp_uvs[uvIndices[i]].y;
+	//	m_vertecies[i].uv.z = 0;
+	//	m_vertecies[i].shine.x = _shine;
+	//}
+	//
+	//// Computing the tangents and bitangents
+	//ComputeTangents();
+	//// Setting indecies member
+	//m_numIndicies = vertexIndices.size();
+	//m_indexList = new unsigned int[m_numIndicies];
+	//for (unsigned int i = 0; i < m_numIndicies; ++i)
+	//	m_indexList[i] = i;
+	//
+	//// Return true if everything went right
 	return true;
 }
 
 // Textures the object 
 void Object::TextureObject(ID3D11Device* _device, const wchar_t* _filePath)
 {
-	 CreateDDSTextureFromFile(_device, _filePath, NULL, &m_shaderResourceView.p);
+	 //CreateDDSTextureFromFile(_device, _filePath, NULL, &m_shaderResourceView.p);
 }
 
 // Returns the world matrix of the object
@@ -288,18 +283,4 @@ void Object::ComputeTangents()
 void Object::SetShaderResourceView(CComPtr<ID3D11ShaderResourceView> _shader)
 {
 	m_shaderResourceView = _shader;
-}
-
-// Creates constant buffer
-void Object::CreateConstBuffer(ID3D11Device* _device)
-{
-	// Creating the constant buffer for the world
-	D3D11_BUFFER_DESC constBufferDesc;
-	ZeroMemory(&constBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	constBufferDesc.ByteWidth = sizeof(OBJECT_TO_VRAM);
-	constBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	constBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	constBufferDesc.StructureByteStride = sizeof(float);
-	constBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	_device->CreateBuffer(&constBufferDesc, NULL, &m_constBuffer.p);
 }

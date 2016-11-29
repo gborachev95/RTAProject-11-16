@@ -9,7 +9,6 @@ class Object
 	CComPtr<ID3D11Buffer>              m_instanceBuffer;
 	CComPtr<ID3D11Texture2D>           m_texture;
 	CComPtr<ID3D11ShaderResourceView>  m_shaderResourceView;
-	CComPtr<ID3D11Buffer>              m_constBuffer;
 	OBJECT_TO_VRAM                     m_worldToShader;
 	// Object variables
 	VERTEX               *m_vertecies;
@@ -23,7 +22,7 @@ private:
 	void CreateIndexBuffer(ID3D11Device* _device);
 	void ComputeTangents();
 	bool ReadObject(std::string _filePath, float _shine);
-	void CreateConstBuffer(ID3D11Device* _device);
+
 	// Public methods that are called outside of the class
 public:
 
@@ -33,7 +32,7 @@ public:
 	~Object();
 	void InstantiateModel(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position, float _shine);
 	void InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position, float _shine);
-	void Render(ID3D11DeviceContext* _context, CComPtr<ID3D11ShaderResourceView> _shader = nullptr);
+	void Render(ID3D11DeviceContext* _context, ID3D11Buffer* _constBuffer, CComPtr<ID3D11ShaderResourceView> _shader = nullptr);
 	void TextureObject(ID3D11Device* _device, const wchar_t*  _filePath);
 	// Getters
 	XMMATRIX GetWorldMatrix();
