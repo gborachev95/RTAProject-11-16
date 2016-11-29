@@ -11,16 +11,11 @@
 // For smart pointers
 #include <atlbase.h>
 
-#include "DDSTextureLoader.h"
 // Application includes
-#include  "OBJECT_VS.csh"
-#include  "OBJECT_PS.csh"
 
 // Defines
-#define WINDOW_HEIGHT 700
-#define WINDOW_WIDTH 700
-const float SCREEN_ZFAR = 100.0f;
-const float SCREEN_ZNEAR = 0.01f;
+#define WINDOW_HEIGHT 1000
+#define WINDOW_WIDTH 900
 
 // Namespaces
 using namespace DirectX;
@@ -28,7 +23,6 @@ using namespace std;
 
 // Loading libraries
 #pragma comment (lib, "d3d11.lib") 
-//#pragma comment (lib, "libfbxsdk.lib")
 
 // Globals
 

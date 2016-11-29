@@ -24,7 +24,7 @@
     <ClCompile Include="Object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DDSTextureLoader.cpp">
+    <ClCompile Include="FBXLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,12 +38,8 @@
     <ClInclude Include="Object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DDSTextureLoader.h">
+    <ClInclude Include="FBXLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="OBJECT_VS.hlsl" />
-    <FxCompile Include="OBJECT_PS.hlsl" />
   </ItemGroup>
 </Project>
