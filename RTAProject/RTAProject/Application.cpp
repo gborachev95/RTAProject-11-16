@@ -56,7 +56,6 @@ bool Application::Run()
 void Application::Input()
 {
 	FPCamera(0.01f);
-	LightControl();
 }
 
 // Updates the scene
@@ -85,27 +84,12 @@ void Application::Render()
     // Set constant buffers
 	m_deviceContext->VSSetConstantBuffers(1, 1, &m_constBufferScene.p);
 	m_deviceContext->PSSetConstantBuffers(1, 1, &m_constBufferScene.p);
-	m_deviceContext->PSSetConstantBuffers(2, 1, &m_constBufferDirLight.p);
-	m_deviceContext->PSSetConstantBuffers(4, 1, &m_constBufferSpotLight.p);
-
 	// Scene mapping
 	D3D11_MAPPED_SUBRESOURCE mapSubresource;
 	ZeroMemory(&mapSubresource, sizeof(mapSubresource));
 	m_deviceContext->Map(m_constBufferScene, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mapSubresource);
 	memcpy(mapSubresource.pData, &m_viewToShader, sizeof(SCENE_TO_VRAM));
 	m_deviceContext->Unmap(m_constBufferScene, NULL);
-	// Lights mapping
-	// Directional light
-	ZeroMemory(&mapSubresource, sizeof(mapSubresource));
-	m_deviceContext->Map(m_constBufferDirLight, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mapSubresource);
-	memcpy(mapSubresource.pData, &m_dirLightToShader, sizeof(LIGHT_TO_VRAM));
-	m_deviceContext->Unmap(m_constBufferDirLight, NULL);
-
-	// Spot light
-	ZeroMemory(&mapSubresource, sizeof(mapSubresource));
-	m_deviceContext->Map(m_constBufferSpotLight, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mapSubresource);
-	memcpy(mapSubresource.pData, &m_spotLightToShader, sizeof(LIGHT_TO_VRAM));
-	m_deviceContext->Unmap(m_constBufferSpotLight, NULL);
 
 	// Rendering objects
 	m_testObject.Render(m_deviceContext);
@@ -301,7 +285,7 @@ void Application::InitializeToShader()
 	m_viewToShader.viewMatrix = XMMatrixInverse(nullptr, m_viewToShader.viewMatrix);
 
 	// Initilizes lights data
-	InitializeLights();
+	//InitilizeLights();
 }
 
 void Application::CreateConstBuffers()
@@ -315,23 +299,6 @@ void Application::CreateConstBuffers()
 	constBufferDesc.StructureByteStride = sizeof(float);
 	constBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	m_device->CreateBuffer(&constBufferDesc, NULL, &m_constBufferScene.p);
-
-	// Creating const buffer for the lights
-	ZeroMemory(&constBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	constBufferDesc.ByteWidth = sizeof(LIGHT_TO_VRAM);
-	constBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	constBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	constBufferDesc.StructureByteStride = sizeof(float);
-	constBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	m_device->CreateBuffer(&constBufferDesc, NULL, &m_constBufferDirLight.p);
-
-	ZeroMemory(&constBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	constBufferDesc.ByteWidth = sizeof(LIGHT_TO_VRAM);
-	constBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	constBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	constBufferDesc.StructureByteStride = sizeof(float);
-	constBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	m_device->CreateBuffer(&constBufferDesc, NULL, &m_constBufferSpotLight.p);
 }
 
 void Application::FPCamera(float _speed)
@@ -378,65 +345,4 @@ void Application::FPCamera(float _speed)
 		m_viewToShader.viewMatrix.r[3].m128_f32[0] -= _speed;
 	else if (GetAsyncKeyState('A'))
 		m_viewToShader.viewMatrix.r[3].m128_f32[0] += _speed;
-}
-
-// Initilizes the light for the shader
-void Application::InitializeLights()
-{
-	// Direction light
-	ZeroMemory(&m_dirLightToShader, sizeof(LIGHT_TO_VRAM));
-	// Setting the color 
-	m_dirLightToShader.color.r = 0.7f;
-	m_dirLightToShader.color.g = 0.7f;
-	m_dirLightToShader.color.b = 0.7f;
-	m_dirLightToShader.color.a = 1.0f;
-	// Setting the direction
-	m_dirLightToShader.direction.x = -1.0f;
-	m_dirLightToShader.direction.y = -0.5f;
-	m_dirLightToShader.status = true;
-
-	// Spot light
-	ZeroMemory(&m_spotLightToShader, sizeof(LIGHT_TO_VRAM));
-	m_spotLightToShader.direction.x = -1.0f;
-	m_spotLightToShader.radius = 0.9238f;
-	m_spotLightToShader.transform.m128_f32[1] = 4;
-	m_spotLightToShader.color.r = 1.0f;
-	m_spotLightToShader.color.g = 1.0f;
-	m_spotLightToShader.color.b = 1.0f;
-	m_spotLightToShader.color.a = 1.0f;
-}
-
-void Application::LightControl()
-{
-	// Turn on lights
-	if (GetAsyncKeyState('O') && !m_keyPressed)
-	{
-		m_dirLightToShader.status = !m_dirLightToShader.status;
-		m_keyPressed = true;
-	}
-	if (GetAsyncKeyState('I') && !m_keyPressed)
-	{
-		m_spotLightToShader.status = !m_spotLightToShader.status;
-		m_keyPressed = true;
-	}
-	if (!GetAsyncKeyState('I') && !GetAsyncKeyState('O'))
-		m_keyPressed = false;
-
-	
-	// Move light
-	if (m_spotLightToShader.status)
-	{
-		if (GetAsyncKeyState(VK_DOWN))
-			m_spotLightToShader.transform.m128_f32[2] -= 0.01f;
-		else if (GetAsyncKeyState(VK_UP))				
-			m_spotLightToShader.transform.m128_f32[2] += 0.01f;
-		if (GetAsyncKeyState(VK_LEFT))					
-			m_spotLightToShader.transform.m128_f32[0] -= 0.01f;
-		else if (GetAsyncKeyState(VK_RIGHT))			
-			m_spotLightToShader.transform.m128_f32[0] += 0.01f;
-		if (GetAsyncKeyState('Z'))						
-		    m_spotLightToShader.transform.m128_f32[1] += 0.01f;
-		else if (GetAsyncKeyState('X'))					
-			m_spotLightToShader.transform.m128_f32[1] -= 0.01f;
-	}
 }

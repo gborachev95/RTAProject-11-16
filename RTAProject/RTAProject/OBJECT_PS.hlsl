@@ -93,7 +93,7 @@ float4 main(INPUT_PIXEL _inputPixel) : SV_TARGET
 		lightDir = normalize(lightDir);
 		float surRatio = saturate(dot(-lightDir.xyz, spot_light.direction));
 		// Calculating attenuation
-		float aten = 1 - saturate((len / 5.0f));
+		float aten = 1 - saturate((len / 10.0f));
 		if (surRatio > spot_light.radius)
 			spotFactor = 2.0f* aten;
 		else
@@ -103,8 +103,14 @@ float4 main(INPUT_PIXEL _inputPixel) : SV_TARGET
 		float3 cameraDir = normalize(_inputPixel.cameraPosition - _inputPixel.worldPosition);
 		float3 reflectionVec = normalize(reflect(-lightDir.xyz, bumpNormal.xyz));
 		float specular = pow(saturate(dot(cameraDir,reflectionVec)), 10) * _inputPixel.shine.x;
-		spotLightColor = saturate(/*spotFactor * lightRatio * */aten*  spot_light.color * currColor + (aten* specular));
+		spotLightColor = saturate(spotFactor * lightRatio * aten * spot_light.color * currColor + (aten* specular));
+
+		// Calculate the reflection vector based on the light intensity, normal vector, and light direction.
+		//
+
+		// Determine the amount of specular light based on the reflection vector, viewing direction, and specular power.
+		//specular = pow(saturate(dot(reflection, input.viewDirection)), specularPower);
 	}
 
-	return saturate(dirLightColor + spotLightColor);
+	return baseTexture.Sample(filter, _inputPixel.uv.xy);//saturate(dirLightColor + pointLightColor + spotLightColor);
 }

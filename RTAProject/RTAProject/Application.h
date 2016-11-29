@@ -22,16 +22,11 @@
 		CComPtr<ID3D11InputLayout>        m_inputLayoutObject;
 		CComPtr<ID3D11SamplerState>       m_samplerState;
 		CComPtr<ID3D11Buffer>             m_constBufferScene;
-		CComPtr<ID3D11Buffer>             m_constBufferDirLight;
-		CComPtr<ID3D11Buffer>             m_constBufferSpotLight;
 
         // Test variables
 		Object                            m_testObject;
 		SCENE_TO_VRAM				      m_viewToShader;
-		LIGHT_TO_VRAM                     m_dirLightToShader;
-		LIGHT_TO_VRAM                     m_spotLightToShader;
 		POINT                             m_oldMousePos;
-		bool							  m_keyPressed;
 		// Private methods that are called only inside of the class
 	private:
 		// Creates the window
@@ -50,8 +45,6 @@
 		void InitializeToShader();
 		void CreateConstBuffers();
 		void FPCamera(float _speed);
-		void InitializeLights();
-		void LightControl();
 		// Public methods that are called outside of the class
 	public:
 		// Application Methods
