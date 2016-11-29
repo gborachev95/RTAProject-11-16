@@ -32,6 +32,9 @@ Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 
 	// Loading the models
 	LoadObjects();
+
+	// Initializing the start mouse position
+	GetCursorPos(&m_oldMousePos);
 	
 }
 
@@ -52,7 +55,7 @@ bool Application::Run()
 // Runs input
 void Application::Input()
 {
-
+	FPCamera(0.01f);
 }
 
 // Updates the scene
@@ -262,7 +265,7 @@ void Application::CreateSamplerState()
 void Application::LoadObjects()
 {
 	XMFLOAT3 testPosition { 0, 0, 0 };
-	m_testObject.InstantiateModel(m_device, "..\\RTAProject\\FBX Files\\eyes_set_LOW.obj", testPosition, 0);
+	m_testObject.InstantiateModel(m_device, "..\\RTAProject\\FBX Files\\ground.obj", testPosition, 0);
 	m_testObject.TextureObject(m_device, L"..\\RTAProject\\Textures\\groundTexture.dds");
 }
 
@@ -296,4 +299,50 @@ void Application::CreateConstBuffers()
 	constBufferDesc.StructureByteStride = sizeof(float);
 	constBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	m_device->CreateBuffer(&constBufferDesc, NULL, &m_constBufferScene.p);
+}
+
+void Application::FPCamera(float _speed)
+{
+	// Get the cursor position
+	POINT mousePos;
+	ZeroMemory(&mousePos, sizeof(POINT));
+	GetCursorPos(&mousePos);
+
+	// Calculating the difference of the mouse position
+	float deltaX = float(m_oldMousePos.x - mousePos.x);
+	float deltaY = float(m_oldMousePos.y - mousePos.y);
+
+	// Rotating when holding left key
+	if (GetAsyncKeyState(VK_LBUTTON))
+	{
+		m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
+		XMVECTOR storePosition;
+		storePosition.m128_f32[0] = m_viewToShader.viewMatrix.r[3].m128_f32[0];
+		storePosition.m128_f32[1] = m_viewToShader.viewMatrix.r[3].m128_f32[1];
+		storePosition.m128_f32[2] = m_viewToShader.viewMatrix.r[3].m128_f32[2];
+
+		m_viewToShader.viewMatrix.r[3].m128_f32[0] = 0;
+		m_viewToShader.viewMatrix.r[3].m128_f32[1] = 0;
+		m_viewToShader.viewMatrix.r[3].m128_f32[2] = 0;
+
+		m_viewToShader.viewMatrix = XMMatrixMultiply(XMMatrixRotationX(-deltaY*0.0005f), m_viewToShader.viewMatrix);
+		m_viewToShader.viewMatrix = XMMatrixMultiply(m_viewToShader.viewMatrix, XMMatrixRotationY(deltaX*0.0005f));
+
+		m_viewToShader.viewMatrix.r[3].m128_f32[0] = storePosition.m128_f32[0];
+		m_viewToShader.viewMatrix.r[3].m128_f32[1] = storePosition.m128_f32[1];
+		m_viewToShader.viewMatrix.r[3].m128_f32[2] = storePosition.m128_f32[2];
+
+		m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
+	}
+
+	m_oldMousePos = mousePos;
+
+	if (GetAsyncKeyState('W'))
+		m_viewToShader.viewMatrix.r[3].m128_f32[2] -= _speed;
+	else if (GetAsyncKeyState('S'))
+		m_viewToShader.viewMatrix.r[3].m128_f32[2] += _speed;
+	if (GetAsyncKeyState('D'))
+		m_viewToShader.viewMatrix.r[3].m128_f32[0] -= _speed;
+	else if (GetAsyncKeyState('A'))
+		m_viewToShader.viewMatrix.r[3].m128_f32[0] += _speed;
 }

@@ -26,6 +26,7 @@
         // Test variables
 		Object                            m_testObject;
 		SCENE_TO_VRAM				      m_viewToShader;
+		POINT                             m_oldMousePos;
 		// Private methods that are called only inside of the class
 	private:
 		// Creates the window
@@ -43,6 +44,7 @@
 		void LoadObjects();
 		void InitializeToShader();
 		void CreateConstBuffers();
+		void FPCamera(float _speed);
 		// Public methods that are called outside of the class
 	public:
 		// Application Methods
