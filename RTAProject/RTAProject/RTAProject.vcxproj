@@ -52,7 +52,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>F:\25.RTA\Teamame\RTAProject-11-16\RTAProject\FBXInporter;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Azpia\Desktop\Project-RTA\RTAProject-11-16\RTAProject\FBXInporter;F:\25.RTA\Teamame\RTAProject-11-16\RTAProject\FBXInporter;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -86,6 +86,7 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="DDSTextureLoader.h" />
+    <ClInclude Include="DLLLoader.h" />
     <ClInclude Include="includes.h" />
     <ClInclude Include="Object.h" />
   </ItemGroup>
