@@ -100,7 +100,7 @@ namespace FBXImporter
 				currVertex.transform = XMFLOAT3(float(currMesh->GetControlPointAt(ctrlPointIndex).mData[0]), float(currMesh->GetControlPointAt(ctrlPointIndex).mData[1]), float(currMesh->GetControlPointAt(ctrlPointIndex).mData[2]));
 				//currVertex.uv = XMFLOAT3(currMesh->GetUV)
 				//currVertex.normals = XMFLOAT3(currMesh->getnormal)
-
+				
 				_vertecies.push_back(currVertex);
 				_indicies.push_back(ctrlPointIndex);
 			}

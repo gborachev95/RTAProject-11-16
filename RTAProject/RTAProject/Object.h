@@ -12,10 +12,10 @@ class Object
 	CComPtr<ID3D11Buffer>              m_constBuffer;
 	OBJECT_TO_VRAM                     m_worldToShader;
 	// Object variables
-	VERTEX               *m_vertecies;
-	unsigned int         *m_indexList;
-	unsigned int          m_numVerts;
-	unsigned int          m_numIndicies;
+	VERTEX                             *m_vertecies;
+	unsigned int                       *m_indexList;
+	unsigned int                        m_numVerts;
+	unsigned int                        m_numIndicies;
 
 	// Private methods that are called only inside of the class
 private:

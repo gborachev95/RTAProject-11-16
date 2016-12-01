@@ -6,8 +6,9 @@
 // Constructor
 Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 {
+	// Helps debugging
 	//LogSetUp(L"RTA Project Application");
-
+	
 	// Creates the window
 	CreateAppWindow(_hinst, _proc);
 
@@ -93,7 +94,9 @@ void Application::Render()
 
 	// Rendering objects
 	m_groundObject.Render(m_deviceContext);
-   
+	m_fbxTest.Render(m_deviceContext);
+
+
 	// Presenting the screen
 	m_swapChain->Present(0, 0);
 }
@@ -268,6 +271,9 @@ void Application::LoadObjects()
 	m_groundObject.InstantiateModel(m_device, "..\\RTAProject\\FBX Files\\ground.obj", groundPosition, 0);
 	m_groundObject.TextureObject(m_device, L"..\\RTAProject\\Textures\\groundTexture.dds");
 
+	XMFLOAT3 fbXpos{ 0, 0, 0 };
+	m_fbxTest.InstantiateFBX(m_device, "..\\RTAProject\\FBX Files\\Box_Idle.fbx", fbXpos, 0);
+	m_fbxTest.TextureObject(m_device, L"..\\RTAProject\\Textures\\groundTexture.dds");
 	
 }
 

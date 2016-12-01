@@ -18,6 +18,7 @@ namespace FBXImporter
 		XMFLOAT3 uv;
 		XMFLOAT3 tangents;
 		XMFLOAT3 bitangents;
+		XMFLOAT3 shine;
 	};
 
 	struct TRANSFORM_NODE
