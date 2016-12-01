@@ -1,36 +1,22 @@
 #include "Application.h"
 #include "OBJECT_VS.csh"
 #include "OBJECT_PS.csh"
-//#include "FBXLib.h"
+#include "Log.h"
 
-#include "DLLStuff.h"
-#include "DLLLoader.h"
+struct TRANSFORM_NODE
+{
 
-//#include "..\FBXInporter\FBXInporter"
+};
+
+//typedef  int(WINAPI* LoadFBXFile)(const string & _fileName, vector<VERTEX>& _vertecies,
+//	vector<int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy);
+
+#include "..//FBXInporter//FBXLib.h"
 
 // Constructor
 Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 {
-
-	//Loading DLL
-	//"C:\\Users\\Azpia\\Downloads\\DLLUsage_ExplicitLinking\\DLLUsage_ExplicitLinking\\Output\\Debug_Win32\\DLL"
-	//"C:\Users\Azpia\Desktop\Project - RTA\RTAProject - 11 - 16\RTAProject"
-	//Original just uses "DLL" as the path, which i believe it to be the name of the dll (DLL.dll). But our dll (FBXInporter) doesnt seem to work, neither does DLL, or a full path to our dll.
-	TDLLLoader<I_DLLInterface> dll_loader("DLL", "GetDLLInterface");
-	
-	DWORD lasterror = GetLastError();
-
-	I_DLLInterface* dll_interface = dll_loader.GetInterface();
-	if (!dll_interface) {
-		int d = 0;
-	}
-	
-	int a = 0;
-	int * b = &a;
-	dll_interface->test(b);
-	int c = *b;
-	
-	dll_loader.UnloadDLL();
+	//FBXImporter::LoadFBXFile(,);
 
 	// Creates the window
 	CreateAppWindow(_hinst, _proc);
@@ -385,6 +371,11 @@ void Application::FPCamera(float _speed)
 		m_viewToShader.viewMatrix.r[3].m128_f32[0] -= _speed;
 	else if (GetAsyncKeyState('A'))
 		m_viewToShader.viewMatrix.r[3].m128_f32[0] += _speed;
+
+	if (GetAsyncKeyState('Q'))
+		m_viewToShader.viewMatrix.r[3].m128_f32[1] += _speed;
+	else if (GetAsyncKeyState('E'))
+		m_viewToShader.viewMatrix.r[3].m128_f32[1] -= _speed;
 }
 
 void Application::LightsControls(float _speed)

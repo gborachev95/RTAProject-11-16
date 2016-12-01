@@ -3,11 +3,6 @@
 #include <DirectXMath.h>
 #include <vector>
 
-#ifdef FBXImorter_EXPORTS  
-#define FBXImporter_API __declspec(dllexport)   
-#else  
-#define FBXImporter_API __declspec(dllimport)   
-#endif  
 
 using namespace DirectX;
 using namespace std;
@@ -44,8 +39,6 @@ namespace FBXImporter
 		static int GetDataFromMesh(FbxNode* inNode, vector<VERTEX>& _vertecies, vector<int>& _indices);
 		//static void GetDataFromSkeleton(FbxNode* _inNode, std::vector<TRANSFORM_NODE>& _transformHierarchy);		
 	public:
-		static FBXImporter_API int LoadFBXFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy);
-
-	};
+	}; 
 
 }

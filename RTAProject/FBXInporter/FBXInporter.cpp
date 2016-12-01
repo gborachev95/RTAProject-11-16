@@ -9,7 +9,7 @@ namespace FBXImporter
 	meshes using the same rig to create a model
 	[out] A container of all the joint transforms found. As these will all be in the same
 	hierarchy, you may only need the root instead of a list of all nodes.*/
-	int Functions::LoadFBXFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy)
+	int LoadFBXFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy)
 	{
 		// Change the following filename to a suitable filename value.
 		const char* lFilename = _fileName.c_str();//"file.fbx";
@@ -53,7 +53,7 @@ namespace FBXImporter
 
 
 		FbxNode *root = n_fbxScene->GetRootNode();
-		TraverseScene(root, _vertecies, _indices, _transformHierarchy);
+		//TraverseScene(root, _vertecies, _indices, _transformHierarchy);
 
 		return 0;
 	}
