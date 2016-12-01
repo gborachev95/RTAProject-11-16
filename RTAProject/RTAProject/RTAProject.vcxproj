@@ -81,6 +81,7 @@
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
+    <ClCompile Include="Log.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Object.cpp" />
   </ItemGroup>
@@ -89,6 +90,7 @@
     <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="DLLLoader.h" />
     <ClInclude Include="includes.h" />
+    <ClInclude Include="Log.h" />
     <ClInclude Include="Object.h" />
   </ItemGroup>
   <ItemGroup>
