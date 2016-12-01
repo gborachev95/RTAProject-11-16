@@ -33,12 +33,8 @@ namespace FBXImporter
 	};
 
 
-	class Functions
-	{
-		static void TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies,vector<int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy);
-		static int GetDataFromMesh(FbxNode* inNode, vector<VERTEX>& _vertecies, vector<int>& _indices);
-		//static void GetDataFromSkeleton(FbxNode* _inNode, std::vector<TRANSFORM_NODE>& _transformHierarchy);		
-	public:
-	}; 
+	void TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy);
+	int GetDataFromMesh(FbxNode* inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
+	//static void GetDataFromSkeleton(FbxNode* _inNode, std::vector<TRANSFORM_NODE>& _transformHierarchy);		 
 
 }

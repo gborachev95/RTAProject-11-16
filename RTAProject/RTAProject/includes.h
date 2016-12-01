@@ -86,3 +86,10 @@ struct LIGHT_TO_VRAM
 	bool     status;
 	bool     padding[3];
 };
+
+struct TRANSFORM_NODE
+{
+	TRANSFORM_NODE* parent;
+	XMMATRIX localMatrix;
+	XMMATRIX worldMatrix;
+};

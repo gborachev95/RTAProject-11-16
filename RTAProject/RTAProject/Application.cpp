@@ -3,20 +3,10 @@
 #include "OBJECT_PS.csh"
 #include "Log.h"
 
-struct TRANSFORM_NODE
-{
-
-};
-
-//typedef  int(WINAPI* LoadFBXFile)(const string & _fileName, vector<VERTEX>& _vertecies,
-//	vector<int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy);
-
-#include "..//FBXInporter//FBXLib.h"
-
 // Constructor
 Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 {
-	//FBXImporter::LoadFBXFile(,);
+	//LogSetUp(L"RTA Project Application");
 
 	// Creates the window
 	CreateAppWindow(_hinst, _proc);
@@ -102,8 +92,8 @@ void Application::Render()
 	MapShaders();
 
 	// Rendering objects
-	m_testObject.Render(m_deviceContext);
-
+	m_groundObject.Render(m_deviceContext);
+   
 	// Presenting the screen
 	m_swapChain->Present(0, 0);
 }
@@ -274,9 +264,11 @@ void Application::CreateSamplerState()
 
 void Application::LoadObjects()
 {
-	XMFLOAT3 testPosition { 0, 0, 0 };
-	m_testObject.InstantiateModel(m_device, "..\\RTAProject\\FBX Files\\ground.obj", testPosition, 0);
-	m_testObject.TextureObject(m_device, L"..\\RTAProject\\Textures\\groundTexture.dds");
+	XMFLOAT3 groundPosition { 0, 0, 0 };
+	m_groundObject.InstantiateModel(m_device, "..\\RTAProject\\FBX Files\\ground.obj", groundPosition, 0);
+	m_groundObject.TextureObject(m_device, L"..\\RTAProject\\Textures\\groundTexture.dds");
+
+	
 }
 
 // Sets te data that will be going to the shaders

@@ -1,4 +1,7 @@
 #include "Object.h"
+
+#include "..//FBXInporter//FBXLib.h"
+
 // Constructor
 Object::Object()
 {
@@ -25,7 +28,17 @@ void Object::InstantiateModel(ID3D11Device* _device, std::string _filePath, XMFL
 // Instantiates the object using an FBX file
 void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position, float _shine)
 {
-
+	// Local variables
+	vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+	vector<VERTEX> temp_vertices;
+	vector<TRANSFORM_NODE> temp_trfNode;
+	
+	FBXImporter::LoadFBXFile(_filePath, temp_vertices, vertexIndices, temp_trfNode);
+	CreateVertexBuffer(_device);
+	CreateIndexBuffer(_device);
+	CreateConstBuffer(_device);
+	m_worldToShader.worldMatrix = XMMatrixIdentity();
+	m_worldToShader.worldMatrix.r[3] = { _position.x,_position.y, _position.z,1 };
 }
 
 // Draws the object to the screen

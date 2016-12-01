@@ -25,7 +25,8 @@
 		CComPtr<ID3D11Buffer>             m_dirLightConstBuffer;
 		CComPtr<ID3D11Buffer>             m_spotLightConstBuffer;
         // Test variables
-		Object                            m_testObject;
+		Object                            m_groundObject;
+		Object							  m_fbxTest;
 		SCENE_TO_VRAM				      m_viewToShader;
 		POINT                             m_oldMousePos;
 		LIGHT_TO_VRAM                     m_dirLightToShader;
