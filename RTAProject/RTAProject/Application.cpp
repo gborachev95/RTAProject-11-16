@@ -273,7 +273,7 @@ void Application::LoadObjects()
 
 	XMFLOAT3 fbXpos{ 0, 0, 0 };
 	m_fbxTest.InstantiateFBX(m_device, "..\\RTAProject\\FBX Files\\Box_Idle.fbx", fbXpos, 0);
-	m_fbxTest.TextureObject(m_device, L"..\\RTAProject\\Textures\\groundTexture.dds");
+	m_fbxTest.TextureObject(m_device, L"..\\RTAProject\\Textures\\TestCubeTexture.dds");
 	
 }
 
@@ -350,7 +350,7 @@ void Application::FPCamera(float _speed)
 		m_viewToShader.viewMatrix.r[3].m128_f32[2] = 0;
 
 		m_viewToShader.viewMatrix = XMMatrixMultiply(XMMatrixRotationX(-deltaY*0.0005f), m_viewToShader.viewMatrix);
-		m_viewToShader.viewMatrix = XMMatrixMultiply(m_viewToShader.viewMatrix, XMMatrixRotationY(deltaX*0.0005f));
+		m_viewToShader.viewMatrix = XMMatrixMultiply(m_viewToShader.viewMatrix, XMMatrixRotationY(-deltaX*0.0005f));
 
 		m_viewToShader.viewMatrix.r[3].m128_f32[0] = storePosition.m128_f32[0];
 		m_viewToShader.viewMatrix.r[3].m128_f32[1] = storePosition.m128_f32[1];

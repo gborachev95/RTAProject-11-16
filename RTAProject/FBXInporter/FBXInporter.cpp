@@ -88,31 +88,144 @@ namespace FBXImporter
 
 		FbxMesh* currMesh = _inNode->GetMesh();
 
+		//int triangleCount = currMesh->GetPolygonCount();
+		//int vertexCounter = 0;
+		//for (int triIndex = 0; triIndex < triangleCount; ++triIndex)
+		//{
+		//	for (int triVertIndex = 0; triVertIndex < 3; ++triVertIndex)
+		//	{
+		//		int ctrlPointIndex = currMesh->GetPolygonVertex(triIndex, triVertIndex);
+		//		VERTEX currVertex;
+		//
+		//		currVertex.transform = XMFLOAT3(float(currMesh->GetControlPointAt(ctrlPointIndex).mData[0]), float(currMesh->GetControlPointAt(ctrlPointIndex).mData[1]), float(currMesh->GetControlPointAt(ctrlPointIndex).mData[2]));
+		//
+		//		_vertecies.push_back(currVertex);
+		//		_indicies.push_back(currMesh->GetPolygonVertexIndex(ctrlPointIndex));
+		//	}
+		//}
+
+		// Getting the Vertecies DO NOT DELETE
+		//int numVertices = currMesh->GetControlPointsCount();
+		//FbxVector4 *verticesFbx = currMesh->GetControlPoints();
+		//FbxGeometryElementNormal* normalsElement = currMesh->GetElementNormal();
+		//FbxLayerElementArrayTemplate<FbxVector2>* uvVertices = 0;
+		//currMesh->GetTextureUV(&uvVertices, FbxLayerElement::eTextureDiffuse);
+		//
+		//for (int vertexIndex = 0; vertexIndex < numVertices; ++vertexIndex)
+		//{
+		//	VERTEX currVertex;
+		//	currVertex.transform = XMFLOAT3((float)verticesFbx[vertexIndex][0], (float)verticesFbx[vertexIndex][1], (float)verticesFbx[vertexIndex][2]);
+		//
+		//	// Getting normals 
+		//	FbxVector4 normal = normalsElement->GetDirectArray().GetAt(vertexIndex);
+		//	currVertex.normals = XMFLOAT3((float)normal[0], (float)normal[1], (float)normal[2]);
+		//
+		//
+		//	// Getting the UVs
+		//	FbxVector2 uv = (*uvVertices)[vertexIndex*5];
+		//	currVertex.uv.x = (float)uv[0];
+		//	currVertex.uv.y = (float)uv[1];
+		//	currVertex.uv.z = 0.0f;
+		//
+		//	// Set the Vertex
+		//	_vertecies.push_back(currVertex);
+		//}
+		// Getting the Indices
 		int triangleCount = currMesh->GetPolygonCount();
-		int vertexCounter = 0;
 		for (int triIndex = 0; triIndex < triangleCount; ++triIndex)
 		{
 			for (int triVertIndex = 0; triVertIndex < 3; ++triVertIndex)
 			{
 				int ctrlPointIndex = currMesh->GetPolygonVertex(triIndex, triVertIndex);
-				VERTEX currVertex;
-
-				currVertex.transform = XMFLOAT3(float(currMesh->GetControlPointAt(ctrlPointIndex).mData[0]), float(currMesh->GetControlPointAt(ctrlPointIndex).mData[1]), float(currMesh->GetControlPointAt(ctrlPointIndex).mData[2]));
-				//currVertex.uv = XMFLOAT3(currMesh->GetUV)
-				//currVertex.normals = XMFLOAT3(currMesh->getnormal)
-				
-				_vertecies.push_back(currVertex);
 				_indicies.push_back(ctrlPointIndex);
 			}
 		}
+
+		// Getting Normals
+		//vector<XMFLOAT3> normals;
+		//FbxGeometryElementNormal* normalEl = currMesh->GetElementNormal();
+		//if (normalEl)
+		//{
+		//	int numNormals = currMesh->GetPolygonCount() * 3;
+		//	int vertexCounter = 0;
+		//	for (int polyCounter = 0; polyCounter<currMesh->GetPolygonCount(); polyCounter++)
+		//	{
+		//		for (int i = 0; i<3; i++)
+		//		{
+		//			XMFLOAT3 currNormal;
+		//			FbxVector4 normal = normalEl->GetDirectArray().GetAt(vertexCounter);
+		//			currNormal.x = (float)normal[0];
+		//			currNormal.y = (float)normal[1];
+		//			currNormal.z = (float)normal[2];
+		//
+		//			normals.push_back(currNormal);
+		//			vertexCounter++;
+		//		}
+		//	}
+		//}
+
+		int vertexCounter = 0;
+		fbxsdk::FbxGeometryElementNormal* normalEl = currMesh->GetElementNormal();
+		int polygonCount = currMesh->GetPolygonCount();
+		for (int i = 0; i < polygonCount; ++i) 
+		{
+			FbxLayerElementArrayTemplate<fbxsdk::FbxVector2>* uvVertices = 0;
+			currMesh->GetTextureUV(&uvVertices, fbxsdk::FbxLayerElement::eTextureDiffuse);
+			for (int j = 0; j < currMesh->GetPolygonSize(i); ++j) 
+			{
+				// Setting Vertecies
+				VERTEX currVertex;
+				currVertex.transform = XMFLOAT3(float(currMesh->GetControlPointAt(vertexCounter).mData[0]), float(currMesh->GetControlPointAt(vertexCounter).mData[1]), float(currMesh->GetControlPointAt(vertexCounter).mData[2]));
+
+				// Setting Normals
+				FbxVector4 normal = normalEl->GetDirectArray().GetAt(vertexCounter);
+				currVertex.normals.x = (float)normal[0];
+				currVertex.normals.y = (float)normal[1];
+				currVertex.normals.z = (float)normal[2];
+				
+
+				// Setting UVs
+				currVertex.uv.x = (float)(*uvVertices)[vertexCounter].mData[0];
+				currVertex.uv.y = (float)(*uvVertices)[vertexCounter].mData[1];
+
+				++vertexCounter;
+
+				// Pushing the final result
+				_vertecies.push_back(currVertex);
+			}
+
+		}
+
 		return 0;
 	}
 
 	//void GetDataFromSkeleton(FbxNode* _inNode, std::vector<TRANSFORM_NODE>& _transformHierarchy)
 	//{
-	////	FbxSkeleton* currSkeleton = _inNode->GetSkeleton();
+	//int numDeformers = fbxMesh->GetDeformerCount();
+	//FbxSkin* skin = (FbxSkin*)fbxMesh->GetDeformer(0, FbxDeformer::eSkin);
+	//if (skin != 0)
+	//{
+	//	int boneCount = skin->GetClusterCount();
+	//	for (int boneIndex = 0; boneIndex < boneCount; boneIndex++)
+	//	{
+	//		FbxCluster* cluster = skin->GetCluster(boneIndex);
+	//		FbxNode* bone = cluster->GetLink(); // Get a reference to the bone's node
 	//
-	//	//currSkeleton-
-	//	
+	//											// Get the bind pose
+	//		FbxAMatrix bindPoseMatrix;
+	//		cluster->GetTransformLinkMatrix(bindPoseMatrix);
+	//
+	//		int *boneVertexIndices = cluster->GetControlPointIndices();
+	//		double *boneVertexWeights = cluster->GetControlPointWeights();
+	//
+	//		// Iterate through all the vertices, which are affected by the bone
+	//		int numBoneVertexIndices = cluster->GetControlPointIndicesCount();
+	//		for (int boneVertexIndex = 0; boneVertexIndex < numBoneVertexIndices; boneVertexIndex++)
+	//		{
+	//			int boneVertexIndex = boneVertexIndices[boneVertexIndex];
+	//			float boneWeight = (float)boneVertexWeights[boneVertexIndex];
+	//		}
+	//	}
+	//}
 	//}
 }

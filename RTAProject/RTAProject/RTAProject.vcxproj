@@ -91,6 +91,7 @@
     <ClInclude Include="Application.h" />
     <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="DLLLoader.h" />
+    <ClInclude Include="FBXDLL.h" />
     <ClInclude Include="includes.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Object.h" />

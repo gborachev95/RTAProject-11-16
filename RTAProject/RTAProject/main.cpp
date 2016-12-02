@@ -7,9 +7,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 // Main loop 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 {
-	
-	//HINSTANCE inst = LoadLibrary(L"FbxInporter.dll");
-
 	srand(unsigned int(time(0)));
 	Application mainApp(hInstance, (WNDPROC)WndProc);
 	MSG msg; ZeroMemory(&msg, sizeof(msg));

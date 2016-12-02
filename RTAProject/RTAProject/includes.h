@@ -14,7 +14,6 @@
 // For smart pointers
 #include <atlbase.h>
 
-#include "DDSTextureLoader.h"
 // Application includes
 
 
@@ -30,9 +29,6 @@ using namespace std;
 
 // Loading libraries
 #pragma comment (lib, "d3d11.lib") 
-//#pragma comment (lib, "libfbxsdk.lib")
-
-// Globals
 
 // Structures
 struct VERTEX

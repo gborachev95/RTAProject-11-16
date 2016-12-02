@@ -1,6 +1,9 @@
 #include "Object.h"
-
+#include "FBXDLL.h"
 #include "..//FBXInporter//FBXLib.h"
+#include "DDSTextureLoader.h"
+
+using namespace FBXImporter;
 
 // Constructor
 Object::Object()
@@ -28,37 +31,29 @@ void Object::InstantiateModel(ID3D11Device* _device, std::string _filePath, XMFL
 // Instantiates the object using an FBX file
 void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position, float _shine)
 {
+	// Gets us the function from the DLL
+	//OpenFBXFile LoadFBXFile = LinkFBXDll();
+
 	// Local variables
 	vector<unsigned int> vertexIndices, uvIndices, normalIndices;
 	vector<VERTEX> temp_vertices;
 	vector<TRANSFORM_NODE> temp_trfNode;
 	
-	FBXImporter::LoadFBXFile(_filePath, temp_vertices, vertexIndices, temp_trfNode);
+	LoadFBXFile(_filePath, temp_vertices, vertexIndices, temp_trfNode);
 
 	// Setting the members
 	m_numVerts = temp_vertices.size();
 	m_vertecies = new VERTEX [m_numVerts];
-	for (unsigned int i = 0; i < m_numVerts; ++i)
-	{
-		// Setting vertecies
-		m_vertecies[i] = temp_vertices[vertexIndices[i]];
 
-		// Setting normals			   [vertexIndices[i]
-		//m_vertecies[i].normals = temp[vertexIndices[i]_normals[normalIndices[i]];
-		// Setting UVs
-		//m_vertecies[i].uv.x = temp_uvs[uvIndices[i]].x;
-		//m_vertecies[i].uv.y = temp_uvs[uvIndices[i]].y;
-		//m_vertecies[i].uv.z = 0;
-		//m_vertecies[i].shine.x = _shine;
-	}
+	// Setting vertecies
+	for (unsigned int i = 0; i < m_numVerts; ++i)
+		m_vertecies[i] = temp_vertices[i];
 
 	m_numIndicies = vertexIndices.size();
 	m_indexList = new unsigned int[m_numIndicies];
 	for (unsigned int i = 0; i < m_numIndicies; ++i)
 		m_indexList[i] = vertexIndices[i];
 
-
-	//Working
 	CreateVertexBuffer(_device);
 	CreateIndexBuffer(_device);
 	CreateConstBuffer(_device);
