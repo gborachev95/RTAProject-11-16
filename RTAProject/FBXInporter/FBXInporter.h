@@ -22,25 +22,20 @@ namespace FBXImporter
 	struct TRANSFORM_NODE
 	{
 		TRANSFORM_NODE* parent;
+		TRANSFORM_NODE *sibling;
 		XMMATRIX localMatrix;
 		XMMATRIX worldMatrix;
 	};
 
 	struct KEYFRAME_DATA
 	{
-		//Time keyTime;
-		//XMMATRIX bones[bonesNum];
+		float startTime,endTime,durationTime;
+		vector<XMMATRIX> bones;
 	};
 	
-	struct ANIMATION_DATA
-	{
-
-	};
 
 	void TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy);
 	int GetDataFromMesh(FbxNode* inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
 	void GetDataFromSkeleton(FbxNode* _inNode, std::vector<TRANSFORM_NODE>& _transformHierarchy);	
-	void GetFrameData(FbxNode* _inNode, std::vector<KEYFRAME_DATA>& _frameData);
-	void GetAnimationData(FbxScene* _inScene, std::vector<ANIMATION_DATA> _animData);
-
+	void GetFrameData(FbxScene* _inScene, std::vector<KEYFRAME_DATA>& _frameData);
 }

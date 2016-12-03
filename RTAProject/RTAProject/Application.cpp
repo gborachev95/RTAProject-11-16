@@ -383,6 +383,17 @@ void Application::FPCamera(float _speed)
 		m_viewToShader.viewMatrix.r[3].m128_f32[1] += _speed;
 	else if (GetAsyncKeyState('E'))
 		m_viewToShader.viewMatrix.r[3].m128_f32[1] -= _speed;
+
+	// Spot light 
+	m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
+	m_spotLightToShader.transform.m128_f32[0] = m_viewToShader.viewMatrix.r[3].m128_f32[0];
+	m_spotLightToShader.transform.m128_f32[1] = m_viewToShader.viewMatrix.r[3].m128_f32[1];
+	m_spotLightToShader.transform.m128_f32[2] = m_viewToShader.viewMatrix.r[3].m128_f32[2];
+	m_spotLightToShader.direction.x = m_viewToShader.viewMatrix.r[2].m128_f32[0];
+	m_spotLightToShader.direction.y = m_viewToShader.viewMatrix.r[2].m128_f32[1];
+	m_spotLightToShader.direction.z = m_viewToShader.viewMatrix.r[2].m128_f32[2];
+
+	m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
 }
 
 void Application::LightsControls(float _speed)
@@ -402,21 +413,21 @@ void Application::LightsControls(float _speed)
 		m_keyPressed = false;
 
 	// Move point light
-	if (m_spotLightToShader.status)
-	{
-		if (GetAsyncKeyState(VK_DOWN))
-			m_spotLightToShader.transform.m128_f32[2] -= _speed;//float(Timer.Delta())* 2.0f;
-		else if (GetAsyncKeyState(VK_UP))
-			m_spotLightToShader.transform.m128_f32[2] += _speed;
-		if (GetAsyncKeyState(VK_LEFT))
-			m_spotLightToShader.transform.m128_f32[0] -= _speed;
-		else if (GetAsyncKeyState(VK_RIGHT))
-			m_spotLightToShader.transform.m128_f32[0] += _speed;
-		if (GetAsyncKeyState('Z'))
-			m_spotLightToShader.transform.m128_f32[1] += _speed;
-		else if (GetAsyncKeyState('X'))
-			m_spotLightToShader.transform.m128_f32[1] -= _speed;
-	}
+	//if (m_spotLightToShader.status)
+	//{
+	//	if (GetAsyncKeyState(VK_DOWN))
+	//		m_spotLightToShader.transform.m128_f32[2] -= _speed;//float(Timer.Delta())* 2.0f;
+	//	else if (GetAsyncKeyState(VK_UP))
+	//		m_spotLightToShader.transform.m128_f32[2] += _speed;
+	//	if (GetAsyncKeyState(VK_LEFT))
+	//		m_spotLightToShader.transform.m128_f32[0] -= _speed;
+	//	else if (GetAsyncKeyState(VK_RIGHT))
+	//		m_spotLightToShader.transform.m128_f32[0] += _speed;
+	//	if (GetAsyncKeyState('Z'))
+	//		m_spotLightToShader.transform.m128_f32[1] += _speed;
+	//	else if (GetAsyncKeyState('X'))
+	//		m_spotLightToShader.transform.m128_f32[1] -= _speed;
+	//}
 }
 
 void Application::MapShaders()

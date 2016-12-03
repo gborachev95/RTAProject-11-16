@@ -93,17 +93,17 @@ float4 main(INPUT_PIXEL _inputPixel) : SV_TARGET
 		lightDir = normalize(lightDir);
 		float surRatio = saturate(dot(-lightDir.xyz, spot_light.direction));
 		// Calculating attenuation
-		float aten = 1 - saturate((len / 6.0f));
+		float aten = 1 - saturate((len / 20.0f));
 		if (surRatio > spot_light.radius)
 			spotFactor = 2.0f* aten;
 		else
 			spotFactor = aten * 0.7f;
-		float lightRatio = saturate(dot(lightDir.xyz, bumpNormal.xyz));
+		float lightRatio = saturate(dot(lightDir.xyz, _inputPixel.normals.xyz));
 		// Specular effect
 		float3 cameraDir = normalize(_inputPixel.cameraPosition - _inputPixel.worldPosition);
-		float3 reflectionVec = normalize(reflect(-lightDir.xyz, bumpNormal.xyz));
+		float3 reflectionVec = normalize(reflect(-lightDir.xyz, _inputPixel.normals.xyz));
 		float specular = pow(saturate(dot(cameraDir,reflectionVec)), 10) * _inputPixel.shine.x;
-		spotLightColor = saturate(/*spotFactor * lightRatio **/ aten * spot_light.color * currColor + (aten* specular));
+		spotLightColor = saturate(spotFactor * lightRatio * aten * spot_light.color * currColor /*+ (aten* specular)*/);
 	}
 
 	return saturate(dirLightColor/* + pointLightColor*/ + spotLightColor);

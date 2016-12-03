@@ -57,8 +57,8 @@ namespace FBXImporter
 		
 		TraverseScene(root, _vertecies, _indices, _transformHierarchy);
 
-		//vector<ANIMATION_DATA> temp;
-		//GetAnimationData(fbxScene, temp);
+		vector<KEYFRAME_DATA> temp;
+		GetFrameData(fbxScene, temp);
 
 		return 0;
 	}
@@ -98,10 +98,7 @@ namespace FBXImporter
 		FbxMesh* currMesh = _inNode->GetMesh();
 
 		//Containers
-		vector<FbxVector2> UVList;
-		vector<FbxVector4> normalsList;
 		vector<VERTEX> controlPointsList;
-		vector<VERTEX> vertexList;
 
 		int triangleCount = currMesh->GetPolygonCount();
 		for (int triIndex = 0; triIndex < triangleCount; ++triIndex)
@@ -118,52 +115,47 @@ namespace FBXImporter
 			// Setting Vertecies
 			VERTEX currVertex;
 			currVertex.transform = XMFLOAT3(float(currMesh->GetControlPointAt(j).mData[0]), float(currMesh->GetControlPointAt(j).mData[1]), float(currMesh->GetControlPointAt(j).mData[2]));
+			//FbxVector4 tangents = currMesh->GetElementTangent(j)->GetDirectArray().GetAt(j);
+			//FbxVector4 bitangents = currMesh->GetElementBinormal(j)->GetDirectArray().GetAt(j);
+			//currVertex.tangents = { (float)tangents[0],(float)tangents[1],(float)tangents[2] };
+			//currVertex.bitangents = { (float)bitangents[0],(float)bitangents[1],(float)bitangents[2] };
 			controlPointsList.push_back(currVertex);
 		}
 
 		// Loop for each poly
-		for (int Poly =0; Poly < currMesh->GetPolygonCount(); Poly++)
+		for (int polyIndex = 0; polyIndex < currMesh->GetPolygonCount(); ++polyIndex)
 		{
 			// Get number of verts in this poly
-			const int NumVertices = currMesh->GetPolygonSize(Poly);
+			const int NumVertices = currMesh->GetPolygonSize(polyIndex);
 
 			// Loop for each vert in poly
 			for (int Vertex = 0; Vertex < NumVertices; Vertex++)
 			{
 				FbxVector2 fbxTexCoord;
-				FbxStringList UVSetNameList;
 				FbxVector4 fbxNormals;
-				VERTEX pos;
-
+				FbxVector4 fbxTangents;
+				FbxStringList UVSetNameList;
+				VERTEX currVertex;
+				
 				// Get the name of each set of UV coords
 				currMesh->GetUVSetNames(UVSetNameList);
 
-				//Get Data
+				// Get data from mesh
 				bool map;
-				currMesh->GetPolygonVertexUV(Poly, Vertex, UVSetNameList.GetStringAt(0), fbxTexCoord, map);
-				currMesh->GetPolygonVertexNormal(Poly, Vertex, fbxNormals);
-				pos = controlPointsList[_indicies[Poly * 3 + Vertex]];
+				currMesh->GetPolygonVertexUV(polyIndex, Vertex, UVSetNameList.GetStringAt(0), fbxTexCoord, map);
+				currMesh->GetPolygonVertexNormal(polyIndex, Vertex, fbxNormals);
+				
 
-				pos.normals.x = (float)fbxNormals.mData[0];
-				pos.normals.y = (float)fbxNormals.mData[1];
-				pos.normals.z = (float)fbxNormals.mData[2];
-				pos.uv.x = float(fbxTexCoord[0]);
-				pos.uv.y = float(1.0f - fbxTexCoord[1]);
-
-				FbxVector2 UVCoord;
-				UVCoord.mData[0] = static_cast<float>(fbxTexCoord[0]);
-				UVCoord.mData[1] = static_cast<float>(fbxTexCoord[1]);
+				// Set the current vertex
+				currVertex = controlPointsList[_indicies[polyIndex * 3 + Vertex]];
+				currVertex.normals = {(float)fbxNormals.mData[0],(float)fbxNormals.mData[1] ,(float)fbxNormals.mData[2] };
+				currVertex.uv = { float(fbxTexCoord[0]),float(1.0f - fbxTexCoord[1]),0};
 				
 				// Store Data
-				UVList.push_back(UVCoord);
-				normalsList.push_back(fbxNormals);
-				vertexList.push_back(pos);
-				_vertecies.push_back(pos);
-				_indicies[Poly * 3 + Vertex] = Poly * 3 + Vertex;
+				_vertecies.push_back(currVertex);
+				_indicies[polyIndex * 3 + Vertex] = polyIndex * 3 + Vertex;
 			}
 		}
-
-		FbxVector4 cpoint = currMesh->GetControlPointAt(82);
 		return 0;
 	}
 
@@ -231,7 +223,7 @@ namespace FBXImporter
 
 			tranformNode.localMatrix = localMatrix;
 			tranformNode.worldMatrix = worldMatrix;
-			//bone->GetParent();
+			bone->GetParent();
 			_transformHierarchy.push_back(tranformNode);
 		}
 
@@ -295,144 +287,79 @@ namespace FBXImporter
 		//}
 	} // Get the bones function
 
-	void GetFrameData(FbxNode* _inNode, std::vector<KEYFRAME_DATA>& _frameData)
+	void GetFrameData(FbxScene* _inScene, std::vector<KEYFRAME_DATA>& _frameData)
 	{	
+
+		//int numStacks = _inScene->GetSrcObjectCount();
+		//for (int i = 0; i < numStacks; ++i)
+		//{
+		//	KEYFRAME_DATA currKey;
+		//	FbxAnimStack* animStack = (FbxAnimStack*)_inScene->GetSrcObject(i);
+        //    //animStack->set
+		//	// Getting the frame times
+		//	FbxTimeSpan animTime = animStack->GetLocalTimeSpan();
+		//	currKey.startTime = (float)animTime.GetStart().GetMilliSeconds();
+		//	currKey.endTime = (float)animTime.GetStop().GetMilliSeconds();
+		//	currKey.durationTime = (float)animTime.GetDuration().GetMilliSeconds();
+		//	
+		//    // Getting the bones possitions
+		//	int numFrames = animStack->GetMemberCount();
+		//	for (int iFrame = 0; iFrame < numFrames; ++i)
+		//	{
+		//		FbxObject *frame = animStack->GetMember(i);
+		//		//frame->get
+		//	}
+		//}
+
+
+
+		//bool isAnimated = false;
+		//
+		//// Iterate all animations (for example, walking, running, falling and etc.)
+		//int numAnimations = _inScene->GetSrcObjectCount(FbxAnimStack::ClassId);
+		//for (int animationIndex = 0; animationIndex < numAnimations; animationIndex++)
+		//{
+		//	FbxAnimStack *animStack = (FbxAnimStack*)_inScene->GetSrcObject(FbxAnimStack::ClassId, animationIndex);
+		//	FbxAnimEvaluator *animEvaluator = _inScene->GetAnimationEvaluator();
+		//	animStack->GetName(); // Get the name of the animation if needed
+		//
+		//						  // Iterate all the transformation layers of the animation. You can have several layers, for example one for translation, one for rotation, one for scaling and each can have keys at different frame numbers.
+		//	int numLayers = animStack->GetMemberCount();
+		//	for (int layerIndex = 0; layerIndex < numLayers; layerIndex++)
+		//	{
+		//		FbxAnimLayer *animLayer = (FbxAnimLayer*)animStack->GetMember(layerIndex);
+		//		animLayer->GetName(); // Get the layer's name if needed
+		//
+		//		FbxAnimCurve *translationCurve = fbxNode->LclTranslation.GetCurve(animLayer);
+		//		FbxAnimCurve *rotationCurve = fbxNode->LclRotation.GetCurve(animLayer);
+		//		FbxAnimCurve *scalingCurve = fbxNode->LclScaling.GetCurve(animLayer);
+		//
+		//		if (scalingCurve != 0)
+		//		{
+		//			int numKeys = scalingCurve->KeyGetCount();
+		//			for (int keyIndex = 0; keyIndex < numKeys; keyIndex++)
+		//			{
+		//				FbxTime frameTime = scalingCurve->KeyGetTime(keyIndex);
+		//				FbxDouble3 scalingVector = fbxNode->EvaluateLocalScaling(frameTime);
+		//				float x = (float)scalingVector[0];
+		//				float y = (float)scalingVector[1];
+		//				float z = (float)scalingVector[2];
+		//
+		//				float frameSeconds = (float)frameTime.GetSecondDouble(); // If needed, get the time of the scaling keyframe, in seconds
+		//			}
+		//		}
+		//		else
+		//		{
+		//			// If this animation layer has no scaling curve, then use the default one, if needed
+		//			FbxDouble3 scalingVector = fbxNode->LclScaling.Get();
+		//			float x = (float)scalingVector[0];
+		//			float y = (float)scalingVector[1];
+		//			float z = (float)scalingVector[2];
+		//		}
+		//
+		//		// Analogically, process rotationa and translation 
+		//	}
+		//}
 	}
-
-	void GetAnimationData(FbxScene* _inScene, std::vector<ANIMATION_DATA> _animData)
-	{
-		int numStacks = _inScene->GetSrcObjectCount();
-		for (int i = 0; i < numStacks; ++i)
-		{
-			FbxAnimStack* animStack = (FbxAnimStack*)_inScene->GetSrcObject(i);
-			int numAnimLayers = animStack->GetMemberCount();
-
-			for (int layerIndex = 0; layerIndex < numAnimLayers; ++i)
-			{
-				//FbxAnimLayer* lAnimLayer = animStack->GetMember(i);
-			}
-		}
-	}
-
-#if 0
-	//void ProcessSkeletonHierarchy(FbxNode* inRootNode)
-	//{
-	//
-	//	for (int childIndex = 0; childIndex < inRootNode->GetChildCount(); ++childIndex)
-	//	{
-	//		FbxNode* currNode = inRootNode->GetChild(childIndex);
-	//		ProcessSkeletonHierarchyRecursively(currNode, 0, 0, -1);
-	//	}
-	//}
-
-	// inDepth is not needed here, I used it for debug but forgot to remove it
-	//void ProcessSkeletonHierarchyRecursively(FbxNode* inNode, int inDepth, int myIndex, int inParentIndex)
-	//{
-	//	if (inNode->GetNodeAttribute() && inNode->GetNodeAttribute()->GetAttributeType() && inNode->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::eSkeleton)
-	//	{
-	//		//Joint currJoint;
-	//		//currJoint.mParentIndex = inParentIndex;
-	//		//currJoint.mName = inNode->GetName();
-	//		//mSkeleton.mJoints.push_back(currJoint);
-	//	}
-	//	for (int i = 0; i < inNode->GetChildCount(); i++)
-	//	{
-	//		//ProcessSkeletonHierarchyRecursively(inNode->GetChild(i), inDepth + 1, mSkeleton.mJoints.size(), myIndex);
-	//	}
-	//}
-
-	//void ProcessJointsAndAnimations(FbxNode* inNode)
-	//{
-	//	//FbxMesh* currMesh = inNode->GetMesh();
-	//	//unsigned int numOfDeformers = currMesh->GetDeformerCount();
-	//	// This geometry transform is something I cannot understand
-	//	// I think it is from MotionBuilder
-	//	// If you are using Maya for your models, 99% this is just an
-	//	// identity matrix
-	//	// But I am taking it into account anyways......
-	//	//FbxAMatrix geometryTransform = Utilities::GetGeometryTransformation(inNode);
-	//
-	//	// A deformer is a FBX thing, which contains some clusters
-	//	// A cluster contains a link, which is basically a joint
-	//	// Normally, there is only one deformer in a mesh
-	//	//for (unsigned int deformerIndex = 0; deformerIndex < numOfDeformers; ++deformerIndex)
-	//	//{
-	//	//	// There are many types of deformers in Maya,
-	//	//	// We are using only skins, so we see if this is a skin
-	//	//	FbxSkin* currSkin = reinterpret_cast<FbxSkin*>(currMesh->GetDeformer(deformerIndex, FbxDeformer::eSkin));
-	//	//	if (!currSkin)
-	//	//	{
-	//	//		continue;
-	//	//	}
-	//	//
-	//	//	unsigned int numOfClusters = currSkin->GetClusterCount();
-	//	//	for (unsigned int clusterIndex = 0; clusterIndex < numOfClusters; ++clusterIndex)
-	//	//	{
-	//	//		FbxCluster* currCluster = currSkin->GetCluster(clusterIndex);
-	//	//		std::string currJointName = currCluster->GetLink()->GetName();
-	//	//		unsigned int currJointIndex = FindJointIndexUsingName(currJointName);
-	//	//		FbxAMatrix transformMatrix;
-	//	//		FbxAMatrix transformLinkMatrix;
-	//	//		FbxAMatrix globalBindposeInverseMatrix;
-	//	//
-	//	//		currCluster->GetTransformMatrix(transformMatrix);	// The transformation of the mesh at binding time
-	//	//		currCluster->GetTransformLinkMatrix(transformLinkMatrix);	// The transformation of the cluster(joint) at binding time from joint space to world space
-	//	//		globalBindposeInverseMatrix = transformLinkMatrix.Inverse() * transformMatrix * geometryTransform;
-	//	//
-	//	//		// Update the information in mSkeleton 
-	//	//		mSkeleton.mJoints[currJointIndex].mGlobalBindposeInverse = globalBindposeInverseMatrix;
-	//	//		mSkeleton.mJoints[currJointIndex].mNode = currCluster->GetLink();
-	//	//
-	//	//		// Associate each joint with the control points it affects
-	//	//		unsigned int numOfIndices = currCluster->GetControlPointIndicesCount();
-	//	//		for (unsigned int i = 0; i < numOfIndices; ++i)
-	//	//		{
-	//	//			BlendingIndexWeightPair currBlendingIndexWeightPair;
-	//	//			currBlendingIndexWeightPair.mBlendingIndex = currJointIndex;
-	//	//			currBlendingIndexWeightPair.mBlendingWeight = currCluster->GetControlPointWeights()[i];
-	//	//			mControlPoints[currCluster->GetControlPointIndices()[i]]->mBlendingInfo.push_back(currBlendingIndexWeightPair);
-	//	//		}
-	//	//
-	//	//		// Get animation information
-	//	//		// Now only supports one take
-	//	//		FbxAnimStack* currAnimStack = mFBXScene->GetSrcObject<FbxAnimStack>(0);
-	//	//		FbxString animStackName = currAnimStack->GetName();
-	//	//		mAnimationName = animStackName.Buffer();
-	//	//		FbxTakeInfo* takeInfo = mFBXScene->GetTakeInfo(animStackName);
-	//	//		FbxTime start = takeInfo->mLocalTimeSpan.GetStart();
-	//	//		FbxTime end = takeInfo->mLocalTimeSpan.GetStop();
-	//	//		mAnimationLength = end.GetFrameCount(FbxTime::eFrames24) - start.GetFrameCount(FbxTime::eFrames24) + 1;
-	//	//		Keyframe** currAnim = &mSkeleton.mJoints[currJointIndex].mAnimation;
-	//	//
-	//	//		for (FbxLongLong i = start.GetFrameCount(FbxTime::eFrames24); i <= end.GetFrameCount(FbxTime::eFrames24); ++i)
-	//	//		{
-	//	//			FbxTime currTime;
-	//	//			currTime.SetFrame(i, FbxTime::eFrames24);
-	//	//			*currAnim = new Keyframe();
-	//	//			(*currAnim)->mFrameNum = i;
-	//	//			FbxAMatrix currentTransformOffset = inNode->EvaluateGlobalTransform(currTime) * geometryTransform;
-	//	//			(*currAnim)->mGlobalTransform = currentTransformOffset.Inverse() * currCluster->GetLink()->EvaluateGlobalTransform(currTime);
-	//	//			currAnim = &((*currAnim)->mNext);
-	//	//		}
-	//	//	}
-	//	//}
-	//	//
-	//	//// Some of the control points only have less than 4 joints
-	//	//// affecting them.
-	//	//// For a normal renderer, there are usually 4 joints
-	//	//// I am adding more dummy joints if there isn't enough
-	//	//BlendingIndexWeightPair currBlendingIndexWeightPair;
-	//	//currBlendingIndexWeightPair.mBlendingIndex = 0;
-	//	//currBlendingIndexWeightPair.mBlendingWeight = 0;
-	//	//for (auto itr = mControlPoints.begin(); itr != mControlPoints.end(); ++itr)
-	//	//{
-	//	//	for (unsigned int i = itr->second->mBlendingInfo.size(); i <= 4; ++i)
-	//	//	{
-	//	//		itr->second->mBlendingInfo.push_back(currBlendingIndexWeightPair);
-	//	//	}
-	//	//}
-	//}
-
-#endif 
 
 } // FBXImporter namespace
