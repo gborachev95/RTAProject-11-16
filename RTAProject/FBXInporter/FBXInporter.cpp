@@ -95,6 +95,74 @@ namespace FBXImporter
 
 		FbxMesh* currMesh = _inNode->GetMesh();
 
+		//Containers
+		vector<FbxVector2> UVList;
+		vector<FbxVector4> normalsList;
+		vector<VERTEX> controlPointsList;
+		vector<VERTEX> vertexList;
+
+		int triangleCount = currMesh->GetPolygonCount();
+		for (int triIndex = 0; triIndex < triangleCount; ++triIndex)
+		{
+			for (int triVertIndex = 0; triVertIndex < 3; ++triVertIndex)
+			{
+				int ctrlPointIndex = currMesh->GetPolygonVertex(triIndex, triVertIndex);
+				_indicies.push_back(ctrlPointIndex);
+			}
+		}
+
+		for (int j = 0; j < currMesh->GetControlPointsCount(); ++j)
+		{
+			// Setting Vertecies
+			VERTEX currVertex;
+			currVertex.transform = XMFLOAT3(float(currMesh->GetControlPointAt(j).mData[0]), float(currMesh->GetControlPointAt(j).mData[1]), float(currMesh->GetControlPointAt(j).mData[2]));
+			controlPointsList.push_back(currVertex);
+		}
+
+		// Loop for each poly
+		for (int Poly =0; Poly < currMesh->GetPolygonCount(); Poly++)
+		{
+			// Get number of verts in this poly
+			const int NumVertices = currMesh->GetPolygonSize(Poly);
+
+			// Loop for each vert in poly
+			for (int Vertex = 0; Vertex < NumVertices; Vertex++)
+			{
+				FbxVector2 fbxTexCoord;
+				FbxStringList UVSetNameList;
+				FbxVector4 fbxNormals;
+				VERTEX pos;
+
+				// Get the name of each set of UV coords
+				currMesh->GetUVSetNames(UVSetNameList);
+
+				//Get Data
+				bool map;
+				currMesh->GetPolygonVertexUV(Poly, Vertex, UVSetNameList.GetStringAt(0), fbxTexCoord, map);
+				currMesh->GetPolygonVertexNormal(Poly, Vertex, fbxNormals);
+				pos = controlPointsList[_indicies[Poly * 3 + Vertex]];
+
+				pos.normals.x = fbxNormals.mData[0];
+				pos.normals.y = fbxNormals.mData[1];
+				pos.normals.z = fbxNormals.mData[2];
+				pos.uv.x = fbxTexCoord[0];
+				pos.uv.y = 1- fbxTexCoord[1];
+
+				FbxVector2 UVCoord;
+				UVCoord.mData[0] = static_cast<float>(fbxTexCoord[0]);
+				UVCoord.mData[1] = static_cast<float>(fbxTexCoord[1]);
+				
+				// Store Data
+				UVList.push_back(UVCoord);
+				normalsList.push_back(fbxNormals);
+				vertexList.push_back(pos);
+				_vertecies.push_back(pos);
+				_indicies[Poly * 3 + Vertex] = Poly * 3 + Vertex;
+			}
+		}
+
+		FbxVector4 cpoint = currMesh->GetControlPointAt(82);
+
 		//int triangleCount = currMesh->GetPolygonCount();
 		//int vertexCounter = 0;
 		//for (int triIndex = 0; triIndex < triangleCount; ++triIndex)
@@ -138,15 +206,6 @@ namespace FBXImporter
 		//	_vertecies.push_back(currVertex);
 		//}
 		// Getting the Indices
-		int triangleCount = currMesh->GetPolygonCount();
-		for (int triIndex = 0; triIndex < triangleCount; ++triIndex)
-		{
-			for (int triVertIndex = 0; triVertIndex < 3; ++triVertIndex)
-			{
-				int ctrlPointIndex = currMesh->GetPolygonVertex(triIndex, triVertIndex);
-				_indicies.push_back(ctrlPointIndex);
-			}
-		}
 
 		// Getting Normals
 		//vector<XMFLOAT3> normals;
@@ -171,37 +230,37 @@ namespace FBXImporter
 		//	}
 		//}
 
-		int vertexCounter = 0;
-		fbxsdk::FbxGeometryElementNormal* normalEl = currMesh->GetElementNormal();
-		int polygonCount = currMesh->GetPolygonCount();
-		for (int i = 0; i < polygonCount; ++i) 
-		{
-			FbxLayerElementArrayTemplate<fbxsdk::FbxVector2>* uvVertices = 0;
-			currMesh->GetTextureUV(&uvVertices, fbxsdk::FbxLayerElement::eTextureDiffuse);
-			for (int j = 0; j < currMesh->GetPolygonSize(i); ++j) 
-			{
-				// Setting Vertecies
-				VERTEX currVertex;
-				currVertex.transform = XMFLOAT3(float(currMesh->GetControlPointAt(vertexCounter).mData[0]), float(currMesh->GetControlPointAt(vertexCounter).mData[1]), float(currMesh->GetControlPointAt(vertexCounter).mData[2]));
+		//int vertexCounter = 0;
+		//fbxsdk::FbxGeometryElementNormal* normalEl = currMesh->GetElementNormal();
+		//int polygonCount = currMesh->GetPolygonCount();
+		//for (int i = 0; i < polygonCount; ++i) 
+		//{
+		//	FbxLayerElementArrayTemplate<fbxsdk::FbxVector2>* uvVertices = 0;
+		//	currMesh->GetTextureUV(&uvVertices, fbxsdk::FbxLayerElement::eTextureDiffuse);
+		//	for (int j = 0; j < currMesh->GetPolygonSize(i); ++j) 
+		//	{
+		//		// Setting Vertecies
+		//		VERTEX currVertex;
+		//		currVertex.transform = XMFLOAT3(float(currMesh->GetControlPointAt(vertexCounter).mData[0]), float(currMesh->GetControlPointAt(vertexCounter).mData[1]), float(currMesh->GetControlPointAt(vertexCounter).mData[2]));
 
-				// Setting Normals
-				FbxVector4 normal = normalEl->GetDirectArray().GetAt(vertexCounter);
-				currVertex.normals.x = (float)normal[0];
-				currVertex.normals.y = (float)normal[1];
-				currVertex.normals.z = (float)normal[2];
-				
+		//		// Setting Normals
+		//		FbxVector4 normal = normalEl->GetDirectArray().GetAt(vertexCounter);
+		//		currVertex.normals.x = (float)normal[0];
+		//		currVertex.normals.y = (float)normal[1];
+		//		currVertex.normals.z = (float)normal[2];
+		//		
 
-				// Setting UVs
-				currVertex.uv.x = (float)(*uvVertices)[vertexCounter].mData[0];
-				currVertex.uv.y = (float)(*uvVertices)[vertexCounter].mData[1];
+		//		// Setting UVs
+		//		currVertex.uv.x = (float)(*uvVertices)[vertexCounter].mData[0];
+		//		currVertex.uv.y = (float)(*uvVertices)[vertexCounter].mData[1];
 
-				++vertexCounter;
+		//		++vertexCounter;
 
-				// Pushing the final result
-				_vertecies.push_back(currVertex);
-			}
+		//		// Pushing the final result
+		//		_vertecies.push_back(currVertex);
+		//	}
 
-		}
+		//}
 
 		return 0;
 	}
