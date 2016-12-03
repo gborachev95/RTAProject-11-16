@@ -27,6 +27,7 @@
         // Test variables
 		Object                            m_groundObject;
 		Object							  m_fbxTest;
+		Object                            m_fbxMage;
 		SCENE_TO_VRAM				      m_viewToShader;
 		POINT                             m_oldMousePos;
 		LIGHT_TO_VRAM                     m_dirLightToShader;

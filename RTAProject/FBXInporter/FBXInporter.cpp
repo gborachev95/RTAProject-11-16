@@ -5,10 +5,12 @@
 
 namespace FBXImporter
 {
-	/* [out] Test nmodels provided will only have one mesh, but other assets may have multiple
+	/* 
+	[out] Test nmodels provided will only have one mesh, but other assets may have multiple
 	meshes using the same rig to create a model
 	[out] A container of all the joint transforms found. As these will all be in the same
-	hierarchy, you may only need the root instead of a list of all nodes.*/
+	hierarchy, you may only need the root instead of a list of all nodes.
+	*/
 	int LoadFBXFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy)
 	{
 		// Change the following filename to a suitable filename value.
@@ -145,7 +147,7 @@ namespace FBXImporter
 				pos.normals.x = (float)fbxNormals.mData[0];
 				pos.normals.y = (float)fbxNormals.mData[1];
 				pos.normals.z = (float)fbxNormals.mData[2];
-				pos.uv.x = float(1.0f - fbxTexCoord[0]);
+				pos.uv.x = float(fbxTexCoord[0]);
 				pos.uv.y = float(1.0f - fbxTexCoord[1]);
 
 				FbxVector2 UVCoord;

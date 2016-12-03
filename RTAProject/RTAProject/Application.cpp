@@ -95,7 +95,7 @@ void Application::Render()
 	// Rendering objects
 	m_groundObject.Render(m_deviceContext);
 	m_fbxTest.Render(m_deviceContext);
-
+	m_fbxMage.Render(m_deviceContext);
 
 	// Presenting the screen
 	m_swapChain->Present(0, 0);
@@ -268,12 +268,21 @@ void Application::CreateSamplerState()
 void Application::LoadObjects()
 {
 	XMFLOAT3 groundPosition { 0, 0, 0 };
-	m_groundObject.InstantiateModel(m_device, "..\\RTAProject\\FBX Files\\ground.obj", groundPosition, 0);
-	m_groundObject.TextureObject(m_device, L"..\\RTAProject\\Textures\\groundTexture.dds");
+	m_groundObject.InstantiateModel(m_device, "..\\RTAProject\\Assets\\ground.obj", groundPosition, 0);
+	m_groundObject.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\groundTexture.dds");
 
 	XMFLOAT3 fbXpos{ 0, 0, 0 };
-	m_fbxTest.InstantiateFBX(m_device, "..\\RTAProject\\FBX Files\\Box_Idle.fbx", fbXpos, 0);
-	m_fbxTest.TextureObject(m_device, L"..\\RTAProject\\Textures\\TestCubeTexture.dds");
+	m_fbxTest.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Testbox\\Box_Idle.fbx", fbXpos, 0);
+	m_fbxTest.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\TestCubeTexture.dds");
+
+
+	XMFLOAT3 fbxPos2{ 5, 0, 0 };
+	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Idle.fbx", fbxPos2, 0);
+	XMMATRIX rotMatrix = XMMatrixMultiply(XMMatrixRotationY(3.141f), m_fbxMage.GetWorldMatrix());
+	m_fbxMage.SetWorldMatrix(rotMatrix);
+	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds");
+
+
 	
 }
 
