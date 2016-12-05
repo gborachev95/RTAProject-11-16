@@ -152,6 +152,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ExporterHeader.h" />
     <ClInclude Include="FBXInporter.h" />
     <ClInclude Include="FBXLib.h" />
     <ClInclude Include="stdafx.h" />

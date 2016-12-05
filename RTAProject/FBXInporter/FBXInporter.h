@@ -2,8 +2,9 @@
 #include "fbxsdk.h"
 #include <DirectXMath.h>
 #include <vector>
+#include "ExporterHeader.h"
 
-
+using namespace FileInfo;
 using namespace DirectX;
 using namespace std;
 
@@ -38,6 +39,7 @@ namespace FBXImporter
 	int GetDataFromMesh(FbxNode* inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, std::vector<TRANSFORM_NODE>& _transformHierarchy);
 	void GetDataFromSkeleton(FbxNode* _inNode, std::vector<TRANSFORM_NODE>& _transformHierarchy);	
 	void GetFrameData(FbxScene* _inScene, std::vector<KEYFRAME_DATA>& _frameData);
+	void ExportBinaryFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
 	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<TRANSFORM_NODE>& _transformHierarchy);
 	XMMATRIX CreateXMMatrixFromFBXVectors(FbxVector4 _rotVec, FbxVector4 _translVec, FbxVector4 _scaleVec);
 
