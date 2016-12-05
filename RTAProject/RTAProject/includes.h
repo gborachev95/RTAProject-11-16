@@ -15,7 +15,7 @@
 #include <atlbase.h>
 
 // Application includes
-
+#include "..\FBXInporter\ExporterHeader.h"
 
 // Defines
 #define WINDOW_HEIGHT 700
