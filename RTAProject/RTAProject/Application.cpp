@@ -281,9 +281,6 @@ void Application::LoadObjects()
 	XMMATRIX rotMatrix = XMMatrixMultiply(XMMatrixRotationY(3.141f), m_fbxMage.GetWorldMatrix());
 	m_fbxMage.SetWorldMatrix(rotMatrix);
 	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds");
-
-
-	
 }
 
 // Sets te data that will be going to the shaders

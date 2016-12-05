@@ -57,8 +57,8 @@ namespace FBXImporter
 		
 		TraverseScene(root, _vertecies, _indices, _transformHierarchy);
 
-		vector<KEYFRAME_DATA> temp;
-		GetFrameData(fbxScene, temp);
+		//vector<KEYFRAME_DATA> temp;
+		//GetFrameData(fbxScene,temp);
 
 		return 0;
 	}
@@ -78,25 +78,18 @@ namespace FBXImporter
 				FbxNode * child = _node->GetChild(i);
 				TraverseScene(child, _vertecies, _indices, _transformHierarchy);
 				if (child->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::eMesh)
-				{
-					GetDataFromMesh(child, _vertecies, _indices);
-					//GetDataFromSkeleton(child, _transformHierarchy);
-				}
-				else if (child->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::eSkeleton)
-						GetDataFromSkeleton(child, _transformHierarchy);
-				//else if (child->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::e)
-				//{
-				//
-				//}
+					GetDataFromMesh(child, _vertecies, _indices,_transformHierarchy);
+				//else if (child->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::eSkeleton)
+					//	GetDataFromSkeleton(child, _transformHierarchy);
 			}
 		}
 	}
 
-	int GetDataFromMesh(FbxNode* _inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indicies)
+	int GetDataFromMesh(FbxNode* _inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indicies, std::vector<TRANSFORM_NODE>& _transformHierarchy)
 	{
 
 		FbxMesh* currMesh = _inNode->GetMesh();
-
+		LoadMeshSkeleton(currMesh, _transformHierarchy);
 		//Containers
 		vector<VERTEX> controlPointsList;
 
@@ -161,33 +154,6 @@ namespace FBXImporter
 
 	void GetDataFromSkeleton(FbxNode* _inNode, std::vector<TRANSFORM_NODE>& _transformHierarchy)
 	{
-		//int numDeformers = _inNode->GetDeformerCount();
-		//FbxSkin* skin = (FbxSkin*)fbxMesh->GetDeformer(0, FbxDeformer::eSkin);
-		//if (skin != 0)
-		//{
-		//	int boneCount = skin->GetClusterCount();
-		//	for (int boneIndex = 0; boneIndex < boneCount; boneIndex++)
-		//	{
-		//		FbxCluster* cluster = skin->GetCluster(boneIndex);
-		//		FbxNode* bone = cluster->GetLink(); // Get a reference to the bone's node
-		//
-		//											// Get the bind pose
-		//		FbxAMatrix bindPoseMatrix;
-		//		cluster->GetTransformLinkMatrix(bindPoseMatrix);
-		//
-		//		int *boneVertexIndices = cluster->GetControlPointIndices();
-		//		double *boneVertexWeights = cluster->GetControlPointWeights();
-		//
-		//		// Iterate through all the vertices, which are affected by the bone
-		//		int numBoneVertexIndices = cluster->GetControlPointIndicesCount();
-		//		for (int boneVertexIndex = 0; boneVertexIndex < numBoneVertexIndices; boneVertexIndex++)
-		//		{
-		//			int boneVertexIndex = boneVertexIndices[boneVertexIndex];
-		//			float boneWeight = (float)boneVertexWeights[boneVertexIndex];
-		//		}
-		//	}
-		//}
-
 		FbxSkeleton* currSkeleton = _inNode->GetSkeleton();	
 		FbxSkeleton::EType type = currSkeleton->GetSkeletonType();
 		int boneSize = currSkeleton->GetNodeCount();
@@ -201,165 +167,94 @@ namespace FBXImporter
 			FbxVector4 lRotationVector = bone->GetGeometricRotation(FbxNode::EPivotSet::eSourcePivot);
 			FbxVector4 lScaleVector = bone->GetGeometricScaling(FbxNode::EPivotSet::eSourcePivot);
 			FbxVector4 lTranslationVector = bone->GetGeometricTranslation(FbxNode::EPivotSet::eSourcePivot);
-			XMMATRIX localMatrix = XMMatrixIdentity();
-			XMVECTOR sVec = { (float)lScaleVector.mData[0], (float)lScaleVector.mData[1], (float)lScaleVector.mData[2], (float)lScaleVector.mData[3] };
-			XMVECTOR rVec = { (float)lRotationVector.mData[0], (float)lRotationVector.mData[1], (float)lRotationVector.mData[2], (float)lRotationVector.mData[3] };
-			XMVECTOR tVec = { (float)lTranslationVector.mData[0], (float)lTranslationVector.mData[1], (float)lTranslationVector.mData[2], (float)lTranslationVector.mData[3] };
-			localMatrix = XMMatrixScalingFromVector(sVec) * localMatrix;
-			localMatrix = XMMatrixRotationRollPitchYawFromVector(rVec) * localMatrix;
-			localMatrix = XMMatrixTranslationFromVector(tVec) * localMatrix;
-
+			XMMATRIX localMatrix = CreateXMMatrixFromFBXVectors(lRotationVector, lTranslationVector, lScaleVector);
+			
 			// Getting the global matrix
 			FbxVector4 wRotationVector = bone->GetGeometricRotation(FbxNode::EPivotSet::eDestinationPivot);
 			FbxVector4 wScaleVector = bone->GetGeometricScaling(FbxNode::EPivotSet::eDestinationPivot);
 			FbxVector4 wTranslationVector = bone->GetGeometricTranslation(FbxNode::EPivotSet::eDestinationPivot);
-			XMMATRIX worldMatrix = XMMatrixIdentity();
-			XMVECTOR wsVec = { (float)wScaleVector.mData[0], (float)wScaleVector.mData[1], (float)wScaleVector.mData[2], (float)wScaleVector.mData[3] };
-			XMVECTOR wrVec = { (float)wRotationVector.mData[0], (float)wRotationVector.mData[1], (float)wRotationVector.mData[2], (float)wRotationVector.mData[3] };
-			XMVECTOR wtVec = { (float)wTranslationVector.mData[0], (float)wTranslationVector.mData[1], (float)wTranslationVector.mData[2], (float)wTranslationVector.mData[3] };
-			worldMatrix = XMMatrixScalingFromVector(wsVec) * worldMatrix;
-			worldMatrix = XMMatrixRotationRollPitchYawFromVector(wrVec) * worldMatrix;
-			worldMatrix = XMMatrixTranslationFromVector(wtVec) * worldMatrix;
-
+			XMMATRIX worldMatrix = CreateXMMatrixFromFBXVectors(wRotationVector, wTranslationVector, wScaleVector);;
+		
 			tranformNode.localMatrix = localMatrix;
 			tranformNode.worldMatrix = worldMatrix;
-			bone->GetParent();
+			//bone->GetParent();
 			_transformHierarchy.push_back(tranformNode);
 		}
 
-		//FbxMesh* boneMesh = nullptr;
-		//FbxNodeAttribute::EType type = currSkeleton->GetNode()->GetNodeAttribute()->GetAttributeType();
-		//if ( type == currSkeleton->eMesh)
-		//{
-		//	boneMesh = currSkeleton->GetNode()->GetMesh();
-		//
-		//	FbxMesh* currMesh = boneMesh;
-		//	int deformerCount = currMesh->GetDeformerCount(FbxDeformer::eSkin);
-		//	int vertexCount = currMesh->GetControlPointsCount();
-		//	for (int i = 0; i < deformerCount; ++i)
-		//	{
-		//		// Getting the skin
-		//		FbxSkin *fbxSkin = (FbxSkin*)currMesh->GetDeformer(i, FbxDeformer::eSkin);
-		//		if (fbxSkin == nullptr)
-		//			continue;
-		//
-		//		// Bone count
-		//		int bonesCount = fbxSkin->GetClusterCount();
-		//
-		//		// Iterate throuhg bones
-		//		for (int boneIndex = 0; boneIndex < bonesCount; ++boneIndex)
-		//		{
-		//			// Cluster
-		//			FbxCluster* cluster = fbxSkin->GetCluster(boneIndex);
-		//
-		//			// Bone reference
-		//			FbxNode* bone = cluster->GetLink();
-		//
-		//			// Get the bind pose
-		//			FbxAMatrix bindPoseMatrix, transformMatrix;
-		//			cluster->GetTransformMatrix(transformMatrix);
-		//			cluster->GetTransformLinkMatrix(bindPoseMatrix);
-		//			XMMATRIX d311Matrix_bindPose, d311Matrix_transform;
-		//
-		//			// Decomposed transform components
-		//			FbxVector4 scaleVector = bindPoseMatrix.GetS();
-		//			FbxVector4 rotationVector = bindPoseMatrix.GetR();
-		//			FbxVector4 translationVector = bindPoseMatrix.GetT();
-		//
-		//			int *vertexIndices = cluster->GetControlPointIndices();
-		//			double *vertexWeights = cluster->GetControlPointWeights();
-		//
-		//			// Iterate through all the vertices, which are affected by the bone
-		//			// Used for skinning
-		//			//int vertexIndices = cluster->GetControlPointIndicesCount();
-		//			//for (int iBoneVertexIndex = 0; iBoneVertexIndex < ncVertexIndices; iBoneVertexIndex++)
-		//			//{
-		//			//		// vertex
-		//			//		int niVertex = pVertexIndices[iBoneVertexIndex];
-		//			//
-		//			//		// weight
-		//			//		float fWeight = (float)pVertexWeights[iBoneVertexIndex];
-		//			//}
-		//
-		//		} // Bones Inner for loop
-		//	} // Deformer Outer for loop
-		//
-		//}
 	} // Get the bones function
 
 	void GetFrameData(FbxScene* _inScene, std::vector<KEYFRAME_DATA>& _frameData)
 	{	
+		int numAnimStacks = _inScene->GetSrcObjectCount<FbxAnimStack>();
+		for (int animIndex = 0; animIndex < numAnimStacks; ++animIndex)
+		{
+			KEYFRAME_DATA currKey;
+			FbxAnimStack* animStack = (FbxAnimStack*)_inScene->GetSrcObject<FbxAnimStack>(animIndex);
 
-		//int numStacks = _inScene->GetSrcObjectCount();
-		//for (int i = 0; i < numStacks; ++i)
-		//{
-		//	KEYFRAME_DATA currKey;
-		//	FbxAnimStack* animStack = (FbxAnimStack*)_inScene->GetSrcObject(i);
-        //    //animStack->set
-		//	// Getting the frame times
-		//	FbxTimeSpan animTime = animStack->GetLocalTimeSpan();
-		//	currKey.startTime = (float)animTime.GetStart().GetMilliSeconds();
-		//	currKey.endTime = (float)animTime.GetStop().GetMilliSeconds();
-		//	currKey.durationTime = (float)animTime.GetDuration().GetMilliSeconds();
-		//	
-		//    // Getting the bones possitions
-		//	int numFrames = animStack->GetMemberCount();
-		//	for (int iFrame = 0; iFrame < numFrames; ++i)
-		//	{
-		//		FbxObject *frame = animStack->GetMember(i);
-		//		//frame->get
-		//	}
-		//}
-
-
-
-		//bool isAnimated = false;
-		//
-		//// Iterate all animations (for example, walking, running, falling and etc.)
-		//int numAnimations = _inScene->GetSrcObjectCount(FbxAnimStack::ClassId);
-		//for (int animationIndex = 0; animationIndex < numAnimations; animationIndex++)
-		//{
-		//	FbxAnimStack *animStack = (FbxAnimStack*)_inScene->GetSrcObject(FbxAnimStack::ClassId, animationIndex);
-		//	FbxAnimEvaluator *animEvaluator = _inScene->GetAnimationEvaluator();
-		//	animStack->GetName(); // Get the name of the animation if needed
-		//
-		//						  // Iterate all the transformation layers of the animation. You can have several layers, for example one for translation, one for rotation, one for scaling and each can have keys at different frame numbers.
-		//	int numLayers = animStack->GetMemberCount();
-		//	for (int layerIndex = 0; layerIndex < numLayers; layerIndex++)
-		//	{
-		//		FbxAnimLayer *animLayer = (FbxAnimLayer*)animStack->GetMember(layerIndex);
-		//		animLayer->GetName(); // Get the layer's name if needed
-		//
-		//		FbxAnimCurve *translationCurve = fbxNode->LclTranslation.GetCurve(animLayer);
-		//		FbxAnimCurve *rotationCurve = fbxNode->LclRotation.GetCurve(animLayer);
-		//		FbxAnimCurve *scalingCurve = fbxNode->LclScaling.GetCurve(animLayer);
-		//
-		//		if (scalingCurve != 0)
-		//		{
-		//			int numKeys = scalingCurve->KeyGetCount();
-		//			for (int keyIndex = 0; keyIndex < numKeys; keyIndex++)
-		//			{
-		//				FbxTime frameTime = scalingCurve->KeyGetTime(keyIndex);
-		//				FbxDouble3 scalingVector = fbxNode->EvaluateLocalScaling(frameTime);
-		//				float x = (float)scalingVector[0];
-		//				float y = (float)scalingVector[1];
-		//				float z = (float)scalingVector[2];
-		//
-		//				float frameSeconds = (float)frameTime.GetSecondDouble(); // If needed, get the time of the scaling keyframe, in seconds
-		//			}
-		//		}
-		//		else
-		//		{
-		//			// If this animation layer has no scaling curve, then use the default one, if needed
-		//			FbxDouble3 scalingVector = fbxNode->LclScaling.Get();
-		//			float x = (float)scalingVector[0];
-		//			float y = (float)scalingVector[1];
-		//			float z = (float)scalingVector[2];
-		//		}
-		//
-		//		// Analogically, process rotationa and translation 
-		//	}
-		//}
+			// Getting the frame times
+			FbxTimeSpan animTime = animStack->GetLocalTimeSpan();
+			currKey.startTime = (float)animTime.GetStart().GetMilliSeconds();
+			currKey.endTime = (float)animTime.GetStop().GetMilliSeconds();
+			currKey.durationTime = (float)animTime.GetDuration().GetMilliSeconds();
+			
+		    // Getting the bones possitions
+			//int numFrames = animStack->GetMemberCount();
+			//for (int iFrame = 0; iFrame < numFrames; ++iFrame)
+			//{
+				//FbxObject *frame = animStack->GetMember(iFrame);
+				
+		    //}
+			_frameData.push_back(currKey);
+		}
 	}
 
+	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<TRANSFORM_NODE>& _transformHierarchy)
+	{
+		int numDeformers = _inMesh->GetDeformerCount();
+		FbxSkin* skin = (FbxSkin*)_inMesh->GetDeformer(0, FbxDeformer::eSkin);
+		if (skin != 0)
+		{
+			int boneCount = skin->GetClusterCount();
+			for (int boneIndex = 0; boneIndex < boneCount; boneIndex++)
+			{
+				TRANSFORM_NODE currBone;
+				FbxCluster* cluster = skin->GetCluster(boneIndex);
+				FbxNode* bone = cluster->GetLink();
+
+				// Get bone matrix
+				FbxAMatrix wTransformMatrix = bone->EvaluateGlobalTransform();
+				FbxAMatrix lTransformMatrix = bone->EvaluateLocalTransform();
+
+				currBone.worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
+				currBone.localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
+
+				int *boneVertexIndices = cluster->GetControlPointIndices();
+				double *boneVertexWeights = cluster->GetControlPointWeights();
+				// Iterate through all the vertices, which are affected by the bone
+				int numBoneVertexIndices = cluster->GetControlPointIndicesCount();
+				for (int boneVertexIndex = 0; boneVertexIndex < numBoneVertexIndices; boneVertexIndex++)
+				{
+					int boneVertIndex = boneVertexIndices[boneVertexIndex];
+					float boneWeight = (float)boneVertexWeights[boneVertexIndex];
+				}
+
+				currBone.parent = nullptr;
+				currBone.sibling = nullptr;
+				_transformHierarchy.push_back(currBone);
+			}
+		}	
+	}
+
+	XMMATRIX CreateXMMatrixFromFBXVectors(FbxVector4 _rotVec, FbxVector4 _translVec, FbxVector4 _scaleVec)
+	{
+		XMMATRIX returnMatrix = XMMatrixIdentity();
+		XMVECTOR sVec = { (float)_scaleVec.mData[0], (float)_scaleVec.mData[1], (float)_scaleVec.mData[2], (float)_scaleVec.mData[3] };
+		XMVECTOR rVec = { (float)_rotVec.mData[0], (float)_rotVec.mData[1], (float)_rotVec.mData[2], (float)_rotVec.mData[3] };
+		XMVECTOR tVec = { (float)_translVec.mData[0], (float)_translVec.mData[1], (float)_translVec.mData[2], (float)_translVec.mData[3] };
+		returnMatrix = XMMatrixScalingFromVector(sVec) * returnMatrix;
+		returnMatrix = XMMatrixRotationRollPitchYawFromVector(rVec) * returnMatrix;
+		returnMatrix = XMMatrixTranslationFromVector(tVec) * returnMatrix;
+
+		return returnMatrix;
+	}
 } // FBXImporter namespace

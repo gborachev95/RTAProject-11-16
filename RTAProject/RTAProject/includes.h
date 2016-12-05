@@ -86,6 +86,7 @@ struct LIGHT_TO_VRAM
 struct TRANSFORM_NODE
 {
 	TRANSFORM_NODE* parent;
+	TRANSFORM_NODE *sibling;
 	XMMATRIX localMatrix;
 	XMMATRIX worldMatrix;
 };
