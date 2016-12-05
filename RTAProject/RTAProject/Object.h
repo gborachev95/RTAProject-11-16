@@ -41,5 +41,6 @@ public:
 	void SetShaderResourceView(CComPtr<ID3D11ShaderResourceView> _shader);
 	void SetWorldMatrix(XMMATRIX& _matrix);
 	void SetPosition(float _x, float _y, float _z);
-
+	// Loader
+	void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
 };

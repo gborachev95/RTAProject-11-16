@@ -2,6 +2,7 @@
 #include "FBXDLL.h"
 #include "..//FBXInporter//FBXLib.h"
 #include "DDSTextureLoader.h"
+#include <fstream>
 
 using namespace FBXImporter;
 
@@ -40,6 +41,7 @@ void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOA
 	vector<TRANSFORM_NODE> temp_trfNode;
 	
 	LoadFBXFile(_filePath, temp_vertices, vertexIndices, temp_trfNode);
+	//LoadBinaryFile(_filePath, temp_vertices, vertexIndices);
 
 	// Setting the members
 	m_numVerts = temp_vertices.size();
@@ -335,4 +337,22 @@ void Object::CreateConstBuffer(ID3D11Device* _device)
 	constBufferDesc.StructureByteStride = sizeof(float);
 	constBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	_device->CreateBuffer(&constBufferDesc, NULL, &m_constBuffer.p);
+}
+
+void Object::LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices)
+{
+	FILE* file = nullptr;
+	FileInfo::ExporterHeader header;
+
+	if (header.ReadHeader(&file, "FBXBinary.bin", _filePath.c_str()))
+	{
+		fstream binFile;
+		binFile.open("FBXBinary.bin", std::ios::in | std::ios::binary);
+		if (binFile.is_open())
+		{
+
+		}
+		binFile.close();
+	}
+	
 }

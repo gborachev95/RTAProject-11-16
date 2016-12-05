@@ -6,7 +6,7 @@
 
 namespace FBXImporter
 {
-	/* 
+	/*
 	[out] Test nmodels provided will only have one mesh, but other assets may have multiple
 	meshes using the same rig to create a model
 	[out] A container of all the joint transforms found. As these will all be in the same
@@ -17,7 +17,7 @@ namespace FBXImporter
 		// Change the following filename to a suitable filename value.
 		const char* lFilename = _fileName.c_str();
 
-	    // Initialize the SDK manager. This object handles memory management.
+		// Initialize the SDK manager. This object handles memory management.
 		FbxManager* lSdkManager = FbxManager::Create();
 
 		/*To import the contents of an FBX file, a FbxIOSettings object and a FbxImporter object must be created.
@@ -54,8 +54,8 @@ namespace FBXImporter
 		// The file is imported, so get rid of the importer.
 		lImporter->Destroy();
 
-	    FbxNode *root = fbxScene->GetRootNode();
-		
+		FbxNode *root = fbxScene->GetRootNode();
+
 		TraverseScene(root, _vertecies, _indices, _transformHierarchy);
 		ExportBinaryFile(_fileName, _vertecies, _indices);
 
@@ -80,7 +80,7 @@ namespace FBXImporter
 				FbxNode * child = _node->GetChild(i);
 				TraverseScene(child, _vertecies, _indices, _transformHierarchy);
 				if (child->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::eMesh)
-					GetDataFromMesh(child, _vertecies, _indices,_transformHierarchy);
+					GetDataFromMesh(child, _vertecies, _indices, _transformHierarchy);
 				//else if (child->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::eSkeleton)
 					//	GetDataFromSkeleton(child, _transformHierarchy);
 			}
@@ -131,7 +131,7 @@ namespace FBXImporter
 				FbxVector4 fbxTangents;
 				FbxStringList UVSetNameList;
 				VERTEX currVertex;
-				
+
 				// Get the name of each set of UV coords
 				currMesh->GetUVSetNames(UVSetNameList);
 
@@ -139,13 +139,13 @@ namespace FBXImporter
 				bool map;
 				currMesh->GetPolygonVertexUV(polyIndex, Vertex, UVSetNameList.GetStringAt(0), fbxTexCoord, map);
 				currMesh->GetPolygonVertexNormal(polyIndex, Vertex, fbxNormals);
-				
+
 
 				// Set the current vertex
 				currVertex = controlPointsList[_indicies[polyIndex * 3 + Vertex]];
-				currVertex.normals = {(float)fbxNormals.mData[0],(float)fbxNormals.mData[1] ,(float)fbxNormals.mData[2] };
-				currVertex.uv = { float(fbxTexCoord[0]),float(1.0f - fbxTexCoord[1]),0};
-				
+				currVertex.normals = { (float)fbxNormals.mData[0],(float)fbxNormals.mData[1] ,(float)fbxNormals.mData[2] };
+				currVertex.uv = { float(fbxTexCoord[0]),float(1.0f - fbxTexCoord[1]),0 };
+
 				// Store Data
 				_vertecies.push_back(currVertex);
 				_indicies[polyIndex * 3 + Vertex] = polyIndex * 3 + Vertex;
@@ -156,7 +156,7 @@ namespace FBXImporter
 
 	void GetDataFromSkeleton(FbxNode* _inNode, std::vector<TRANSFORM_NODE>& _transformHierarchy)
 	{
-		FbxSkeleton* currSkeleton = _inNode->GetSkeleton();	
+		FbxSkeleton* currSkeleton = _inNode->GetSkeleton();
 		FbxSkeleton::EType type = currSkeleton->GetSkeletonType();
 		int boneSize = currSkeleton->GetNodeCount();
 
@@ -164,19 +164,19 @@ namespace FBXImporter
 		{
 			TRANSFORM_NODE tranformNode;
 			FbxNode* bone = currSkeleton->GetNode(i);
-			
+
 			// Getting the local matrix
 			FbxVector4 lRotationVector = bone->GetGeometricRotation(FbxNode::EPivotSet::eSourcePivot);
 			FbxVector4 lScaleVector = bone->GetGeometricScaling(FbxNode::EPivotSet::eSourcePivot);
 			FbxVector4 lTranslationVector = bone->GetGeometricTranslation(FbxNode::EPivotSet::eSourcePivot);
 			XMMATRIX localMatrix = CreateXMMatrixFromFBXVectors(lRotationVector, lTranslationVector, lScaleVector);
-			
+
 			// Getting the global matrix
 			FbxVector4 wRotationVector = bone->GetGeometricRotation(FbxNode::EPivotSet::eDestinationPivot);
 			FbxVector4 wScaleVector = bone->GetGeometricScaling(FbxNode::EPivotSet::eDestinationPivot);
 			FbxVector4 wTranslationVector = bone->GetGeometricTranslation(FbxNode::EPivotSet::eDestinationPivot);
 			XMMATRIX worldMatrix = CreateXMMatrixFromFBXVectors(wRotationVector, wTranslationVector, wScaleVector);;
-		
+
 			tranformNode.localMatrix = localMatrix;
 			tranformNode.worldMatrix = worldMatrix;
 			//bone->GetParent();
@@ -186,7 +186,7 @@ namespace FBXImporter
 	} // Get the bones function
 
 	void GetFrameData(FbxScene* _inScene, std::vector<KEYFRAME_DATA>& _frameData)
-	{	
+	{
 		int numAnimStacks = _inScene->GetSrcObjectCount<FbxAnimStack>();
 		for (int animIndex = 0; animIndex < numAnimStacks; ++animIndex)
 		{
@@ -198,14 +198,14 @@ namespace FBXImporter
 			currKey.startTime = (float)animTime.GetStart().GetMilliSeconds();
 			currKey.endTime = (float)animTime.GetStop().GetMilliSeconds();
 			currKey.durationTime = (float)animTime.GetDuration().GetMilliSeconds();
-			
-		    // Getting the bones possitions
+
+			// Getting the bones possitions
 			//int numFrames = animStack->GetMemberCount();
 			//for (int iFrame = 0; iFrame < numFrames; ++iFrame)
 			//{
 				//FbxObject *frame = animStack->GetMember(iFrame);
-				
-		    //}
+
+			//}
 			_frameData.push_back(currKey);
 		}
 	}
@@ -244,36 +244,36 @@ namespace FBXImporter
 				currBone.sibling = nullptr;
 				_transformHierarchy.push_back(currBone);
 			}
-		}	
+		}
 	}
 
-} // FBXImporter namespace
-
-void FBXImporter::ExportBinaryFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices)
-{
-	//Initializing header for exporting
-	ExporterHeader header(FILE_TYPES::MESH, _fileName.c_str());
-	header.mesh.numIndex = _indices.size();
-	header.mesh.numPoints = _vertecies.size();
-	header.mesh.index = INDEX_TYPES::TRI_STRIP;
-	header.mesh.vertSize = sizeof(VERTEX);
-
-	fstream binFile;
-	binFile.open("FBXBinary.bin", std::ios::out | std::ios::binary);
-	if (binFile.is_open())
+	void ExportBinaryFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices)
 	{
-		binFile.write((char*)&header, sizeof(ExporterHeader));
-		for (size_t i = 0; i < _vertecies.size(); i++)
+		//Initializing header for exporting
+		ExporterHeader header(FILE_TYPES::MESH, _fileName.c_str());
+		header.mesh.numIndex = _indices.size();
+		header.mesh.numPoints = _vertecies.size();
+		header.mesh.index = INDEX_TYPES::TRI_STRIP;
+		header.mesh.vertSize = sizeof(VERTEX);
+
+		fstream binFile;
+		binFile.open("FBXBinary.bin", std::ios::out | std::ios::binary);
+		if (binFile.is_open())
 		{
-			binFile.write((char*)&_vertecies[i], sizeof(VERTEX));
+			binFile.write((char*)&header, sizeof(ExporterHeader));
+			for (size_t i = 0; i < _vertecies.size(); i++)
+			{
+				binFile.write((char*)&_vertecies[i], sizeof(VERTEX));
+			}
+			for (size_t i = 0; i < _indices.size(); i++)
+			{
+				binFile.write((char*)&_indices[i], sizeof(unsigned int));
+			}
 		}
-		for (size_t i = 0; i < _indices.size(); i++)
-		{
-			binFile.write((char*)&_indices[i], sizeof(unsigned int));
-		}
+		binFile.close();
 	}
-	binFile.close();
-}	XMMATRIX CreateXMMatrixFromFBXVectors(FbxVector4 _rotVec, FbxVector4 _translVec, FbxVector4 _scaleVec)
+
+	XMMATRIX CreateXMMatrixFromFBXVectors(FbxVector4 _rotVec, FbxVector4 _translVec, FbxVector4 _scaleVec)
 	{
 		XMMATRIX returnMatrix = XMMatrixIdentity();
 		XMVECTOR sVec = { (float)_scaleVec.mData[0], (float)_scaleVec.mData[1], (float)_scaleVec.mData[2], (float)_scaleVec.mData[3] };
@@ -285,4 +285,4 @@ void FBXImporter::ExportBinaryFile(const string & _fileName, vector<VERTEX>& _ve
 
 		return returnMatrix;
 	}
-} // FBXImporter namespace
+}// FBXImporter namespace
