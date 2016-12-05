@@ -38,9 +38,9 @@ void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOA
 	// Local variables
 	vector<unsigned int> vertexIndices, uvIndices, normalIndices;
 	vector<VERTEX> temp_vertices;
-	vector<TRANSFORM_NODE> temp_trfNode;
 	
-	LoadFBXFile(_filePath, temp_vertices, vertexIndices, temp_trfNode);
+	
+	LoadFBXFile(_filePath, temp_vertices, vertexIndices, m_bones);
 	//LoadBinaryFile(_filePath, temp_vertices, vertexIndices);
 
 	// Setting the members
@@ -355,4 +355,10 @@ void Object::LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, v
 		binFile.close();
 	}
 	
+}
+
+
+vector<TRANSFORM_NODE> Object::GetFBXBones()
+{
+	return m_bones;
 }

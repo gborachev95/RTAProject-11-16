@@ -10,12 +10,13 @@ class Object
 	CComPtr<ID3D11Texture2D>           m_texture;
 	CComPtr<ID3D11ShaderResourceView>  m_shaderResourceView;
 	CComPtr<ID3D11Buffer>              m_constBuffer;
-	OBJECT_TO_VRAM                     m_worldToShader;
+	OBJECT_TO_VRAM                     m_worldToShader;       
 	// Object variables
 	VERTEX                             *m_vertecies;
 	unsigned int                       *m_indexList;
 	unsigned int                        m_numVerts;
 	unsigned int                        m_numIndicies;
+	vector<TRANSFORM_NODE>              m_bones;
 
 	// Private methods that are called only inside of the class
 private:
@@ -37,6 +38,7 @@ public:
 	void TextureObject(ID3D11Device* _device, const wchar_t*  _filePath);
 	// Getters
 	XMMATRIX GetWorldMatrix();
+	vector<TRANSFORM_NODE> GetFBXBones();
 	// Setters
 	void SetShaderResourceView(CComPtr<ID3D11ShaderResourceView> _shader);
 	void SetWorldMatrix(XMMATRIX& _matrix);

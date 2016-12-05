@@ -87,7 +87,7 @@ namespace FBXImporter
 		}
 	}
 
-	int GetDataFromMesh(FbxNode* _inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indicies, std::vector<TRANSFORM_NODE>& _transformHierarchy)
+	void GetDataFromMesh(FbxNode* _inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indicies, std::vector<TRANSFORM_NODE>& _transformHierarchy)
 	{
 
 		FbxMesh* currMesh = _inNode->GetMesh();
@@ -151,7 +151,6 @@ namespace FBXImporter
 				_indicies[polyIndex * 3 + Vertex] = polyIndex * 3 + Vertex;
 			}
 		}
-		return 0;
 	}
 
 	void GetDataFromSkeleton(FbxNode* _inNode, std::vector<TRANSFORM_NODE>& _transformHierarchy)
