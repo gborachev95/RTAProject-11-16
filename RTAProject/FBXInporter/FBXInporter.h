@@ -33,6 +33,8 @@ namespace FBXImporter
 		float startTime,endTime,durationTime;
 		vector<XMMATRIX> bones;
 	};
+
+
 	
 
 	void TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy);
