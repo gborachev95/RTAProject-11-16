@@ -58,6 +58,7 @@ namespace FBXImporter
 
 		TraverseScene(root, _vertecies, _indices, _transformHierarchy);
 		ExportBinaryFile(_fileName, _vertecies, _indices);
+		ExportBinaryFile(_fileName, _transformHierarchy);
 
 		fbxScene->Destroy();
 		lSdkManager->Destroy();
@@ -93,6 +94,7 @@ namespace FBXImporter
 	{
 
 		FbxMesh* currMesh = _inNode->GetMesh();
+		//currMesh->GetDeformer()
 		LoadMeshSkeleton(currMesh, _transformHierarchy);
 		//Containers
 		vector<VERTEX> controlPointsList;
@@ -252,17 +254,64 @@ namespace FBXImporter
 
 	void ExportBinaryFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices)
 	{
+		ExporterHeader header(FileInfo::FILE_TYPES::MESH, _fileName.c_str());
+		header.version = EXPORTER_VERSION_NUMBER;
+		header.mesh.numPoints = _vertecies.size();
+		header.mesh.numIndex = _indices.size();
+		header.mesh.modelType = FileInfo::MODEL_TYPES::BASIC;
+		header.mesh.vertSize = sizeof(VERTEX);
+		header.mesh.index = FileInfo::INDEX_TYPES::TRI_STRIP;
+
+		string binName;
 		fstream binFile;
-		binFile.open("..\\RTAProject\\FBXBinary.bin", std::ios::out | std::ios::binary);
+		const char* theName = strrchr(_fileName.c_str(), '\\');
+		binName = strrchr(theName, theName[1]);
+		binName.pop_back();
+		binName.pop_back();
+		binName.pop_back();
+		binName.pop_back();
+		binName.append("_mesh.bin");
+		binFile.open(binName.c_str(), std::ios::out | std::ios::binary);
 		if (binFile.is_open())
 		{
+			binFile.write((char*)&header, sizeof(FileInfo::ExporterHeader));
 			for (size_t i = 0; i < _vertecies.size(); i++)
 			{
+				VERTEX temp = _vertecies[i];
 				binFile.write((char*)&_vertecies[i], sizeof(VERTEX));
 			}
 			for (size_t i = 0; i < _indices.size(); i++)
 			{
+				unsigned int temp = _indices[i];
 				binFile.write((char*)&_indices[i], sizeof(unsigned int));
+			}
+		}
+		binFile.close();
+	}
+
+	void ExportBinaryFile(const string & _fileName, vector<Transform> _bones)
+	{
+		ExporterHeader header(FileInfo::FILE_TYPES::BIND_POSE, _fileName.c_str());
+		header.version = EXPORTER_VERSION_NUMBER;
+		header.bind.numBones = _bones.size();
+
+		string binName;
+		fstream binFile;
+		const char* theName = strrchr(_fileName.c_str(), '\\');
+		binName = strrchr(theName, theName[1]);
+		binName.pop_back();
+		binName.pop_back();
+		binName.pop_back();
+		binName.pop_back();
+		binName.append("_bindpose.bin");
+		binFile.open(binName.c_str(), std::ios::out | std::ios::binary);
+		if (binFile.is_open())
+		{
+			binFile.write((char*)&header, sizeof(FileInfo::ExporterHeader));
+			for (size_t i = 0; i < _bones.size(); i++)
+			{
+				Transform temp = _bones[i];
+				binFile.write((char*)&_bones[i], sizeof(Transform) * header.bind.numBones);
 			}
 		}
 		binFile.close();
