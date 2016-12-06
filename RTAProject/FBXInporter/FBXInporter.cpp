@@ -211,6 +211,7 @@ namespace FBXImporter
 	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy)
 	{
 		//int numDeformers = _inMesh->GetDeformerCount();
+		vector<FbxNode*> bonesVector;
 		FbxSkin* skin = (FbxSkin*)_inMesh->GetDeformer(0, FbxDeformer::eSkin);
 		if (skin != 0)
 		{
@@ -218,11 +219,9 @@ namespace FBXImporter
 			for (int boneIndex = 0; boneIndex < boneCount; boneIndex++)
 			{
 				Transform currBone;
-				Transform currBoneParent;
-				Transform currBoneChild;
-
 				FbxCluster* cluster = skin->GetCluster(boneIndex);
 				FbxNode* bone = cluster->GetLink();
+				currBone.SetName(bone->GetName());
 				
 				// Get bone matrix
 				FbxAMatrix wTransformMatrix = bone->EvaluateGlobalTransform();
@@ -243,9 +242,11 @@ namespace FBXImporter
 				}
 				*/
 				
-				SetBoneConnection(bone, currBone);
+				bonesVector.push_back(bone);
 				_transformHierarchy.push_back(currBone);
 			}
+
+			SetBoneConnection(bonesVector, _transformHierarchy);
 		}
 	}
 
@@ -279,49 +280,82 @@ namespace FBXImporter
 
 		return returnMatrix;
 	}
-	void SetBoneConnection(FbxNode* _currBone, Transform& _setBone)
-	{
-		FbxNode* parent = _currBone->GetParent();
-		FbxNode* child = _currBone->GetChild(0);
-		FbxNode* sibling = nullptr;
 
-		if (parent->GetChild(0)->GetName() != _currBone->GetName())
+	void SetBoneConnection(vector<FbxNode*> _boneVect, std::vector<Transform>& _transformHierarchy)
+	{
+		for (unsigned int i = 0; i < _boneVect.size(); ++i)
 		{
-			if (parent->GetChild(0))
-				sibling = parent->GetChild(0);
-		}
-		else
-		{
-			if (parent->GetChild(1))
-				sibling = parent->GetChild(1);
-		}
-		
-		// If this node is the root
-		if (!parent)
-		{
-			Transform* childTN = nullptr;
-			SetTransformNode(childTN,child);
-		}
-		else
-		{
+			FbxNode* parent = _boneVect[i]->GetParent();
+			FbxNode* child = _boneVect[i]->GetChild(0);
+			FbxNode* sibling = nullptr;
 			Transform* childTN = nullptr, *siblingTN = nullptr, *parentTN = nullptr;
 
-			SetTransformNode(parentTN, parent);
-			if (child)
-				SetTransformNode(childTN, child);
-			if (sibling)
-				SetTransformNode(siblingTN, sibling);
-		
+			// If this node is the root
+			const char* CHECK_NAME = _boneVect[i]->GetName();
+			if (_boneVect[i]->GetName()[0] == 'R')
+			{
+				if (child)
+				{
+					childTN = &CheckTransform(_transformHierarchy, child->GetName());
+					SetTransformNode((*childTN), child);
+					childTN->AddParent(&_transformHierarchy[i]);
+					_transformHierarchy[i].AddChild(childTN);
+				}
+			}
+			else
+			{
+				// Set parent
+				parentTN = &CheckTransform(_transformHierarchy, parent->GetName());
+				SetTransformNode((*parentTN), parent);
+				_transformHierarchy[i].AddParent(parentTN);
+
+				// Set the sibling
+				if (parent->GetChildCount() > 1)
+				{
+					if (parent->GetChild(0)->GetName()[0] == _boneVect[i]->GetName()[0])
+					{
+						if (parent->GetChild(1))
+							sibling = parent->GetChild(1);
+					}
+					else
+					{
+						if (parent->GetChild(0))
+							sibling = parent->GetChild(0);
+					}
+					siblingTN = &CheckTransform(_transformHierarchy, sibling->GetName());
+					SetTransformNode((*siblingTN), sibling);
+					_transformHierarchy[i].AddSibling(siblingTN);
+				}
+
+				// Set child
+				if (child)
+				{
+					childTN = &CheckTransform(_transformHierarchy, child->GetName());
+					SetTransformNode((*childTN), child);
+					childTN->AddParent(&_transformHierarchy[i]);
+					_transformHierarchy[i].AddChild(childTN);
+				}
+			}
 		}
 	}
-	void SetTransformNode(Transform* _transforms, FbxNode* _theNode)
+
+	void SetTransformNode(Transform& _transforms, FbxNode* _theNode)
 	{
-		//_transforms = new Transform();
-		//FbxAMatrix wTransformMatrix = _theNode->EvaluateGlobalTransform();
-		//FbxAMatrix lTransformMatrix = _theNode->EvaluateLocalTransform();
-		//_transforms->m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
-		//_transforms->m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
-		//_transforms->SetDirty(false);
-		//_transforms->SetName(_theNode->GetName());
+		FbxAMatrix wTransformMatrix = _theNode->EvaluateGlobalTransform();
+		FbxAMatrix lTransformMatrix = _theNode->EvaluateLocalTransform();
+		_transforms.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
+		_transforms.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
+		_transforms.SetDirty(false);
+		_transforms.SetName(_theNode->GetName());
+	}
+
+	Transform& CheckTransform(std::vector<Transform>& _transformHierarchy, const char* _id)
+	{
+		for (unsigned int i = 0; i < _transformHierarchy.size(); ++i)
+		{
+			if (_transformHierarchy[i].GetName() == _id)
+				return _transformHierarchy[i];
+		}
+		return _transformHierarchy[0];
 	}
 }// FBXImporter namespace

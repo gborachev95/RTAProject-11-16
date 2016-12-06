@@ -32,7 +32,9 @@ namespace FBXImporter
 	void ExportBinaryFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
 	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy);
 	XMMATRIX CreateXMMatrixFromFBXVectors(FbxVector4 _rotVec, FbxVector4 _translVec, FbxVector4 _scaleVec);
-	void SetBoneConnection(FbxNode* _currBone, Transform& _setBone);
-	void SetTransformNode(Transform* _transforms, FbxNode* _theNode);
+	void SetBoneConnection(vector<FbxNode*> _boneVect, std::vector<Transform>& _transformHierarchy);
+	void SetTransformNode(Transform& _transforms, FbxNode* _theNode);
+	Transform& CheckTransform(std::vector<Transform>& _transformHierarchy, const char* _id);
+
 
 }
