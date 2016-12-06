@@ -17,7 +17,7 @@ __declspec(align(16)) class Object
 	unsigned int                        m_numVerts;
 	unsigned int                        m_numIndicies;
 
-	vector<Transform>              m_bones;
+	vector<Transform>                   m_bones;
 
 	// Private methods that are called only inside of the class
 private:
@@ -46,6 +46,7 @@ public:
 	void SetWorldMatrix(XMMATRIX& _matrix);
 	void SetPosition(float _x, float _y, float _z);
 	// Loader
+	
 	void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
 	void LoadBinaryFile(std::string _filePath, vector<Transform>& _bones);
 	// Alligning by 16 bytes so we don't get a warning 

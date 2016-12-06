@@ -20,12 +20,12 @@ public:
 	}
 	~Transform()
 	{
-		if (m_child)
-			delete m_child;
-		if (m_parent)
-			delete m_parent;
-		if (m_sibling)
-			delete m_sibling;
+		//if (m_child)
+		//	delete m_child;
+		//if (m_parent)
+		//	delete m_parent;
+		//if (m_sibling)
+		//	delete m_sibling;
 	}
 	void AddChild(Transform* _child)
 	{
@@ -43,6 +43,7 @@ public:
 			m_parent = _parent;
 	};
 	void SetName(const char* _name) { m_name = _name; };
+	const char* GetName() { return m_name; };
 	void SetDirty(bool _dirty) { m_dirty = _dirty; };
 
 	// Alligning by 16 bytes so we don't get a warning 
