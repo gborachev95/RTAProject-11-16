@@ -16,7 +16,7 @@ __declspec(align(16)) class Object
 	unsigned int                       *m_indexList;
 	unsigned int                        m_numVerts;
 	unsigned int                        m_numIndicies;
-	vector<Transform>              m_bones;
+	vector<Transform>                   m_bones;
 
 	// Private methods that are called only inside of the class
 private:
