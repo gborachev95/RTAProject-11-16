@@ -59,6 +59,8 @@ namespace FBXImporter
 		TraverseScene(root, _vertecies, _indices, _transformHierarchy);
 		ExportBinaryFile(_fileName, _vertecies, _indices);
 
+		fbxScene->Destroy();
+		lSdkManager->Destroy();
 		//vector<KEYFRAME_DATA> temp;
 		//GetFrameData(fbxScene,temp);
 
@@ -269,7 +271,8 @@ namespace FBXImporter
 				*/
 				
 				currBone.parent = nullptr;
-				currBone.sibling = nullptr;
+				currBone.child = nullptr;
+				//SetBoneParents(bone,currBone);
 				_transformHierarchy.push_back(currBone);
 			}
 		}
@@ -305,4 +308,30 @@ namespace FBXImporter
 
 		return returnMatrix;
 	}
+
+	void SetBoneParents(FbxNode* _currBone, TRANSFORM_NODE& _setBone)
+	{
+		
+		//_currBone->GetChil
+		//FbxNode* parent = _currBone->GetParent();
+		//FbxNode* child = _currBone->GetChild(0);
+		//
+		//TRANSFORM_NODE* parentTN = new TRANSFORM_NODE();
+		//TRANSFORM_NODE*	childTN = new TRANSFORM_NODE();
+		//
+		//// Get bone matrix
+		//FbxAMatrix wTransformMatrix = parent->EvaluateGlobalTransform();
+		//FbxAMatrix lTransformMatrix = parent->EvaluateLocalTransform();
+		//childTN->worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
+		//childTN->localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
+		//
+		//
+		//wTransformMatrix = child->EvaluateGlobalTransform();
+		//lTransformMatrix = child->EvaluateLocalTransform();
+		//childTN->worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
+		//childTN->localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
+		//
+		//_setBone.child = childTN;
+		//_setBone.parent = parentTN;
+ 	}
 }// FBXImporter namespace

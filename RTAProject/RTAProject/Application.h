@@ -2,7 +2,7 @@
 #include "includes.h"
 #include "Object.h"
 
-	class Application
+ class Application
 	{
 	private:
 		// Window handles

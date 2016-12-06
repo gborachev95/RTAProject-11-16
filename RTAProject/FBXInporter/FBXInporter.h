@@ -23,7 +23,7 @@ namespace FBXImporter
 	struct TRANSFORM_NODE
 	{
 		TRANSFORM_NODE* parent;
-		TRANSFORM_NODE *sibling;
+		TRANSFORM_NODE* child;
 		XMMATRIX localMatrix;
 		XMMATRIX worldMatrix;
 	};
@@ -42,6 +42,6 @@ namespace FBXImporter
 	void ExportBinaryFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
 	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<TRANSFORM_NODE>& _transformHierarchy);
 	XMMATRIX CreateXMMatrixFromFBXVectors(FbxVector4 _rotVec, FbxVector4 _translVec, FbxVector4 _scaleVec);
-
+	void SetBoneParents(FbxNode* _currBone, TRANSFORM_NODE& _setBone);
 
 }

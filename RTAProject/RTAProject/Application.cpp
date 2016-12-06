@@ -279,15 +279,15 @@ void Application::LoadObjects()
 	m_fbxTest.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Testbox\\Box_Idle.fbx", fbXpos, 0);
 	m_fbxTest.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\TestCubeTexture.dds");
 	// Setiing the bones of the test object
-	//m_testBones = m_fbxTest.GetFBXBones();
-	//for (unsigned int i = 0; i < m_testBones.size(); ++i)
-	//{
-	//	XMFLOAT3 bonePos = XMFLOAT3(m_testBones[i].worldMatrix.r[3].m128_f32[0], m_testBones[i].worldMatrix.r[3].m128_f32[1], m_testBones[i].worldMatrix.r[3].m128_f32[2]);
-	//	bonePos = XMFLOAT3(bonePos.x + fbXpos.x, bonePos.y + fbXpos.y, bonePos.z + fbXpos.z);
-	//	Object* bone = new Object();
-	//	bone->InstantiateModel(m_device, "..\\RTAProject\\Assets\\boneSphere.obj", bonePos, 0);
-	//	m_bonesVec.push_back(bone);
-	//}
+	m_testBones = m_fbxTest.GetFBXBones();
+	for (unsigned int i = 0; i < m_testBones.size(); ++i)
+	{
+		XMFLOAT3 bonePos = XMFLOAT3(m_testBones[i].worldMatrix.r[3].m128_f32[0], m_testBones[i].worldMatrix.r[3].m128_f32[1], m_testBones[i].worldMatrix.r[3].m128_f32[2]);
+		bonePos = XMFLOAT3(bonePos.x + fbXpos.x, bonePos.y + fbXpos.y, bonePos.z + fbXpos.z);
+		Object* bone = new Object();
+		bone->InstantiateModel(m_device, "..\\RTAProject\\Assets\\boneSphere.obj", bonePos, 0);
+		m_bonesVec.push_back(bone);
+	}
 
 	XMFLOAT3 fbxPos2{ 5.0f, 0.0f, 0.0f };
 	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Walk.fbx", fbxPos2, 0);
@@ -502,3 +502,4 @@ void Application::InitilizeLights()
 	m_spotLightToShader.color.b = 1.0f;
 	m_spotLightToShader.color.a = 1.0f;
 }
+

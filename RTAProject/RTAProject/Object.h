@@ -1,7 +1,7 @@
 #pragma once
 #include "includes.h"
 
-class Object
+__declspec(align(16)) class Object
 {
 	// Graphics variables
 	CComPtr<ID3D11Buffer>              m_indexBuffer;
@@ -45,4 +45,15 @@ public:
 	void SetPosition(float _x, float _y, float _z);
 	// Loader
 	void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy);
+
+	// Alligning by 16 bytes so we don't get a warning 
+	void* operator new(size_t i)
+	{
+		return _mm_malloc(i,16);
+	}
+
+		void operator delete(void* p)
+	{
+		_mm_free(p);
+	}
 };
