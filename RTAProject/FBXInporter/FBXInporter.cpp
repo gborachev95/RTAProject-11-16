@@ -153,36 +153,36 @@ namespace FBXImporter
 		}
 	}
 
-	void GetDataFromSkeleton(FbxNode* _inNode, std::vector<TRANSFORM_NODE>& _transformHierarchy)
-	{
-		FbxSkeleton* currSkeleton = _inNode->GetSkeleton();
-		FbxSkeleton::EType type = currSkeleton->GetSkeletonType();
-		int boneSize = currSkeleton->GetNodeCount();
-
-		for (int i = 0; i < boneSize; ++i)
-		{
-			TRANSFORM_NODE tranformNode;
-			FbxNode* bone = currSkeleton->GetNode(i);
-
-			// Getting the local matrix
-			FbxVector4 lRotationVector = bone->GetGeometricRotation(FbxNode::EPivotSet::eSourcePivot);
-			FbxVector4 lScaleVector = bone->GetGeometricScaling(FbxNode::EPivotSet::eSourcePivot);
-			FbxVector4 lTranslationVector = bone->GetGeometricTranslation(FbxNode::EPivotSet::eSourcePivot);
-			XMMATRIX localMatrix = CreateXMMatrixFromFBXVectors(lRotationVector, lTranslationVector, lScaleVector);
-
-			// Getting the global matrix
-			FbxVector4 wRotationVector = bone->GetGeometricRotation(FbxNode::EPivotSet::eDestinationPivot);
-			FbxVector4 wScaleVector = bone->GetGeometricScaling(FbxNode::EPivotSet::eDestinationPivot);
-			FbxVector4 wTranslationVector = bone->GetGeometricTranslation(FbxNode::EPivotSet::eDestinationPivot);
-			XMMATRIX worldMatrix = CreateXMMatrixFromFBXVectors(wRotationVector, wTranslationVector, wScaleVector);;
-
-			tranformNode.localMatrix = localMatrix;
-			tranformNode.worldMatrix = worldMatrix;
-			//bone->GetParent();
-			_transformHierarchy.push_back(tranformNode);
-		}
-
-	} // Get the bones function
+	//void GetDataFromSkeleton(FbxNode* _inNode, std::vector<TRANSFORM_NODE>& _transformHierarchy)
+	//{
+	//	FbxSkeleton* currSkeleton = _inNode->GetSkeleton();
+	//	FbxSkeleton::EType type = currSkeleton->GetSkeletonType();
+	//	int boneSize = currSkeleton->GetNodeCount();
+	//
+	//	for (int i = 0; i < boneSize; ++i)
+	//	{
+	//		TRANSFORM_NODE tranformNode;
+	//		FbxNode* bone = currSkeleton->GetNode(i);
+	//
+	//		// Getting the local matrix
+	//		FbxVector4 lRotationVector = bone->GetGeometricRotation(FbxNode::EPivotSet::eSourcePivot);
+	//		FbxVector4 lScaleVector = bone->GetGeometricScaling(FbxNode::EPivotSet::eSourcePivot);
+	//		FbxVector4 lTranslationVector = bone->GetGeometricTranslation(FbxNode::EPivotSet::eSourcePivot);
+	//		XMMATRIX localMatrix = CreateXMMatrixFromFBXVectors(lRotationVector, lTranslationVector, lScaleVector);
+	//
+	//		// Getting the global matrix
+	//		FbxVector4 wRotationVector = bone->GetGeometricRotation(FbxNode::EPivotSet::eDestinationPivot);
+	//		FbxVector4 wScaleVector = bone->GetGeometricScaling(FbxNode::EPivotSet::eDestinationPivot);
+	//		FbxVector4 wTranslationVector = bone->GetGeometricTranslation(FbxNode::EPivotSet::eDestinationPivot);
+	//		XMMATRIX worldMatrix = CreateXMMatrixFromFBXVectors(wRotationVector, wTranslationVector, wScaleVector);;
+	//
+	//		tranformNode.localMatrix = localMatrix;
+	//		tranformNode.worldMatrix = worldMatrix;
+	//		//bone->GetParent();
+	//		_transformHierarchy.push_back(tranformNode);
+	//	}
+	//
+	//} // Get the bones function
 
 	void GetFrameData(FbxScene* _inScene, std::vector<KEYFRAME_DATA>& _frameData)
 	{
@@ -198,13 +198,41 @@ namespace FBXImporter
 			currKey.endTime = (float)animTime.GetStop().GetMilliSeconds();
 			currKey.durationTime = (float)animTime.GetDuration().GetMilliSeconds();
 
-			// Getting the bones possitions
-			//int numFrames = animStack->GetMemberCount();
-			//for (int iFrame = 0; iFrame < numFrames; ++iFrame)
-			//{
-				//FbxObject *frame = animStack->GetMember(iFrame);
+			// Getting the bones positions
+			int numFrames = animStack->GetMemberCount();
+			for (int iFrame = 0; iFrame < numFrames; ++iFrame)
+			{
+				FbxObject *frame = animStack->GetMember(iFrame);
+				FbxAnimLayer *animLayer = (FbxAnimLayer*)animStack->GetMember(iFrame);
+				
+				//animLayer->
+				//FbxAnimCurve *translationCurve = fbxNode->LclTranslation.GetCurve(animLayer);
+				//FbxAnimCurve *rotationCurve = fbxNode->LclRotation.GetCurve(animLayer);
+				//FbxAnimCurve *scalingCurve = fbxNode->LclScaling.GetCurve(animLayer);
 
-			//}
+				//if (scalingCurve != 0)
+				//{
+				//	int numKeys = scalingCurve->KeyGetCount();
+				//	for (int keyIndex = 0; keyIndex < numKeys; keyIndex++)
+				//	{
+				//		FbxTime frameTime = scalingCurve->KeyGetTime(keyIndex);
+				//		FbxDouble3 scalingVector = fbxNode->EvaluateLocalScaling(frameTime);
+				//		float x = (float)scalingVector[0];
+				//		float y = (float)scalingVector[1];
+				//		float z = (float)scalingVector[2];
+				//
+				//		float frameSeconds = (float)frameTime.GetSecondDouble(); // If needed, get the time of the scaling keyframe, in seconds
+				//	}
+				//}
+				// else
+				//{
+				//	// If this animation layer has no scaling curve, then use the default one, if needed
+				//	FbxDouble3 scalingVector = fbxNode->LclScaling.Get();
+				//	float x = (float)scalingVector[0];
+				//	float y = (float)scalingVector[1];
+				//	float z = (float)scalingVector[2];
+				//}			    
+			}
 			_frameData.push_back(currKey);
 		}
 	}
@@ -251,18 +279,10 @@ namespace FBXImporter
 
 	void ExportBinaryFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices)
 	{
-		//Initializing header for exporting
-		ExporterHeader header(FILE_TYPES::MESH, _fileName.c_str());
-		header.mesh.numIndex = _indices.size();
-		header.mesh.numPoints = _vertecies.size();
-		header.mesh.index = INDEX_TYPES::TRI_STRIP;
-		header.mesh.vertSize = sizeof(VERTEX);
-
 		fstream binFile;
-		binFile.open("FBXBinary.bin", std::ios::out | std::ios::binary);
+		binFile.open("..\\RTAProject\\FBXBinary.bin", std::ios::out | std::ios::binary);
 		if (binFile.is_open())
 		{
-			binFile.write((char*)&header, sizeof(ExporterHeader));
 			for (size_t i = 0; i < _vertecies.size(); i++)
 			{
 				binFile.write((char*)&_vertecies[i], sizeof(VERTEX));
