@@ -251,13 +251,14 @@ namespace FBXImporter
 				TRANSFORM_NODE currBone;
 				FbxCluster* cluster = skin->GetCluster(boneIndex);
 				FbxNode* bone = cluster->GetLink();
-
+				
 				// Get bone matrix
 				FbxAMatrix wTransformMatrix = bone->EvaluateGlobalTransform();
 				FbxAMatrix lTransformMatrix = bone->EvaluateLocalTransform();
 
 				currBone.worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
 				currBone.localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
+
 				/*
 				int *boneVertexIndices = cluster->GetControlPointIndices();
 				double *boneVertexWeights = cluster->GetControlPointWeights();
@@ -270,7 +271,8 @@ namespace FBXImporter
 				}
 				*/
 				
-				currBone.parent = nullptr;
+				
+				//currBone.parent = bone->GetParent()->;
 				currBone.child = nullptr;
 				//SetBoneParents(bone,currBone);
 				_transformHierarchy.push_back(currBone);
