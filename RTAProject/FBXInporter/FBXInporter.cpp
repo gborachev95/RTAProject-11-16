@@ -211,7 +211,7 @@ namespace FBXImporter
 
 	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<TRANSFORM_NODE>& _transformHierarchy)
 	{
-		int numDeformers = _inMesh->GetDeformerCount();
+		//int numDeformers = _inMesh->GetDeformerCount();
 		FbxSkin* skin = (FbxSkin*)_inMesh->GetDeformer(0, FbxDeformer::eSkin);
 		if (skin != 0)
 		{
@@ -228,7 +228,7 @@ namespace FBXImporter
 
 				currBone.worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
 				currBone.localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
-
+				/*
 				int *boneVertexIndices = cluster->GetControlPointIndices();
 				double *boneVertexWeights = cluster->GetControlPointWeights();
 				// Iterate through all the vertices, which are affected by the bone
@@ -238,7 +238,8 @@ namespace FBXImporter
 					int boneVertIndex = boneVertexIndices[boneVertexIndex];
 					float boneWeight = (float)boneVertexWeights[boneVertexIndex];
 				}
-
+				*/
+				
 				currBone.parent = nullptr;
 				currBone.sibling = nullptr;
 				_transformHierarchy.push_back(currBone);
@@ -278,9 +279,9 @@ namespace FBXImporter
 		XMVECTOR sVec = { (float)_scaleVec.mData[0], (float)_scaleVec.mData[1], (float)_scaleVec.mData[2], (float)_scaleVec.mData[3] };
 		XMVECTOR rVec = { (float)_rotVec.mData[0], (float)_rotVec.mData[1], (float)_rotVec.mData[2], (float)_rotVec.mData[3] };
 		XMVECTOR tVec = { (float)_translVec.mData[0], (float)_translVec.mData[1], (float)_translVec.mData[2], (float)_translVec.mData[3] };
-		returnMatrix = XMMatrixScalingFromVector(sVec) * returnMatrix;
-		returnMatrix = XMMatrixRotationRollPitchYawFromVector(rVec) * returnMatrix;
 		returnMatrix = XMMatrixTranslationFromVector(tVec) * returnMatrix;
+		returnMatrix = XMMatrixRotationRollPitchYawFromVector(rVec) * returnMatrix;
+		returnMatrix = XMMatrixScalingFromVector(sVec) * returnMatrix;
 
 		return returnMatrix;
 	}

@@ -290,7 +290,7 @@ void Application::LoadObjects()
 	//}
 
 	XMFLOAT3 fbxPos2{ 5.0f, 0.0f, 0.0f };
-	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Idle.fbx", fbxPos2, 0);
+	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Walk.fbx", fbxPos2, 0);
 	//XMMATRIX rotMatrix = XMMatrixMultiply(XMMatrixRotationY(3.141f), m_fbxMage.GetWorldMatrix());
 	//m_fbxMage.SetWorldMatrix(rotMatrix);
 	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds");
