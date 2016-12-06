@@ -81,19 +81,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Animation.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
+    <ClCompile Include="KeyFrame.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Object.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\FBXInporter\ExporterHeader.h" />
+    <ClInclude Include="Animation.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="DLLLoader.h" />
     <ClInclude Include="FBXDLL.h" />
     <ClInclude Include="includes.h" />
+    <ClInclude Include="KeyFrame.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="Transform.h" />
