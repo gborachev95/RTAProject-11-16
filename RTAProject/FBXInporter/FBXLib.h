@@ -3,7 +3,7 @@
 #include <vector>
 
 struct VERTEX;
-struct TRANSFORM_NODE;
+class Transform;
 
 #ifdef FBXImorter_EXPORTS  
 #define FBXImporter_API __declspec(dllimport)   
@@ -15,6 +15,6 @@ struct TRANSFORM_NODE;
 extern "C"
 namespace FBXImporter
 {
-	FBXImporter_API int LoadFBXFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy);
+	FBXImporter_API int LoadFBXFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<Transform>& _transformHierarchy);
 }
 #endif

@@ -12,7 +12,7 @@ namespace FBXImporter
 	[out] A container of all the joint transforms found. As these will all be in the same
 	hierarchy, you may only need the root instead of a list of all nodes.
 	*/
-	int LoadFBXFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy)
+	int LoadFBXFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<Transform>& _transformHierarchy)
 	{
 		// Change the following filename to a suitable filename value.
 		const char* lFilename = _fileName.c_str();
@@ -58,6 +58,7 @@ namespace FBXImporter
 
 		TraverseScene(root, _vertecies, _indices, _transformHierarchy);
 		ExportBinaryFile(_fileName, _vertecies, _indices);
+		ExportBinaryFile(_fileName, _transformHierarchy);
 
 		fbxScene->Destroy();
 		lSdkManager->Destroy();
@@ -67,7 +68,7 @@ namespace FBXImporter
 		return 0;
 	}
 
-	void TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy)
+	void TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<Transform>& _transformHierarchy)
 	{
 		int childCount = 0;
 		// Exit Contidion
@@ -89,7 +90,7 @@ namespace FBXImporter
 		}
 	}
 
-	void GetDataFromMesh(FbxNode* _inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indicies, std::vector<TRANSFORM_NODE>& _transformHierarchy)
+	void GetDataFromMesh(FbxNode* _inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indicies, std::vector<Transform>& _transformHierarchy)
 	{
 
 		FbxMesh* currMesh = _inNode->GetMesh();
@@ -156,37 +157,6 @@ namespace FBXImporter
 		}
 	}
 
-	//void GetDataFromSkeleton(FbxNode* _inNode, std::vector<TRANSFORM_NODE>& _transformHierarchy)
-	//{
-	//	FbxSkeleton* currSkeleton = _inNode->GetSkeleton();
-	//	FbxSkeleton::EType type = currSkeleton->GetSkeletonType();
-	//	int boneSize = currSkeleton->GetNodeCount();
-	//
-	//	for (int i = 0; i < boneSize; ++i)
-	//	{
-	//		TRANSFORM_NODE tranformNode;
-	//		FbxNode* bone = currSkeleton->GetNode(i);
-	//
-	//		// Getting the local matrix
-	//		FbxVector4 lRotationVector = bone->GetGeometricRotation(FbxNode::EPivotSet::eSourcePivot);
-	//		FbxVector4 lScaleVector = bone->GetGeometricScaling(FbxNode::EPivotSet::eSourcePivot);
-	//		FbxVector4 lTranslationVector = bone->GetGeometricTranslation(FbxNode::EPivotSet::eSourcePivot);
-	//		XMMATRIX localMatrix = CreateXMMatrixFromFBXVectors(lRotationVector, lTranslationVector, lScaleVector);
-	//
-	//		// Getting the global matrix
-	//		FbxVector4 wRotationVector = bone->GetGeometricRotation(FbxNode::EPivotSet::eDestinationPivot);
-	//		FbxVector4 wScaleVector = bone->GetGeometricScaling(FbxNode::EPivotSet::eDestinationPivot);
-	//		FbxVector4 wTranslationVector = bone->GetGeometricTranslation(FbxNode::EPivotSet::eDestinationPivot);
-	//		XMMATRIX worldMatrix = CreateXMMatrixFromFBXVectors(wRotationVector, wTranslationVector, wScaleVector);;
-	//
-	//		tranformNode.localMatrix = localMatrix;
-	//		tranformNode.worldMatrix = worldMatrix;
-	//		//bone->GetParent();
-	//		_transformHierarchy.push_back(tranformNode);
-	//	}
-	//
-	//} // Get the bones function
-
 	void GetFrameData(FbxScene* _inScene, std::vector<KEYFRAME_DATA>& _frameData)
 	{
 		int numAnimStacks = _inScene->GetSrcObjectCount<FbxAnimStack>();
@@ -240,7 +210,7 @@ namespace FBXImporter
 		}
 	}
 
-	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<TRANSFORM_NODE>& _transformHierarchy)
+	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy)
 	{
 		//int numDeformers = _inMesh->GetDeformerCount();
 		FbxSkin* skin = (FbxSkin*)_inMesh->GetDeformer(0, FbxDeformer::eSkin);
@@ -249,7 +219,10 @@ namespace FBXImporter
 			int boneCount = skin->GetClusterCount();
 			for (int boneIndex = 0; boneIndex < boneCount; boneIndex++)
 			{
-				TRANSFORM_NODE currBone;
+				Transform currBone;
+				Transform currBoneParent;
+				Transform currBoneChild;
+
 				FbxCluster* cluster = skin->GetCluster(boneIndex);
 				FbxNode* bone = cluster->GetLink();
 				
@@ -257,8 +230,8 @@ namespace FBXImporter
 				FbxAMatrix wTransformMatrix = bone->EvaluateGlobalTransform();
 				FbxAMatrix lTransformMatrix = bone->EvaluateLocalTransform();
 
-				currBone.worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
-				currBone.localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
+				currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
+				currBone.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
 
 				/*
 				int *boneVertexIndices = cluster->GetControlPointIndices();
@@ -272,10 +245,7 @@ namespace FBXImporter
 				}
 				*/
 				
-				
-				//currBone.parent = bone->GetParent()->;
-				currBone.child = nullptr;
-				//SetBoneParents(bone,currBone);
+				SetBoneConnection(bone, currBone);
 				_transformHierarchy.push_back(currBone);
 			}
 		}
@@ -291,8 +261,16 @@ namespace FBXImporter
 		header.mesh.vertSize = sizeof(VERTEX);
 		header.mesh.index = FileInfo::INDEX_TYPES::TRI_STRIP;
 
+		string binName;
 		fstream binFile;
-		binFile.open("..\\RTAProject\\FBXBinary.bin", std::ios::out | std::ios::binary);
+		const char* theName = strrchr(_fileName.c_str(), '\\');
+		binName = strrchr(theName, theName[1]);
+		binName.pop_back();
+		binName.pop_back();
+		binName.pop_back();
+		binName.pop_back();
+		binName.append("_mesh.bin");
+		binFile.open(binName.c_str(), std::ios::out | std::ios::binary);
 		if (binFile.is_open())
 		{
 			binFile.write((char*)&header, sizeof(FileInfo::ExporterHeader));
@@ -310,6 +288,34 @@ namespace FBXImporter
 		binFile.close();
 	}
 
+	void ExportBinaryFile(const string & _fileName, vector<Transform> _bones)
+	{
+		ExporterHeader header(FileInfo::FILE_TYPES::BIND_POSE, _fileName.c_str());
+		header.version = EXPORTER_VERSION_NUMBER;
+		header.bind.numBones = _bones.size();
+
+		string binName;
+		fstream binFile;
+		const char* theName = strrchr(_fileName.c_str(), '\\');
+		binName = strrchr(theName, theName[1]);
+		binName.pop_back();
+		binName.pop_back();
+		binName.pop_back();
+		binName.pop_back();
+		binName.append("_bindpose.bin");
+		binFile.open(binName.c_str(), std::ios::out | std::ios::binary);
+		if (binFile.is_open())
+		{
+			binFile.write((char*)&header, sizeof(FileInfo::ExporterHeader));
+			for (size_t i = 0; i < _bones.size(); i++)
+			{
+				Transform temp = _bones[i];
+				binFile.write((char*)&_bones[i], sizeof(Transform) * header.bind.numBones);
+			}
+		}
+		binFile.close();
+	}
+
 	XMMATRIX CreateXMMatrixFromFBXVectors(FbxVector4 _rotVec, FbxVector4 _translVec, FbxVector4 _scaleVec)
 	{
 		XMMATRIX returnMatrix = XMMatrixIdentity();
@@ -322,30 +328,49 @@ namespace FBXImporter
 
 		return returnMatrix;
 	}
-
-	void SetBoneParents(FbxNode* _currBone, TRANSFORM_NODE& _setBone)
+	void SetBoneConnection(FbxNode* _currBone, Transform& _setBone)
 	{
+		FbxNode* parent = _currBone->GetParent();
+		FbxNode* child = _currBone->GetChild(0);
+		FbxNode* sibling = nullptr;
+
+		if (parent->GetChild(0)->GetName() != _currBone->GetName())
+		{
+			if (parent->GetChild(0))
+				sibling = parent->GetChild(0);
+		}
+		else
+		{
+			if (parent->GetChild(1))
+				sibling = parent->GetChild(1);
+		}
 		
-		//_currBone->GetChil
-		//FbxNode* parent = _currBone->GetParent();
-		//FbxNode* child = _currBone->GetChild(0);
-		//
-		//TRANSFORM_NODE* parentTN = new TRANSFORM_NODE();
-		//TRANSFORM_NODE*	childTN = new TRANSFORM_NODE();
-		//
-		//// Get bone matrix
-		//FbxAMatrix wTransformMatrix = parent->EvaluateGlobalTransform();
-		//FbxAMatrix lTransformMatrix = parent->EvaluateLocalTransform();
-		//childTN->worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
-		//childTN->localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
-		//
-		//
-		//wTransformMatrix = child->EvaluateGlobalTransform();
-		//lTransformMatrix = child->EvaluateLocalTransform();
-		//childTN->worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
-		//childTN->localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
-		//
-		//_setBone.child = childTN;
-		//_setBone.parent = parentTN;
- 	}
+		// If this node is the root
+		if (!parent)
+		{
+			Transform* childTN = nullptr;
+			SetTransformNode(childTN,child);
+		}
+		else
+		{
+			Transform* childTN = nullptr, *siblingTN = nullptr, *parentTN = nullptr;
+
+			SetTransformNode(parentTN, parent);
+			if (child)
+				SetTransformNode(childTN, child);
+			if (sibling)
+				SetTransformNode(siblingTN, sibling);
+		
+		}
+	}
+	void SetTransformNode(Transform* _transforms, FbxNode* _theNode)
+	{
+		//_transforms = new Transform();
+		//FbxAMatrix wTransformMatrix = _theNode->EvaluateGlobalTransform();
+		//FbxAMatrix lTransformMatrix = _theNode->EvaluateLocalTransform();
+		//_transforms->m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
+		//_transforms->m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
+		//_transforms->SetDirty(false);
+		//_transforms->SetName(_theNode->GetName());
+	}
 }// FBXImporter namespace

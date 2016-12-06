@@ -16,7 +16,8 @@ __declspec(align(16)) class Object
 	unsigned int                       *m_indexList;
 	unsigned int                        m_numVerts;
 	unsigned int                        m_numIndicies;
-	vector<TRANSFORM_NODE>              m_bones;
+
+	vector<Transform>              m_bones;
 
 	// Private methods that are called only inside of the class
 private:
@@ -38,14 +39,15 @@ public:
 	void TextureObject(ID3D11Device* _device, const wchar_t*  _filePath);
 	// Getters
 	XMMATRIX GetWorldMatrix();
-	vector<TRANSFORM_NODE> GetFBXBones();
+
+	vector<Transform> GetFBXBones();
 	// Setters
 	void SetShaderResourceView(CComPtr<ID3D11ShaderResourceView> _shader);
 	void SetWorldMatrix(XMMATRIX& _matrix);
 	void SetPosition(float _x, float _y, float _z);
 	// Loader
-	void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _bones);
-
+	void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
+	void LoadBinaryFile(std::string _filePath, vector<Transform>& _bones);
 	// Alligning by 16 bytes so we don't get a warning 
 	void* operator new(size_t i)
 	{

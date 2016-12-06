@@ -3,6 +3,7 @@
 #include <DirectXMath.h>
 #include <vector>
 #include "ExporterHeader.h"
+#include "..\RTAProject\Transform.h"
 
 using namespace FileInfo;
 using namespace DirectX;
@@ -20,13 +21,6 @@ namespace FBXImporter
 		XMFLOAT3 shine;
 	};
 
-	struct TRANSFORM_NODE
-	{
-		TRANSFORM_NODE* parent;
-		TRANSFORM_NODE* child;
-		XMMATRIX localMatrix;
-		XMMATRIX worldMatrix;
-	};
 
 	struct KEYFRAME_DATA
 	{
@@ -34,17 +28,17 @@ namespace FBXImporter
 		vector<XMMATRIX> bones;
 	};
 
-
 	
-
-	void TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy);
-	void GetDataFromMesh(FbxNode* inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, std::vector<TRANSFORM_NODE>& _transformHierarchy);
-	void GetDataFromSkeleton(FbxNode* _inNode, std::vector<TRANSFORM_NODE>& _transformHierarchy);	
-	//void GetFrameData(FbxScene* _inScene, std::vector<KEYFRAME_DATA>& _frameData);
+	void TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<Transform>& _transformHierarchy);
+	void GetDataFromMesh(FbxNode* inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, std::vector<Transform>& _transformHierarchy);
 	//typedef bool(*ExportBinaryFile)(ExporterHeader _header, const string & _fileName);
 	void ExportBinaryFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
-	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<TRANSFORM_NODE>& _transformHierarchy);
+	void ExportBinaryFile(const string & _fileName, vector<Transform> _bones);
+
+	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy);
 	XMMATRIX CreateXMMatrixFromFBXVectors(FbxVector4 _rotVec, FbxVector4 _translVec, FbxVector4 _scaleVec);
-	void SetBoneParents(FbxNode* _currBone, TRANSFORM_NODE& _setBone);
+	
+	void SetBoneConnection(FbxNode* _currBone, Transform& _setBone);
+	void SetTransformNode(Transform* _transforms, FbxNode* _theNode);
 
 }

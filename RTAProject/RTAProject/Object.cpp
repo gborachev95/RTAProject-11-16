@@ -41,7 +41,11 @@ void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOA
 
 	
 	LoadFBXFile(_filePath, temp_vertices, vertexIndices, m_bones);
-	LoadBinaryFile(_filePath, temp_vertices, vertexIndices, m_bones);
+	temp_vertices.clear();
+	vertexIndices.clear();
+	m_bones.clear();
+	LoadBinaryFile(_filePath, temp_vertices, vertexIndices);
+	LoadBinaryFile(_filePath, m_bones);
 
 	// Setting the members
 	m_numVerts = temp_vertices.size();
@@ -339,15 +343,25 @@ void Object::CreateConstBuffer(ID3D11Device* _device)
 	_device->CreateBuffer(&constBufferDesc, NULL, &m_constBuffer.p);
 }
 
-void Object::LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _bones)
+
+void Object::LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices)
 {
 	FILE* file = nullptr;
 	FileInfo::ExporterHeader header;
 	fstream binFile;
 
-	if (header.ReadHeader(&file, "FBXBinary.bin", _filePath.c_str()))
+	string binName;
+	const char* theName = strrchr(_filePath.c_str(), '\\');
+	binName = strrchr(theName, theName[1]);
+	binName.pop_back();
+	binName.pop_back();
+	binName.pop_back();
+	binName.pop_back();
+	binName.append("_mesh.bin");
+
+	if (header.ReadHeader(&file, binName.c_str(), _filePath.c_str()))
 	{
-		binFile.open("FBXBinary.bin", std::ios::in | std::ios::binary);
+		binFile.open(binName.c_str(), std::ios::in | std::ios::binary);
 		if (binFile.is_open())
 		{
 			binFile.seekp(sizeof(FileInfo::ExporterHeader), ios::beg);
@@ -358,24 +372,39 @@ void Object::LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, v
 		}
 		binFile.close();
 	}
-	//else
-	//{
-	//	LoadFBXFile(_filePath, _vertecies, _indices, _bones);
-	//	binFile.open("FBXBinary.bin", std::ios::in | std::ios::binary);
-	//	if (binFile.is_open())
-	//	{
-	//		binFile.seekp(sizeof(FileInfo::ExporterHeader), ios::beg);
-	//		_vertecies.resize(header.mesh.numPoints);
-	//		binFile.read((char*)&_vertecies[0], (header.mesh.numPoints * header.mesh.vertSize));
-	//		_indices.resize(header.mesh.numIndex);
-	//		binFile.read((char*)&_indices[0], (header.mesh.numIndex * sizeof(unsigned int)));
-	//	}
-	//	binFile.close();
-	//}
+}
+
+void Object::LoadBinaryFile(std::string _filePath, vector<Transform>& _bones)
+{
+	FILE* file = nullptr;
+	FileInfo::ExporterHeader header;
+	fstream binFile;
+	string binName;
+
+	const char* theName = strrchr(_filePath.c_str(), '\\');
+	binName = strrchr(theName, theName[1]);
+	binName.pop_back();
+	binName.pop_back();
+	binName.pop_back();
+	binName.pop_back();
+	binName.append("_bindpose.bin");
+
+	if (header.ReadHeader(&file, binName.c_str(), _filePath.c_str()))
+	{
+		binFile.open(binName.c_str(), std::ios::in | std::ios::binary);
+		if (binFile.is_open())
+		{
+			binFile.seekp(sizeof(FileInfo::ExporterHeader), ios::beg);
+			_bones.resize(header.bind.numBones);
+			binFile.read((char*)&_bones[0], header.bind.numBones * sizeof(Transform));
+		}
+		binFile.close();
+	}
 }
 
 
-vector<TRANSFORM_NODE> Object::GetFBXBones()
+
+vector<Transform> Object::GetFBXBones()
 {
 	return m_bones;
 }

@@ -282,7 +282,7 @@ void Application::LoadObjects()
 	m_testBones = m_fbxTest.GetFBXBones();
 	for (unsigned int i = 0; i < m_testBones.size(); ++i)
 	{
-		XMFLOAT3 bonePos = XMFLOAT3(m_testBones[i].worldMatrix.r[3].m128_f32[0], m_testBones[i].worldMatrix.r[3].m128_f32[1], m_testBones[i].worldMatrix.r[3].m128_f32[2]);
+		XMFLOAT3 bonePos = XMFLOAT3(m_testBones[i].m_worldMatrix.r[3].m128_f32[0], m_testBones[i].m_worldMatrix.r[3].m128_f32[1], m_testBones[i].m_worldMatrix.r[3].m128_f32[2]);
 		bonePos = XMFLOAT3(bonePos.x + fbXpos.x, bonePos.y + fbXpos.y, bonePos.z + fbXpos.z);
 		Object* bone = new Object();
 		bone->InstantiateModel(m_device, "..\\RTAProject\\Assets\\boneSphere.obj", bonePos, 0);
@@ -297,7 +297,7 @@ void Application::LoadObjects()
 	m_testBones = m_fbxMage.GetFBXBones();
 	for (unsigned int i = 0; i < m_testBones.size(); ++i)
 	{
-		XMFLOAT3 bonePos = XMFLOAT3(m_testBones[i].worldMatrix.r[3].m128_f32[0], m_testBones[i].worldMatrix.r[3].m128_f32[1], m_testBones[i].worldMatrix.r[3].m128_f32[2]);
+		XMFLOAT3 bonePos = XMFLOAT3(m_testBones[i].m_worldMatrix.r[3].m128_f32[0], m_testBones[i].m_worldMatrix.r[3].m128_f32[1], m_testBones[i].m_worldMatrix.r[3].m128_f32[2]);
 		bonePos = XMFLOAT3(bonePos.x + fbxPos2.x, bonePos.y + fbxPos2.y, bonePos.z + fbxPos2.z);
 		Object* bone = new Object();
 		bone->InstantiateModel(m_device, "..\\RTAProject\\Assets\\boneSphere.obj", bonePos, 0);

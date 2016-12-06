@@ -16,6 +16,7 @@
 
 // Application includes
 #include "..\FBXInporter\ExporterHeader.h"
+#include "Transform.h"
 
 // Defines
 #define WINDOW_HEIGHT 700
@@ -81,12 +82,4 @@ struct LIGHT_TO_VRAM
 	COLOR    color;
 	bool     status;
 	bool     padding[3];
-};
-
-struct TRANSFORM_NODE
-{
-	TRANSFORM_NODE* parent;
-	TRANSFORM_NODE *sibling;
-	XMMATRIX localMatrix;
-	XMMATRIX worldMatrix;
 };
