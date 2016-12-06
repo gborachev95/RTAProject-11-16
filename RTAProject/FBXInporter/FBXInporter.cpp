@@ -278,7 +278,7 @@ namespace FBXImporter
 	void ExportBinaryFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices)
 	{
 		fstream binFile;
-		binFile.open("..\RTAProject\FBXBinary.bin", std::ios::out | std::ios::binary);
+		binFile.open("..\\RTAProject\\FBXBinary.bin", std::ios::out | std::ios::binary);
 		if (binFile.is_open())
 		{
 			for (size_t i = 0; i < _vertecies.size(); i++)
