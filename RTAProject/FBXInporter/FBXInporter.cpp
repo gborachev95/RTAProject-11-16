@@ -93,6 +93,7 @@ namespace FBXImporter
 	{
 
 		FbxMesh* currMesh = _inNode->GetMesh();
+		//currMesh->GetDeformer()
 		LoadMeshSkeleton(currMesh, _transformHierarchy);
 		//Containers
 		vector<VERTEX> controlPointsList;
@@ -282,16 +283,27 @@ namespace FBXImporter
 
 	void ExportBinaryFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices)
 	{
+		ExporterHeader header(FileInfo::FILE_TYPES::MESH, _fileName.c_str());
+		header.version = EXPORTER_VERSION_NUMBER;
+		header.mesh.numPoints = _vertecies.size();
+		header.mesh.numIndex = _indices.size();
+		header.mesh.modelType = FileInfo::MODEL_TYPES::BASIC;
+		header.mesh.vertSize = sizeof(VERTEX);
+		header.mesh.index = FileInfo::INDEX_TYPES::TRI_STRIP;
+
 		fstream binFile;
 		binFile.open("..\\RTAProject\\FBXBinary.bin", std::ios::out | std::ios::binary);
 		if (binFile.is_open())
 		{
+			binFile.write((char*)&header, sizeof(FileInfo::ExporterHeader));
 			for (size_t i = 0; i < _vertecies.size(); i++)
 			{
+				VERTEX temp = _vertecies[i];
 				binFile.write((char*)&_vertecies[i], sizeof(VERTEX));
 			}
 			for (size_t i = 0; i < _indices.size(); i++)
 			{
+				unsigned int temp = _indices[i];
 				binFile.write((char*)&_indices[i], sizeof(unsigned int));
 			}
 		}

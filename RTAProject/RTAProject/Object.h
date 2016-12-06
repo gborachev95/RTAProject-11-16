@@ -44,7 +44,7 @@ public:
 	void SetWorldMatrix(XMMATRIX& _matrix);
 	void SetPosition(float _x, float _y, float _z);
 	// Loader
-	void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy);
+	void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _bones);
 
 	// Alligning by 16 bytes so we don't get a warning 
 	void* operator new(size_t i)
