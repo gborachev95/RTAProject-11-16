@@ -38,10 +38,11 @@ void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOA
 	// Local variables
 	vector<unsigned int> vertexIndices, uvIndices, normalIndices;
 	vector<VERTEX> temp_vertices;
-	
+
 	
 	LoadFBXFile(_filePath, temp_vertices, vertexIndices, m_bones);
-	//LoadBinaryFile(_filePath, temp_vertices, vertexIndices);
+	
+	//	LoadBinaryFile(_filePath, temp_vertices, vertexIndices, temp_trfNode);
 
 	// Setting the members
 	m_numVerts = temp_vertices.size();
@@ -339,22 +340,35 @@ void Object::CreateConstBuffer(ID3D11Device* _device)
 	_device->CreateBuffer(&constBufferDesc, NULL, &m_constBuffer.p);
 }
 
-void Object::LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices)
+void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy)
 {
 	FILE* file = nullptr;
 	FileInfo::ExporterHeader header;
+	fstream binFile;
 
 	if (header.ReadHeader(&file, "FBXBinary.bin", _filePath.c_str()))
 	{
-		fstream binFile;
+
 		binFile.open("FBXBinary.bin", std::ios::in | std::ios::binary);
 		if (binFile.is_open())
 		{
-
+			_vertecies.resize(header.mesh.numPoints);
+			binFile.read((char*)&_vertecies[0], (header.mesh.numPoints * header.mesh.vertSize));
 		}
 		binFile.close();
 	}
-	
+
+	else
+	{
+		LoadFBXFile(_filePath, _vertecies, _indices, _transformHierarchy);
+		binFile.open("FBXBinary.bin", std::ios::in | std::ios::binary);
+		if (binFile.is_open())
+		{
+			_vertecies.resize(header.mesh.numPoints);
+			binFile.read((char*)&_vertecies[0], (header.mesh.numPoints * header.mesh.vertSize));
+		}
+		binFile.close();
+	}
 }
 
 
