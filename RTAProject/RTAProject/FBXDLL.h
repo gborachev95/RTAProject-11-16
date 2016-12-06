@@ -3,12 +3,12 @@
 #include <string>
 #include <vector>
 struct VERTEX;
-struct TRANSFORM_NODE;
+class Transform;
 
 using namespace std;
 
 
-typedef int (WINAPI* OpenFBXFile)(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy);
+typedef int (WINAPI* OpenFBXFile)(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<Transform>& _transformHierarchy);
 
 OpenFBXFile LinkFBXDll()
 {

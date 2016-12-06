@@ -340,7 +340,7 @@ void Object::CreateConstBuffer(ID3D11Device* _device)
 	_device->CreateBuffer(&constBufferDesc, NULL, &m_constBuffer.p);
 }
 
-void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy)
+void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<Transform>& _transformHierarchy)
 {
 	FILE* file = nullptr;
 	FileInfo::ExporterHeader header;
@@ -372,7 +372,7 @@ void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<un
 }
 
 
-vector<TRANSFORM_NODE> Object::GetFBXBones()
+vector<Transform> Object::GetFBXBones()
 {
 	return m_bones;
 }
