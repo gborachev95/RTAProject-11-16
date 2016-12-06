@@ -42,6 +42,7 @@ Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 	// Initializing the start mouse position
 	GetCursorPos(&m_oldMousePos);
 	
+	m_currentFrameIndex = 0;
 }
 
 // Destructor
@@ -65,7 +66,7 @@ bool Application::Run()
 // Runs input
 void Application::Input()
 {
-	FPCamera(0.01f);
+	FPCamera(0.05f);
 	LightsControls(0.01f);
 }
 
@@ -147,6 +148,7 @@ void Application::ClearScreen(COLOR _color)
 	m_deviceContext->ClearDepthStencilView(m_depthView.p, D3D11_CLEAR_DEPTH, 1, 0);
 }
 
+// Initializes graphics
 void Application::InitGraphics()
 {
 	DXGI_SWAP_CHAIN_DESC swapChainDesc;
@@ -269,6 +271,7 @@ void Application::CreateSamplerState()
 	m_device->CreateSamplerState(&samplerDesc, &m_samplerState.p);
 }
 
+// Loads objects
 void Application::LoadObjects()
 {
 	XMFLOAT3 groundPosition { 0, 0, 0 };
@@ -325,6 +328,7 @@ void Application::InitializeToShader()
 	InitilizeLights();
 }
 
+// Creates constant buffers
 void Application::CreateConstBuffers()
 {
 	// Creating const buffer for the scene
@@ -354,6 +358,7 @@ void Application::CreateConstBuffers()
 	m_device->CreateBuffer(&constBufferDesc, NULL, &m_spotLightConstBuffer.p);
 }
 
+// Movement for the camera
 void Application::FPCamera(float _speed)
 {
 	// Get the cursor position
@@ -416,6 +421,7 @@ void Application::FPCamera(float _speed)
 	m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
 }
 
+// Controls for the lights
 void Application::LightsControls(float _speed)
 {
 	// Turn on lights
@@ -450,6 +456,7 @@ void Application::LightsControls(float _speed)
 	//}
 }
 
+// Maps shaders before rendering
 void Application::MapShaders()
 {
 	// Set constant buffers
@@ -501,5 +508,23 @@ void Application::InitilizeLights()
 	m_spotLightToShader.color.g = 1.0f;
 	m_spotLightToShader.color.b = 1.0f;
 	m_spotLightToShader.color.a = 1.0f;
+}
+
+// Update animation frame data
+void Application::FrameInput()
+{
+	if (GetAsyncKeyState('R') && !m_keyPressed)
+	{
+		--m_currentFrameIndex;
+		m_keyPressed = true;
+	}
+	if (GetAsyncKeyState('T') && !m_keyPressed)
+	{
+		++m_currentFrameIndex;
+		m_keyPressed = true;
+	}
+
+	if (!GetAsyncKeyState('R') && !GetAsyncKeyState('T') && m_keyPressed)
+		m_keyPressed = false;
 }
 

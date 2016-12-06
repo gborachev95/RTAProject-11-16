@@ -33,8 +33,9 @@
 		LIGHT_TO_VRAM                     m_dirLightToShader;
 		LIGHT_TO_VRAM                     m_spotLightToShader;
 		bool                              m_keyPressed;
-		vector<Transform>            m_testBones;
+		vector<Transform>				  m_testBones;
 		vector<Object*>                   m_bonesVec;
+		int                               m_currentFrameIndex;
 
 		// Private methods that are called only inside of the class
 	private:
@@ -57,6 +58,8 @@
 		void LightsControls(float _speed);
 		void MapShaders();
 		void InitilizeLights();
+		void FrameInput();
+
 		// Public methods that are called outside of the class
 	public:
 		// Application Methods

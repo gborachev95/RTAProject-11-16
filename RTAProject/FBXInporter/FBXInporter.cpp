@@ -6,12 +6,7 @@
 
 namespace FBXImporter
 {
-	/*
-	[out] Test nmodels provided will only have one mesh, but other assets may have multiple
-	meshes using the same rig to create a model
-	[out] A container of all the joint transforms found. As these will all be in the same
-	hierarchy, you may only need the root instead of a list of all nodes.
-	*/
+	// The only function that is being called outside
 	int LoadFBXFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<Transform>& _transformHierarchy)
 	{
 		// Change the following filename to a suitable filename value.
@@ -68,6 +63,7 @@ namespace FBXImporter
 		return 0;
 	}
 
+	// Traverses the scene object
 	void TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<Transform>& _transformHierarchy)
 	{
 		int childCount = 0;
@@ -90,6 +86,7 @@ namespace FBXImporter
 		}
 	}
 
+	// Gets the verticies data from the mesh
 	void GetDataFromMesh(FbxNode* _inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indicies, std::vector<Transform>& _transformHierarchy)
 	{
 
@@ -157,6 +154,7 @@ namespace FBXImporter
 		}
 	}
 
+	// Gets the frame data
 	void GetFrameData(FbxScene* _inScene, std::vector<KEYFRAME_DATA>& _frameData)
 	{
 		int numAnimStacks = _inScene->GetSrcObjectCount<FbxAnimStack>();
@@ -210,6 +208,7 @@ namespace FBXImporter
 		}
 	}
 
+	// Loads the bind pose bones
 	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy)
 	{
 		//int numDeformers = _inMesh->GetDeformerCount();
@@ -252,6 +251,7 @@ namespace FBXImporter
 		}
 	}
 
+	// Exports fbx vertices data to a binary file
 	void ExportBinaryFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices)
 	{
 		ExporterHeader header(FileInfo::FILE_TYPES::MESH, _fileName.c_str());
@@ -289,6 +289,7 @@ namespace FBXImporter
 		binFile.close();
 	}
 
+	// Exports fbx transform data 
 	void ExportBinaryFile(const string & _fileName, vector<Transform> _bones)
 	{
 		ExporterHeader header(FileInfo::FILE_TYPES::BIND_POSE, _fileName.c_str());
@@ -317,6 +318,7 @@ namespace FBXImporter
 		binFile.close();
 	}
 
+	// Creates a XMMATRIX from fbx Vectors
 	XMMATRIX CreateXMMatrixFromFBXVectors(FbxVector4 _rotVec, FbxVector4 _translVec, FbxVector4 _scaleVec)
 	{
 		XMMATRIX returnMatrix = XMMatrixIdentity();
@@ -330,6 +332,7 @@ namespace FBXImporter
 		return returnMatrix;
 	}
 
+	// Creates the connection between bones
 	void SetBoneConnection(vector<FbxNode*> _boneVect, std::vector<Transform>& _transformHierarchy)
 	{
 		for (unsigned int i = 0; i < _boneVect.size(); ++i)
@@ -388,6 +391,7 @@ namespace FBXImporter
 		}
 	}
 
+	// Helper for making the connection between bones
 	void SetTransformNode(Transform& _transforms, FbxNode* _theNode)
 	{
 		FbxAMatrix wTransformMatrix = _theNode->EvaluateGlobalTransform();
@@ -398,6 +402,7 @@ namespace FBXImporter
 		_transforms.SetName(_theNode->GetName());
 	}
 
+	// Helper for making the connection between bones
 	Transform& CheckTransform(std::vector<Transform>& _transformHierarchy, const char* _id)
 	{
 		for (unsigned int i = 0; i < _transformHierarchy.size(); ++i)
@@ -407,4 +412,5 @@ namespace FBXImporter
 		}
 		return _transformHierarchy[0];
 	}
+
 }// FBXImporter namespace
