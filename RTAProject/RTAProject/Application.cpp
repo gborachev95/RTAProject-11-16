@@ -47,6 +47,9 @@ Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 // Destructor
 Application::~Application()
 {
+	for (unsigned int i = 0; i < m_bonesVec.size(); ++i)
+		delete m_bonesVec[i];
+
 	//dll_loader.UnloadDLL();
 }
 
@@ -96,7 +99,8 @@ void Application::Render()
 	m_groundObject.Render(m_deviceContext);
 	m_fbxTest.Render(m_deviceContext);
 	m_fbxMage.Render(m_deviceContext);
-
+	for (unsigned int i = 0; i < m_bonesVec.size(); ++i)
+		m_bonesVec[i]->Render(m_deviceContext);
 	// Presenting the screen
 	m_swapChain->Present(0, 0);
 }
@@ -274,13 +278,32 @@ void Application::LoadObjects()
 	XMFLOAT3 fbXpos{ 0, 0, 0 };
 	m_fbxTest.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Testbox\\Box_Idle.fbx", fbXpos, 0);
 	m_fbxTest.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\TestCubeTexture.dds");
+	// Setiing the bones of the test object
+	//m_testBones = m_fbxTest.GetFBXBones();
+	//for (unsigned int i = 0; i < m_testBones.size(); ++i)
+	//{
+	//	XMFLOAT3 bonePos = XMFLOAT3(m_testBones[i].worldMatrix.r[3].m128_f32[0], m_testBones[i].worldMatrix.r[3].m128_f32[1], m_testBones[i].worldMatrix.r[3].m128_f32[2]);
+	//	bonePos = XMFLOAT3(bonePos.x + fbXpos.x, bonePos.y + fbXpos.y, bonePos.z + fbXpos.z);
+	//	Object* bone = new Object();
+	//	bone->InstantiateModel(m_device, "..\\RTAProject\\Assets\\boneSphere.obj", bonePos, 0);
+	//	m_bonesVec.push_back(bone);
+	//}
 
-
-	XMFLOAT3 fbxPos2{ 5, 0, 0 };
-	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Idle.fbx", fbxPos2, 0);
-	XMMATRIX rotMatrix = XMMatrixMultiply(XMMatrixRotationY(3.141f), m_fbxMage.GetWorldMatrix());
-	m_fbxMage.SetWorldMatrix(rotMatrix);
+	XMFLOAT3 fbxPos2{ 5.0f, 0.0f, 0.0f };
+	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Walk.fbx", fbxPos2, 0);
+	//XMMATRIX rotMatrix = XMMatrixMultiply(XMMatrixRotationY(3.141f), m_fbxMage.GetWorldMatrix());
+	//m_fbxMage.SetWorldMatrix(rotMatrix);
 	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds");
+	m_testBones = m_fbxMage.GetFBXBones();
+	for (unsigned int i = 0; i < m_testBones.size(); ++i)
+	{
+		XMFLOAT3 bonePos = XMFLOAT3(m_testBones[i].worldMatrix.r[3].m128_f32[0], m_testBones[i].worldMatrix.r[3].m128_f32[1], m_testBones[i].worldMatrix.r[3].m128_f32[2]);
+		bonePos = XMFLOAT3(bonePos.x + fbxPos2.x, bonePos.y + fbxPos2.y, bonePos.z + fbxPos2.z);
+		Object* bone = new Object();
+		bone->InstantiateModel(m_device, "..\\RTAProject\\Assets\\boneSphere.obj", bonePos, 0);
+		bone->TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\groundTexture.dds");
+		m_bonesVec.push_back(bone);
+	}
 }
 
 // Sets te data that will be going to the shaders

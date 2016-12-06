@@ -36,7 +36,7 @@ namespace FBXImporter
 	
 
 	void TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy);
-	int GetDataFromMesh(FbxNode* inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, std::vector<TRANSFORM_NODE>& _transformHierarchy);
+	void GetDataFromMesh(FbxNode* inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, std::vector<TRANSFORM_NODE>& _transformHierarchy);
 	void GetDataFromSkeleton(FbxNode* _inNode, std::vector<TRANSFORM_NODE>& _transformHierarchy);	
 	void GetFrameData(FbxScene* _inScene, std::vector<KEYFRAME_DATA>& _frameData);
 	void ExportBinaryFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);

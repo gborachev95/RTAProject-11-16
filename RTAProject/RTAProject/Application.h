@@ -33,6 +33,9 @@
 		LIGHT_TO_VRAM                     m_dirLightToShader;
 		LIGHT_TO_VRAM                     m_spotLightToShader;
 		bool                              m_keyPressed;
+		vector<TRANSFORM_NODE>            m_testBones;
+		vector<Object*>                   m_bonesVec;
+
 		// Private methods that are called only inside of the class
 	private:
 		// Creates the window

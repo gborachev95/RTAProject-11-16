@@ -38,9 +38,10 @@ void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOA
 	// Local variables
 	vector<unsigned int> vertexIndices, uvIndices, normalIndices;
 	vector<VERTEX> temp_vertices;
-	vector<TRANSFORM_NODE> temp_trfNode;
+
 	
-	LoadFBXFile(_filePath, temp_vertices, vertexIndices, temp_trfNode);
+	LoadFBXFile(_filePath, temp_vertices, vertexIndices, m_bones);
+	
 	//	LoadBinaryFile(_filePath, temp_vertices, vertexIndices, temp_trfNode);
 
 	// Setting the members
@@ -339,7 +340,7 @@ void Object::CreateConstBuffer(ID3D11Device* _device)
 	_device->CreateBuffer(&constBufferDesc, NULL, &m_constBuffer.p);
 }
 
-void Object::LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy)
+void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<TRANSFORM_NODE>& _transformHierarchy)
 {
 	FILE* file = nullptr;
 	FileInfo::ExporterHeader header;
@@ -347,6 +348,7 @@ void Object::LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, v
 
 	if (header.ReadHeader(&file, "FBXBinary.bin", _filePath.c_str()))
 	{
+
 		binFile.open("FBXBinary.bin", std::ios::in | std::ios::binary);
 		if (binFile.is_open())
 		{
@@ -355,6 +357,7 @@ void Object::LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, v
 		}
 		binFile.close();
 	}
+
 	else
 	{
 		LoadFBXFile(_filePath, _vertecies, _indices, _transformHierarchy);
@@ -366,4 +369,10 @@ void Object::LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, v
 		}
 		binFile.close();
 	}
+}
+
+
+vector<TRANSFORM_NODE> Object::GetFBXBones()
+{
+	return m_bones;
 }
