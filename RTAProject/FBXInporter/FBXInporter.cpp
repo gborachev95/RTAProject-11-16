@@ -249,18 +249,10 @@ namespace FBXImporter
 
 	void ExportBinaryFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices)
 	{
-		//Initializing header for exporting
-		ExporterHeader header(FILE_TYPES::MESH, _fileName.c_str());
-		header.mesh.numIndex = _indices.size();
-		header.mesh.numPoints = _vertecies.size();
-		header.mesh.index = INDEX_TYPES::TRI_STRIP;
-		header.mesh.vertSize = sizeof(VERTEX);
-
 		fstream binFile;
-		binFile.open("FBXBinary.bin", std::ios::out | std::ios::binary);
+		binFile.open("..\RTAProject\FBXBinary.bin", std::ios::out | std::ios::binary);
 		if (binFile.is_open())
 		{
-			binFile.write((char*)&header, sizeof(ExporterHeader));
 			for (size_t i = 0; i < _vertecies.size(); i++)
 			{
 				binFile.write((char*)&_vertecies[i], sizeof(VERTEX));
