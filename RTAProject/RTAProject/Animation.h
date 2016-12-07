@@ -1,16 +1,14 @@
 #pragma once
 
 #include "KeyFrame.h"
+#include <vector>
 
 class Animation
 {
-
-	int num_KeyFrames;
-	float totalTime;
-	KeyFrame * bones;
-
 public:
-	Animation();
-	~Animation();
+	unsigned int  m_num_KeyFrames;
+	float m_totalTime;
+	std::vector<KeyFrame> m_bones;
+	const char* m_name;
 };
 

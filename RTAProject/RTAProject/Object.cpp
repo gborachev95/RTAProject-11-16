@@ -40,7 +40,7 @@ void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOA
 	vector<VERTEX> temp_vertices;
 
 	
-	LoadFBXFile(_filePath, temp_vertices, vertexIndices, m_bones);
+	LoadFBXFile(_filePath, temp_vertices, vertexIndices, m_bones, m_animation);
 	temp_vertices.clear();
 	vertexIndices.clear();
 	m_bones.clear();
@@ -280,48 +280,48 @@ Parameters:
 */
 void Object::ComputeTangents()
 {
-	//vector<XMFLOAT3> temp_tangents;
-	//vector<XMFLOAT3> temp_bitangents;
-	//
-	//for (unsigned int i = 0; i < m_numVerts; i += 3)
-	//{
-	//	// Getting the triangles 
-	//	XMFLOAT3 tempV0 = m_vertecies[i].transform;
-	//	XMFLOAT3 tempV1 = m_vertecies[i + 1].transform;
-	//	XMFLOAT3 tempV2 = m_vertecies[i + 2].transform;
-	//
-	//	XMFLOAT3 tempUV0 = m_vertecies[i].uv;
-	//	XMFLOAT3 tempUV1 = m_vertecies[i + 1].uv;
-	//	XMFLOAT3 tempUV2 = m_vertecies[i + 2].uv;
-	//
-	//	// Edges of the triangle 
-	//	XMFLOAT3 deltaPos1{ tempV1.x - tempV0.x, tempV1.y - tempV0.y, tempV1.z - tempV0.z };
-	//	XMFLOAT3 deltaPos2{ tempV2.x - tempV0.x, tempV2.y - tempV0.y, tempV2.z - tempV0.z };
-	//
-	//	XMFLOAT3 deltaUV1 = { tempUV1.x - tempUV0.x, tempUV1.y - tempUV0.y, 0 };
-	//	XMFLOAT3 deltaUV2 = { tempUV2.x - tempUV0.x, tempUV2.y - tempUV0.y, 0 };
-	//
-	//	float ratio = (1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x));
-	//
-	//	// Calculating tangent
-	//	XMFLOAT3 tempTangent1 { deltaPos1.x * deltaUV2.y, deltaPos1.y * deltaUV2.y, deltaPos1.z * deltaUV2.y };
-	//	XMFLOAT3 tempTangent2{ deltaPos2.x * deltaUV1.y, deltaPos2.y * deltaUV1.y, deltaPos2.z * deltaUV1.y };
-	//	XMFLOAT3 tempTangent3{ tempTangent1.x - tempTangent2.x, tempTangent1.y - tempTangent2.y, tempTangent1.z - tempTangent2.z };
-	//	XMFLOAT3 tangent{ tempTangent3.x*ratio, tempTangent3.y*ratio, tempTangent3.z*ratio };
-	//
-	//	// Calculating bitangent
-	//	XMFLOAT3 tempBitangent{ tempTangent2.x - tempTangent1.x, tempTangent2.y - tempTangent1.y, tempTangent2.z - tempTangent1.z };
-	//	XMFLOAT3 bitangent{ tempBitangent.x*ratio, tempBitangent.y*ratio, tempBitangent.z*ratio };
-	//
-	//	// Setting them 
-	//	m_vertecies[i].tangents = tangent;
-	//	m_vertecies[i + 1].tangents = tangent;
-	//	m_vertecies[i + 2].tangents = tangent;
-	//
-	//	m_vertecies[i].bitangents = bitangent;
-	//	m_vertecies[i + 1].bitangents = bitangent;
-	//	m_vertecies[i + 2].bitangents = bitangent;
-	//}
+	vector<XMFLOAT3> temp_tangents;
+	vector<XMFLOAT3> temp_bitangents;
+	
+	for (unsigned int i = 0; i < m_numVerts; i += 3)
+	{
+		// Getting the triangles 
+		XMFLOAT3 tempV0 = m_vertecies[i].transform;
+		XMFLOAT3 tempV1 = m_vertecies[i + 1].transform;
+		XMFLOAT3 tempV2 = m_vertecies[i + 2].transform;
+	
+		XMFLOAT3 tempUV0 = m_vertecies[i].uv;
+		XMFLOAT3 tempUV1 = m_vertecies[i + 1].uv;
+		XMFLOAT3 tempUV2 = m_vertecies[i + 2].uv;
+	
+		// Edges of the triangle 
+		XMFLOAT3 deltaPos1{ tempV1.x - tempV0.x, tempV1.y - tempV0.y, tempV1.z - tempV0.z };
+		XMFLOAT3 deltaPos2{ tempV2.x - tempV0.x, tempV2.y - tempV0.y, tempV2.z - tempV0.z };
+	
+		XMFLOAT3 deltaUV1 = { tempUV1.x - tempUV0.x, tempUV1.y - tempUV0.y, 0 };
+		XMFLOAT3 deltaUV2 = { tempUV2.x - tempUV0.x, tempUV2.y - tempUV0.y, 0 };
+	
+		float ratio = (1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x));
+	
+		// Calculating tangent
+		XMFLOAT3 tempTangent1 { deltaPos1.x * deltaUV2.y, deltaPos1.y * deltaUV2.y, deltaPos1.z * deltaUV2.y };
+		XMFLOAT3 tempTangent2{ deltaPos2.x * deltaUV1.y, deltaPos2.y * deltaUV1.y, deltaPos2.z * deltaUV1.y };
+		XMFLOAT3 tempTangent3{ tempTangent1.x - tempTangent2.x, tempTangent1.y - tempTangent2.y, tempTangent1.z - tempTangent2.z };
+		XMFLOAT3 tangent{ tempTangent3.x*ratio, tempTangent3.y*ratio, tempTangent3.z*ratio };
+	
+		// Calculating bitangent
+		XMFLOAT3 tempBitangent{ tempTangent2.x - tempTangent1.x, tempTangent2.y - tempTangent1.y, tempTangent2.z - tempTangent1.z };
+		XMFLOAT3 bitangent{ tempBitangent.x*ratio, tempBitangent.y*ratio, tempBitangent.z*ratio };
+	
+		// Setting them 
+		m_vertecies[i].tangents = tangent;
+		m_vertecies[i + 1].tangents = tangent;
+		m_vertecies[i + 2].tangents = tangent;
+	
+		m_vertecies[i].bitangents = bitangent;
+		m_vertecies[i + 1].bitangents = bitangent;
+		m_vertecies[i + 2].bitangents = bitangent;
+	}
 }
 
 void Object::SetShaderResourceView(CComPtr<ID3D11ShaderResourceView> _shader)
@@ -343,7 +343,7 @@ void Object::CreateConstBuffer(ID3D11Device* _device)
 	_device->CreateBuffer(&constBufferDesc, NULL, &m_constBuffer.p);
 }
 
-
+// Load binary file verticies
 void Object::LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices)
 {
 	FILE* file = nullptr;
@@ -374,6 +374,7 @@ void Object::LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, v
 	}
 }
 
+// Load binary file bones
 void Object::LoadBinaryFile(std::string _filePath, vector<Transform>& _bones)
 {
 	FILE* file = nullptr;
@@ -402,9 +403,14 @@ void Object::LoadBinaryFile(std::string _filePath, vector<Transform>& _bones)
 	}
 }
 
-
-
+// Getter for the bones
 vector<Transform> Object::GetFBXBones()
 {
 	return m_bones;
+}
+
+// Getter for the animation
+Animation Object::GetAnimation()
+{
+	return m_animation;
 }

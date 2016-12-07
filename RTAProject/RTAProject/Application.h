@@ -34,7 +34,8 @@
 		LIGHT_TO_VRAM                     m_spotLightToShader;
 		bool                              m_keyPressed;
 		vector<Transform>				  m_testBones;
-		vector<Object*>                   m_bonesVec;
+		vector<Object*>                   m_testbonesVec;
+		vector<Object*>                   m_mageBonesVec;
 		int                               m_currentFrameIndex;
 
 		// Private methods that are called only inside of the class

@@ -48,9 +48,10 @@ Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 // Destructor
 Application::~Application()
 {
-	for (unsigned int i = 0; i < m_bonesVec.size(); ++i)
-		delete m_bonesVec[i];
-
+	for (unsigned int i = 0; i < m_testbonesVec.size(); ++i)
+		delete m_testbonesVec[i];
+	for (unsigned int i = 0; i < m_mageBonesVec.size(); ++i)
+		delete m_mageBonesVec[i];
 	//dll_loader.UnloadDLL();
 }
 
@@ -68,12 +69,12 @@ void Application::Input()
 {
 	FPCamera(0.05f);
 	LightsControls(0.01f);
+	FrameInput();
 }
 
 // Updates the scene
 void Application::Update()
 {
-
 }
 
 // Renders the scene
@@ -100,8 +101,10 @@ void Application::Render()
 	m_groundObject.Render(m_deviceContext);
 	m_fbxTest.Render(m_deviceContext);
 	m_fbxMage.Render(m_deviceContext);
-	for (unsigned int i = 0; i < m_bonesVec.size(); ++i)
-		m_bonesVec[i]->Render(m_deviceContext);
+	for (unsigned int i = 0; i < m_mageBonesVec.size(); ++i)
+		m_mageBonesVec[i]->Render(m_deviceContext);
+	for (unsigned int i = 0; i < m_testbonesVec.size(); ++i)
+		m_testbonesVec[i]->Render(m_deviceContext);
 	// Presenting the screen
 	m_swapChain->Present(0, 0);
 }
@@ -289,7 +292,7 @@ void Application::LoadObjects()
 		bonePos = XMFLOAT3(bonePos.x + fbXpos.x, bonePos.y + fbXpos.y, bonePos.z + fbXpos.z);
 		Object* bone = new Object();
 		bone->InstantiateModel(m_device, "..\\RTAProject\\Assets\\boneSphere.obj", bonePos, 0);
-		m_bonesVec.push_back(bone);
+		m_testbonesVec.push_back(bone);
 	}
 
 	XMFLOAT3 fbxPos2{ 5.0f, 0.0f, 0.0f };
@@ -305,7 +308,7 @@ void Application::LoadObjects()
 		Object* bone = new Object();
 		bone->InstantiateModel(m_device, "..\\RTAProject\\Assets\\boneSphere.obj", bonePos, 0);
 		bone->TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\groundTexture.dds");
-		m_bonesVec.push_back(bone);
+		m_mageBonesVec.push_back(bone);
 	}
 }
 
@@ -435,7 +438,7 @@ void Application::LightsControls(float _speed)
 		m_spotLightToShader.status = !m_spotLightToShader.status;
 		m_keyPressed = true;
 	}
-	if (!GetAsyncKeyState('I') && !GetAsyncKeyState('O') &&  m_keyPressed)
+	if (!GetAsyncKeyState('I') && !GetAsyncKeyState('O') && !GetAsyncKeyState('R') && !GetAsyncKeyState('T') && m_keyPressed)
 		m_keyPressed = false;
 
 	// Move point light
@@ -516,15 +519,35 @@ void Application::FrameInput()
 	if (GetAsyncKeyState('R') && !m_keyPressed)
 	{
 		--m_currentFrameIndex;
+		if (m_currentFrameIndex < 1)
+			m_currentFrameIndex = 36;
 		m_keyPressed = true;
+	
+		Animation currAnimation = m_fbxMage.GetAnimation();
+		vector<Transform> myBones = m_fbxMage.GetFBXBones();
+		for (unsigned int i = 4; i < 28; ++i)
+		{
+			currAnimation.m_bones[i].m_transforms[m_currentFrameIndex].m_worldMatrix.r[3].m128_f32[0] += 5.0f;
+			m_mageBonesVec[i]->SetWorldMatrix(currAnimation.m_bones[i].m_transforms[m_currentFrameIndex].m_worldMatrix);
+		}
 	}
 	if (GetAsyncKeyState('T') && !m_keyPressed)
 	{
 		++m_currentFrameIndex;
+		if (m_currentFrameIndex > 36)
+			m_currentFrameIndex = 1;
 		m_keyPressed = true;
+	
+		Animation currAnimation = m_fbxMage.GetAnimation();
+		for (unsigned int i = 4; i < 28; ++i)
+		{
+			currAnimation.m_bones[i].m_transforms[m_currentFrameIndex].m_worldMatrix.r[3].m128_f32[0] += 5.0f;
+			m_mageBonesVec[i]->SetWorldMatrix(currAnimation.m_bones[i].m_transforms[m_currentFrameIndex].m_worldMatrix);
+			
+		}
 	}
-
-	if (!GetAsyncKeyState('R') && !GetAsyncKeyState('T') && m_keyPressed)
-		m_keyPressed = false;
+	
 }
+
+
 

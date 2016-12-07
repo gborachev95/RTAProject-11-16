@@ -7,7 +7,7 @@
 namespace FBXImporter
 {
 	// The only function that is being called outside
-	int LoadFBXFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<Transform>& _transformHierarchy)
+	int LoadFBXFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<Transform>& _transformHierarchy, Animation& _animation)
 	{
 		// Change the following filename to a suitable filename value.
 		const char* lFilename = _fileName.c_str();
@@ -41,7 +41,7 @@ namespace FBXImporter
 		the FbxImporter can be safely destroyed.*/
 
 		// Create a new scene so that it can be populated by the imported file.
-		FbxScene* fbxScene = FbxScene::Create(lSdkManager, "myScene");
+	    fbxScene = FbxScene::Create(lSdkManager, "myScene");
 
 		// Import the contents of the file into the scene.
 		lImporter->Import(fbxScene);
@@ -51,20 +51,18 @@ namespace FBXImporter
 
 		FbxNode *root = fbxScene->GetRootNode();
 
-		TraverseScene(root, _vertecies, _indices, _transformHierarchy);
+		TraverseScene(root, _vertecies, _indices, _transformHierarchy, _animation);
 		ExportBinaryFile(_fileName, _vertecies, _indices);
 		ExportBinaryFile(_fileName, _transformHierarchy);
 
 		fbxScene->Destroy();
 		lSdkManager->Destroy();
-		//vector<KEYFRAME_DATA> temp;
-		//GetFrameData(fbxScene,temp);
-
+		
 		return 0;
 	}
 
 	// Traverses the scene object
-	void TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<Transform>& _transformHierarchy)
+	void TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<Transform>& _transformHierarchy, Animation& _animation)
 	{
 		int childCount = 0;
 		// Exit Contidion
@@ -77,9 +75,9 @@ namespace FBXImporter
 			for (int i = 0; i < childCount; ++i)
 			{
 				FbxNode * child = _node->GetChild(i);
-				TraverseScene(child, _vertecies, _indices, _transformHierarchy);
+				TraverseScene(child, _vertecies, _indices, _transformHierarchy,_animation);
 				if (child->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::eMesh)
-					GetDataFromMesh(child, _vertecies, _indices, _transformHierarchy);
+					GetDataFromMesh(child, _vertecies, _indices, _transformHierarchy,_animation);
 				//else if (child->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::eSkeleton)
 					//	GetDataFromSkeleton(child, _transformHierarchy);
 			}
@@ -87,12 +85,12 @@ namespace FBXImporter
 	}
 
 	// Gets the verticies data from the mesh
-	void GetDataFromMesh(FbxNode* _inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indicies, std::vector<Transform>& _transformHierarchy)
+	void GetDataFromMesh(FbxNode* _inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indicies, std::vector<Transform>& _transformHierarchy, Animation& _animation)
 	{
 
 		FbxMesh* currMesh = _inNode->GetMesh();
 		//currMesh->GetDeformer()
-		LoadMeshSkeleton(currMesh, _transformHierarchy);
+		LoadMeshSkeleton(currMesh, _transformHierarchy, _animation);
 		//Containers
 		vector<VERTEX> controlPointsList;
 
@@ -155,61 +153,54 @@ namespace FBXImporter
 	}
 
 	// Gets the frame data
-	void GetFrameData(FbxScene* _inScene, std::vector<KEYFRAME_DATA>& _frameData)
+	void GetAnimationData(FbxScene* _inScene, FbxNode* _inNode, Animation& _animation)
 	{
 		int numAnimStacks = _inScene->GetSrcObjectCount<FbxAnimStack>();
-		for (int animIndex = 0; animIndex < numAnimStacks; ++animIndex)
+
+
+		FbxAnimStack* animStack = (FbxAnimStack*)_inScene->GetSrcObject<FbxAnimStack>(0);
+		const char* animStackName = animStack->GetName();
+		// Setting name of the animation
+		_animation.m_name = animStackName;
+
+		// Getting the frame times
+		FbxTimeSpan animTime = animStack->GetLocalTimeSpan();
+		FbxTime startTime = animTime.GetStart();
+		FbxTime endTime = animTime.GetStop();
+		// Setting the lenght of the animation
+		_animation.m_totalTime = float(animTime.GetDuration().GetMilliSeconds());
+
+		unsigned int numFrames = (unsigned int)(endTime.GetFrameCount(FbxTime::eFrames30) - startTime.GetFrameCount(FbxTime::eFrames30) + 1);
+		// Setting the num of frames
+		_animation.m_num_KeyFrames = numFrames;
+
+		FbxAMatrix boneTransform = _inNode->EvaluateGlobalTransform();
+		KeyFrame currFrame;
+		// Getting data for each frame
+		for (FbxLongLong iFrame = startTime.GetFrameCount(FbxTime::eFrames30); iFrame < endTime.GetFrameCount(FbxTime::eFrames30); ++iFrame)
 		{
-			KEYFRAME_DATA currKey;
-			FbxAnimStack* animStack = (FbxAnimStack*)_inScene->GetSrcObject<FbxAnimStack>(animIndex);
 
-			// Getting the frame times
-			FbxTimeSpan animTime = animStack->GetLocalTimeSpan();
-			currKey.startTime = (float)animTime.GetStart().GetMilliSeconds();
-			currKey.endTime = (float)animTime.GetStop().GetMilliSeconds();
-			currKey.durationTime = (float)animTime.GetDuration().GetMilliSeconds();
+			FbxTime currTime;
+			currTime.SetFrame(iFrame, FbxTime::eFrames30);
+			currFrame.m_time = float(currTime.GetFramedTime(false).GetMilliSeconds());
+			// Set the number of the currFrame
+			currFrame.m_currFrameNum = (unsigned int)iFrame;
+			FbxAMatrix currentTransformOffset = _inNode->EvaluateGlobalTransform(currTime) * boneTransform;
 
-			// Getting the bones positions
-			int numFrames = animStack->GetMemberCount();
-			for (int iFrame = 0; iFrame < numFrames; ++iFrame)
-			{
-				FbxObject *frame = animStack->GetMember(iFrame);
-				FbxAnimLayer *animLayer = (FbxAnimLayer*)animStack->GetMember(iFrame);
-				
-				//animLayer->
-				//FbxAnimCurve *translationCurve = fbxNode->LclTranslation.GetCurve(animLayer);
-				//FbxAnimCurve *rotationCurve = fbxNode->LclRotation.GetCurve(animLayer);
-				//FbxAnimCurve *scalingCurve = fbxNode->LclScaling.GetCurve(animLayer);
+			// Get bone matrix
+			Transform currBone;
+			FbxAMatrix wTransformMatrix = /*currentTransformOffset.Inverse() * */_inNode->EvaluateGlobalTransform(currTime);
+			FbxAMatrix lTransformMatrix = _inNode->EvaluateLocalTransform();
+			currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
+			currBone.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
 
-				//if (scalingCurve != 0)
-				//{
-				//	int numKeys = scalingCurve->KeyGetCount();
-				//	for (int keyIndex = 0; keyIndex < numKeys; keyIndex++)
-				//	{
-				//		FbxTime frameTime = scalingCurve->KeyGetTime(keyIndex);
-				//		FbxDouble3 scalingVector = fbxNode->EvaluateLocalScaling(frameTime);
-				//		float x = (float)scalingVector[0];
-				//		float y = (float)scalingVector[1];
-				//		float z = (float)scalingVector[2];
-				//
-				//		float frameSeconds = (float)frameTime.GetSecondDouble(); // If needed, get the time of the scaling keyframe, in seconds
-				//	}
-				//}
-				// else
-				//{
-				//	// If this animation layer has no scaling curve, then use the default one, if needed
-				//	FbxDouble3 scalingVector = fbxNode->LclScaling.Get();
-				//	float x = (float)scalingVector[0];
-				//	float y = (float)scalingVector[1];
-				//	float z = (float)scalingVector[2];
-				//}			    
-			}
-			_frameData.push_back(currKey);
+			currFrame.m_transforms.push_back(currBone);
 		}
+		_animation.m_bones.push_back(currFrame);
 	}
 
 	// Loads the bind pose bones
-	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy)
+	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy,Animation& _animation)
 	{
 		//int numDeformers = _inMesh->GetDeformerCount();
 		vector<FbxNode*> bonesVector;
@@ -242,11 +233,12 @@ namespace FBXImporter
 					float boneWeight = (float)boneVertexWeights[boneVertexIndex];
 				}
 				*/
-				
+
+				GetAnimationData(fbxScene, bone, _animation);
 				bonesVector.push_back(bone);
 				_transformHierarchy.push_back(currBone);
 			}
-
+			
 			SetBoneConnection(bonesVector, _transformHierarchy);
 		}
 	}

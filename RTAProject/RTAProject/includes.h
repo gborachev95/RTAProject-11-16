@@ -17,6 +17,7 @@
 // Application includes
 #include "..\FBXInporter\ExporterHeader.h"
 #include "Transform.h"
+#include "Animation.h"
 
 // Defines
 #define WINDOW_HEIGHT 700
@@ -83,3 +84,5 @@ struct LIGHT_TO_VRAM
 	bool     status;
 	bool     padding[3];
 };
+
+

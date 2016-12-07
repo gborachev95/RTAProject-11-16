@@ -11,6 +11,8 @@ using namespace std;
 
 namespace FBXImporter
 {
+	FbxScene* fbxScene;
+
 	struct VERTEX
 	{
 		XMFLOAT3 transform;
@@ -22,22 +24,33 @@ namespace FBXImporter
 	};
 
 
-	struct KEYFRAME_DATA
+	class KeyFrame
 	{
-		float startTime,endTime,durationTime;
-		vector<XMMATRIX> bones;
+	public:
+		unsigned int m_currFrameNum;
+		float m_time;
+		vector<Transform> m_transforms;
+	};
+
+	class Animation
+	{
+	public:
+		unsigned int  m_num_KeyFrames;
+		float m_totalTime;
+		vector<KeyFrame> m_bones;
+		const char* m_name;
 	};
 
 	
-	void TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<Transform>& _transformHierarchy);
-	void GetDataFromMesh(FbxNode* inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, std::vector<Transform>& _transformHierarchy);
-	
+	void TraverseScene(FbxNode* _node, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<Transform>& _transformHierarchy, Animation& _animation);
+	void GetDataFromMesh(FbxNode* inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, std::vector<Transform>& _transformHierarchy, Animation& _animation);
+	void GetAnimationData(FbxScene* _inScene, FbxNode* _inNode, Animation& _animation);
+
 	void ExportBinaryFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
 	void ExportBinaryFile(const string & _fileName, vector<Transform> _bones);
 
-	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy);
+	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy, Animation& _animation);
 	XMMATRIX CreateXMMatrixFromFBXVectors(FbxVector4 _rotVec, FbxVector4 _translVec, FbxVector4 _scaleVec);
-
 	void SetBoneConnection(vector<FbxNode*> _boneVect, std::vector<Transform>& _transformHierarchy);
 	void SetTransformNode(Transform& _transforms, FbxNode* _theNode);
 	Transform& CheckTransform(std::vector<Transform>& _transformHierarchy, const char* _id);

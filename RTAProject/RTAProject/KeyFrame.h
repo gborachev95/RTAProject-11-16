@@ -1,14 +1,11 @@
 #pragma once
 #include "Transform.h"
+#include <vector>
 
 class KeyFrame
 {
-	int num_bones;
-	float time;
-	Transform* pos;
-
 public:
-	KeyFrame();
-	~KeyFrame();
+	unsigned int m_currFrameNum;
+	float m_time;
+	std::vector<Transform> m_transforms;
 };
-
