@@ -39,7 +39,7 @@ void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOA
 	vector<unsigned int> vertexIndices, uvIndices, normalIndices;
 	vector<VERTEX> temp_vertices;
 
-	
+
 	LoadFBXFile(_filePath, temp_vertices, vertexIndices, m_bones, m_animation);
 	temp_vertices.clear();
 	vertexIndices.clear();
@@ -60,6 +60,7 @@ void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOA
 	for (unsigned int i = 0; i < m_numIndicies; ++i)
 		m_indexList[i] = vertexIndices[i];
 
+	ComputeTangents();
 	CreateVertexBuffer(_device);
 	CreateIndexBuffer(_device);
 	CreateConstBuffer(_device);
@@ -68,7 +69,7 @@ void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOA
 }
 
 // Draws the object to the screen
-void Object::Render(ID3D11DeviceContext* _context, CComPtr<ID3D11ShaderResourceView> _shader)
+void Object::Render(ID3D11DeviceContext* _context)
 {
 	unsigned int stride = sizeof(VERTEX);
 	unsigned int offset = 0;
@@ -79,12 +80,16 @@ void Object::Render(ID3D11DeviceContext* _context, CComPtr<ID3D11ShaderResourceV
 	_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
 	// Set the shader resource - for the texture
-	_context->PSSetShaderResources(0, 1,&m_shaderResourceView.p);
+	_context->PSSetShaderResources(0, 1,&m_defShaderResourceView.p);
 	
-	// If there is normal mapping, set it as well
-	if (_shader.p != nullptr)
-		_context->PSSetShaderResources(1, 1, &_shader.p);
+	// If there is normal mapping
+	if (m_normalShaderResourceView.p != nullptr)
+		_context->PSSetShaderResources(1, 1, &m_normalShaderResourceView.p);
 	
+	// If there is specular mapping
+	if (m_specularShaderResourceView.p != nullptr)
+		_context->PSSetShaderResources(2, 1, &m_specularShaderResourceView.p);
+
 	// Setting the object const buffer
 	_context->VSSetConstantBuffers(0, 1, &m_constBuffer.p);
 	_context->PSSetConstantBuffers(0, 1, &m_constBuffer.p);
@@ -95,10 +100,15 @@ void Object::Render(ID3D11DeviceContext* _context, CComPtr<ID3D11ShaderResourceV
 	_context->Map(m_constBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mapSubresource);
 	memcpy(mapSubresource.pData, &m_worldToShader, sizeof(OBJECT_TO_VRAM));
 	_context->Unmap(m_constBuffer, NULL);
-	
 
     // Draw the object
 	_context->DrawIndexed(m_numIndicies, 0, 0);
+
+	// Turn off shaders
+	if (m_normalShaderResourceView.p != nullptr)
+		_context->PSSetShaderResources(1, 1, &m_defShaderResourceView.p);
+	if (m_specularShaderResourceView.p != nullptr)
+		_context->PSSetShaderResources(2, 1, &m_defShaderResourceView.p);
 }
 
 // Creates the vertex buffer for that object
@@ -245,9 +255,13 @@ bool Object::ReadObject(std::string _filePath,float _shine)
 }
 
 // Textures the object 
-void Object::TextureObject(ID3D11Device* _device, const wchar_t* _filePath)
+void Object::TextureObject(ID3D11Device* _device, const wchar_t*  _filePathToDefuse, const wchar_t*  _filePathToNormalMap, const wchar_t*  _filePathToSpecular)
 {
-	 CreateDDSTextureFromFile(_device, _filePath, NULL, &m_shaderResourceView.p);
+	 CreateDDSTextureFromFile(_device, _filePathToDefuse, NULL, &m_defShaderResourceView.p);
+	 if(_filePathToNormalMap)
+	 CreateDDSTextureFromFile(_device, _filePathToNormalMap, NULL, &m_normalShaderResourceView.p);
+	 if(_filePathToSpecular)
+	 CreateDDSTextureFromFile(_device, _filePathToSpecular, NULL, &m_specularShaderResourceView.p);
 }
 
 // Returns the world matrix of the object
@@ -322,11 +336,6 @@ void Object::ComputeTangents()
 		m_vertecies[i + 1].bitangents = bitangent;
 		m_vertecies[i + 2].bitangents = bitangent;
 	}
-}
-
-void Object::SetShaderResourceView(CComPtr<ID3D11ShaderResourceView> _shader)
-{
-	m_shaderResourceView = _shader;
 }
 
 // Creates constant buffer

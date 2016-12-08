@@ -89,8 +89,8 @@ namespace FBXImporter
 	{
 
 		FbxMesh* currMesh = _inNode->GetMesh();
-		//currMesh->GetDeformer()
 		LoadMeshSkeleton(currMesh, _transformHierarchy, _animation);
+
 		//Containers
 		vector<VERTEX> controlPointsList;
 
@@ -109,10 +109,6 @@ namespace FBXImporter
 			// Setting Vertecies
 			VERTEX currVertex;
 			currVertex.transform = XMFLOAT3(float(currMesh->GetControlPointAt(j).mData[0]), float(currMesh->GetControlPointAt(j).mData[1]), float(currMesh->GetControlPointAt(j).mData[2]));
-			//FbxVector4 tangents = currMesh->GetElementTangent(j)->GetDirectArray().GetAt(j);
-			//FbxVector4 bitangents = currMesh->GetElementBinormal(j)->GetDirectArray().GetAt(j);
-			//currVertex.tangents = { (float)tangents[0],(float)tangents[1],(float)tangents[2] };
-			//currVertex.bitangents = { (float)bitangents[0],(float)bitangents[1],(float)bitangents[2] };
 			controlPointsList.push_back(currVertex);
 		}
 
@@ -127,8 +123,8 @@ namespace FBXImporter
 			{
 				FbxVector2 fbxTexCoord;
 				FbxVector4 fbxNormals;
-				FbxVector4 fbxTangents;
 				FbxStringList UVSetNameList;
+				
 				VERTEX currVertex;
 
 				// Get the name of each set of UV coords
@@ -139,12 +135,11 @@ namespace FBXImporter
 				currMesh->GetPolygonVertexUV(polyIndex, Vertex, UVSetNameList.GetStringAt(0), fbxTexCoord, map);
 				currMesh->GetPolygonVertexNormal(polyIndex, Vertex, fbxNormals);
 
-
 				// Set the current vertex
 				currVertex = controlPointsList[_indicies[polyIndex * 3 + Vertex]];
 				currVertex.normals = { (float)fbxNormals.mData[0],(float)fbxNormals.mData[1] ,(float)fbxNormals.mData[2] };
 				currVertex.uv = { float(fbxTexCoord[0]),float(1.0f - fbxTexCoord[1]),0 };
-
+				
 				// Store Data
 				_vertecies.push_back(currVertex);
 				_indicies[polyIndex * 3 + Vertex] = polyIndex * 3 + Vertex;
