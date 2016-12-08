@@ -161,18 +161,18 @@ namespace FBXImporter
 		FbxAnimStack* animStack = (FbxAnimStack*)_inScene->GetSrcObject<FbxAnimStack>(0);
 		const char* animStackName = animStack->GetName();
 		// Setting name of the animation
-		_animation.m_name = animStackName;
+		_animation.SetAnimationName(animStackName);
 
 		// Getting the frame times
 		FbxTimeSpan animTime = animStack->GetLocalTimeSpan();
 		FbxTime startTime = animTime.GetStart();
 		FbxTime endTime = animTime.GetStop();
 		// Setting the lenght of the animation
-		_animation.m_totalTime = float(animTime.GetDuration().GetMilliSeconds());
+		_animation.SetTotalTime(float(animTime.GetDuration().GetMilliSeconds()));
 
 		unsigned int numFrames = (unsigned int)(endTime.GetFrameCount(FbxTime::eFrames30) - startTime.GetFrameCount(FbxTime::eFrames30) + 1);
 		// Setting the num of frames
-		_animation.m_num_KeyFrames = numFrames;
+		_animation.SetKeyFramesNumber(numFrames);
 
 		FbxAMatrix boneTransform = _inNode->EvaluateGlobalTransform();
 		KeyFrame currFrame;
@@ -182,9 +182,9 @@ namespace FBXImporter
 
 			FbxTime currTime;
 			currTime.SetFrame(iFrame, FbxTime::eFrames30);
-			currFrame.m_time = float(currTime.GetFramedTime(false).GetMilliSeconds());
+			currFrame.SetFrameTime(float(currTime.GetFramedTime(false).GetMilliSeconds()));
 			// Set the number of the currFrame
-			currFrame.m_currFrameNum = (unsigned int)iFrame;
+			currFrame.SetBoneIndex((unsigned int)iFrame);
 			FbxAMatrix currentTransformOffset = _inNode->EvaluateGlobalTransform(currTime) * boneTransform;
 
 			// Get bone matrix
@@ -194,9 +194,9 @@ namespace FBXImporter
 			currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
 			currBone.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
 
-			currFrame.m_transforms.push_back(currBone);
+			currFrame.m_bones.push_back(currBone);
 		}
-		_animation.m_bones.push_back(currFrame);
+		_animation.m_keyFrame.push_back(currFrame);
 	}
 
 	// Loads the bind pose bones

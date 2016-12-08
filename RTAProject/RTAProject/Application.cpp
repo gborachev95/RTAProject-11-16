@@ -527,8 +527,8 @@ void Application::FrameInput()
 		vector<Transform> myBones = m_fbxMage.GetFBXBones();
 		for (unsigned int i = 4; i < 28; ++i)
 		{
-			currAnimation.m_bones[i].m_transforms[m_currentFrameIndex].m_worldMatrix.r[3].m128_f32[0] += 5.0f;
-			m_mageBonesVec[i]->SetWorldMatrix(currAnimation.m_bones[i].m_transforms[m_currentFrameIndex].m_worldMatrix);
+			currAnimation.m_keyFrame[i].m_bones[m_currentFrameIndex].m_worldMatrix.r[3].m128_f32[0] += 5.0f;
+			m_mageBonesVec[i]->SetWorldMatrix(currAnimation.m_keyFrame[i].m_bones[m_currentFrameIndex].m_worldMatrix);
 		}
 	}
 	if (GetAsyncKeyState('T') && !m_keyPressed)
@@ -541,8 +541,8 @@ void Application::FrameInput()
 		Animation currAnimation = m_fbxMage.GetAnimation();
 		for (unsigned int i = 4; i < 28; ++i)
 		{
-			currAnimation.m_bones[i].m_transforms[m_currentFrameIndex].m_worldMatrix.r[3].m128_f32[0] += 5.0f;
-			m_mageBonesVec[i]->SetWorldMatrix(currAnimation.m_bones[i].m_transforms[m_currentFrameIndex].m_worldMatrix);
+			currAnimation.m_keyFrame[i].m_bones[m_currentFrameIndex].m_worldMatrix.r[3].m128_f32[0] += 5.0f;
+			m_mageBonesVec[i]->SetWorldMatrix(currAnimation.m_keyFrame[i].m_bones[m_currentFrameIndex].m_worldMatrix);
 			
 		}
 	}

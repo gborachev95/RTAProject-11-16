@@ -3,7 +3,9 @@
 #include <DirectXMath.h>
 #include <vector>
 #include "ExporterHeader.h"
-#include "..\RTAProject\Transform.h"
+#include "Transform.h"
+#include "Animation.h"
+#include "KeyFrame.h"
 
 using namespace FileInfo;
 using namespace DirectX;
@@ -21,24 +23,6 @@ namespace FBXImporter
 		XMFLOAT3 tangents;
 		XMFLOAT3 bitangents;
 		XMFLOAT3 shine;
-	};
-
-
-	class KeyFrame
-	{
-	public:
-		unsigned int m_currFrameNum;
-		float m_time;
-		vector<Transform> m_transforms;
-	};
-
-	class Animation
-	{
-	public:
-		unsigned int  m_num_KeyFrames;
-		float m_totalTime;
-		vector<KeyFrame> m_bones;
-		const char* m_name;
 	};
 
 	
