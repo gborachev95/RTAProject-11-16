@@ -40,7 +40,8 @@ struct VERTEX
 	XMFLOAT3 uv;
 	XMFLOAT3 tangents;
 	XMFLOAT3 bitangents;
-	XMFLOAT3 shine;
+	XMFLOAT4 skinIndices;
+	XMFLOAT4 skinWeights;
 };
 
 struct COLOR

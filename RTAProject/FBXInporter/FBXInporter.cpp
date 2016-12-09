@@ -243,22 +243,23 @@ namespace FBXImporter
 
 	void LoadMeshSkin(FbxMesh *_inMesh, vector<VERTEX>& _vertecies) 
 	{
-
-		unsigned int amountOfVertecies = _vertecies.size();		
-		TEMP_SKIN_DATA * tempSkin = new TEMP_SKIN_DATA[amountOfVertecies]; //TO DO: DELETE
-		for (unsigned int i = 0; i < amountOfVertecies; i++)
-		{
-			tempSkin[i].bonesStored = 0;
-			for (size_t j = 0; j < 4; j++)
-			{
-				tempSkin[i].indices[j] = -1;
-				tempSkin[i].weights[j] = -1;
-			}
-		}
-
 		FbxSkin* skin = (FbxSkin*)_inMesh->GetDeformer(0, FbxDeformer::eSkin);
 		if (skin != 0)
 		{
+			// Initializing for debugging purposes
+			unsigned int amountOfVertecies = _vertecies.size();
+			TEMP_SKIN_DATA * tempSkin = new TEMP_SKIN_DATA[amountOfVertecies];
+			for (unsigned int i = 0; i < amountOfVertecies; i++)
+			{
+				tempSkin[i].bonesStored = 0;
+				for (unsigned int j = 0; j < 4; j++)
+				{
+					tempSkin[i].indices[j] = -1;
+					tempSkin[i].weights[j] = -1;
+				}
+			}
+
+
 			int boneCount = skin->GetClusterCount();
 			for (int boneIndex = 0; boneIndex < boneCount; boneIndex++)
 			{
@@ -282,20 +283,22 @@ namespace FBXImporter
 					}
 				}
 			}
+
+			for (unsigned int i = 0; i < amountOfVertecies; i++)
+			{
+				_vertecies[i].skinIndices.x = (float)tempSkin[i].indices[0];
+				_vertecies[i].skinIndices.y = (float)tempSkin[i].indices[1];
+				_vertecies[i].skinIndices.z = (float)tempSkin[i].indices[2];
+				_vertecies[i].skinIndices.w = (float)tempSkin[i].indices[3];
+
+				_vertecies[i].skinWeights.x = tempSkin[i].weights[0];
+				_vertecies[i].skinWeights.y = tempSkin[i].weights[1];
+				_vertecies[i].skinWeights.z = tempSkin[i].weights[2];
+				_vertecies[i].skinWeights.w = tempSkin[i].weights[3];
+			}
+			delete[] tempSkin;
 		}
-		for (unsigned int i = 0; i < amountOfVertecies; i++)
-		{
-			//_vertecies[i].skinIndices.x = tempSkin[i].indices[0];
-			//_vertecies[i].skinIndices.y = tempSkin[i].indices[1];
-			//_vertecies[i].skinIndices.z = tempSkin[i].indices[2];
-			//_vertecies[i].skinIndices.w = tempSkin[i].indices[3];
-			//
-			//_vertecies[i].skinWeights.x = tempSkin[i].weights[0];
-			//_vertecies[i].skinWeights.y = tempSkin[i].weights[1];
-			//_vertecies[i].skinWeights.z = tempSkin[i].weights[2];
-			//_vertecies[i].skinWeights.w = tempSkin[i].weights[3];
-		}
-		delete[] tempSkin;
+
 	}
 
 	// Exports fbx vertices data to a binary file
@@ -358,7 +361,7 @@ namespace FBXImporter
 			binFile.write((char*)&header, sizeof(FileInfo::ExporterHeader));
 			for (size_t i = 0; i < _bones.size(); i++)
 			{
-				Transform temp = _bones[i];
+				Transform temp = _bones[i];		
 				binFile.write((char*)&_bones[i], sizeof(Transform) * header.bind.numBones);
 			}
 		}

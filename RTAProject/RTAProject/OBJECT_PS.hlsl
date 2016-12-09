@@ -1,15 +1,14 @@
 struct INPUT_PIXEL
 {
 	float4 projectedCoordinate : SV_POSITION;
+	float3 worldPosition       : POSITION;
 	float3 normals             : NORMALS;
 	float3 uv                  : UV;
 	float3 tangents            : TANGENTS;
 	float3 bitangents          : BITANGENTS;
-	float3 shine               : SHINE;
-	// Not part of the structure
-	float3 worldPosition       : WORLDPOS;
-	float3 cameraPosition      : CAMERA_POS;
 };
+
+
 texture2D baseTexture : register(t0);
 texture2D normalTexture : register(t1);
 texture2D specularTexture : register(t2);

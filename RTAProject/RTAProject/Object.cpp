@@ -238,8 +238,7 @@ bool Object::ReadObject(std::string _filePath,float _shine)
 		// Setting UVs
 		m_vertecies[i].uv.x = temp_uvs[uvIndices[i]].x;
 		m_vertecies[i].uv.y = temp_uvs[uvIndices[i]].y;
-		m_vertecies[i].uv.z = 0;
-		m_vertecies[i].shine.x = _shine;
+		m_vertecies[i].uv.z = _shine;
 	}
 	
 	// Computing the tangents and bitangents

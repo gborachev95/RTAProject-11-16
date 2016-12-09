@@ -1,6 +1,7 @@
 #include "Application.h"
 #include "OBJECT_VS.csh"
 #include "OBJECT_PS.csh"
+#include "ANIMATION_VS.csh"
 #include "Log.h"
 
 // Constructor
@@ -99,12 +100,17 @@ void Application::Render()
 
 	// Rendering objects
 	m_groundObject.Render(m_deviceContext);
-	m_fbxTest.Render(m_deviceContext);
-	m_fbxMage.Render(m_deviceContext);
 	for (unsigned int i = 0; i < m_mageBonesVec.size(); ++i)
 		m_mageBonesVec[i]->Render(m_deviceContext);
 	for (unsigned int i = 0; i < m_testbonesVec.size(); ++i)
 		m_testbonesVec[i]->Render(m_deviceContext);
+
+	// Render fbx objects
+	m_deviceContext->VSSetShader(m_VS_ANIMATION.p, NULL, NULL);
+	m_deviceContext->IASetInputLayout(m_inputLayoutAnimation);
+	m_fbxTest.Render(m_deviceContext);
+	m_fbxMage.Render(m_deviceContext);
+
 	// Presenting the screen
 	m_swapChain->Present(0, 0);
 }
@@ -238,16 +244,22 @@ void Application::CreateLayouts()
 		{ "NORMALS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "UV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TANGENTS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "BITANGENTS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "SHINE", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		//{ "SKIN_INDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		//{ "SKIN_WEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "WORLDPOS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "CAMERA_POS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "LIGHT_PROJ", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	    { "BITANGENTS", 0,  DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
+	D3D11_INPUT_ELEMENT_DESC vLayoutAnimation[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMALS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "UV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TANGENTS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BITANGENTS", 0,  DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "SKIN_INDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "SKIN_WEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	// Creating layout for object shader
-	m_device->CreateInputLayout(vLayoutObject, ARRAYSIZE(vLayoutObject), OBJECT_VS, sizeof(OBJECT_VS), &m_inputLayoutObject.p);
+	m_device->CreateInputLayout(vLayoutAnimation, ARRAYSIZE(vLayoutObject), OBJECT_VS, sizeof(OBJECT_VS), &m_inputLayoutObject.p);
+	m_device->CreateInputLayout(vLayoutAnimation, ARRAYSIZE(vLayoutAnimation), ANIMATION_VS, sizeof(ANIMATION_VS), &m_inputLayoutAnimation.p);
 }
 
 // Create shaders
@@ -256,6 +268,8 @@ void Application::CreateShaders()
 	// Creates the shaders for the Object
 	m_device->CreateVertexShader(OBJECT_VS, sizeof(OBJECT_VS), nullptr, &m_VS_OBJECT.p);
 	m_device->CreatePixelShader(OBJECT_PS, sizeof(OBJECT_PS), nullptr, &m_PS_OBJECT.p);
+
+	m_device->CreateVertexShader(ANIMATION_VS, sizeof(ANIMATION_VS), nullptr, &m_VS_ANIMATION.p);
 }
 
 // Creates the sampler state that goes to the pixel shader texture
@@ -302,6 +316,7 @@ void Application::LoadObjects()
 	//XMMATRIX rotMatrix = XMMatrixMultiply(XMMatrixRotationY(3.141f), m_fbxMage.GetWorldMatrix());
 	//m_fbxMage.SetWorldMatrix(rotMatrix);
 	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds");//, L"..\\RTAProject\\Assets\\Textures\\mageNormalMap.dds");//, L"..\\RTAProject\\Assets\\Textures\\mageSpecularMap.dds");
+	m_testBones.clear();
 	m_testBones = m_fbxMage.GetFBXBones();
 	for (unsigned int i = 0; i < m_testBones.size(); ++i)
 	{

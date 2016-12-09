@@ -28,22 +28,9 @@ namespace FBXImporter
 		XMFLOAT3 uv;
 		XMFLOAT3 tangents;
 		XMFLOAT3 bitangents;
-		XMFLOAT3 shine;
-		//XMFLOAT4 skinIndices;
-		//XMFLOAT4 skinWeights;
+		XMFLOAT4 skinIndices;
+		XMFLOAT4 skinWeights;
 	};
-
-/*	struct ANIM_VERTEX
-	{
-		XMFLOAT3 transform;
-		XMFLOAT3 normals;
-		XMFLOAT3 uv;
-		XMFLOAT3 tangents;
-		XMFLOAT3 bitangents;
-		XMFLOAT3 shine;
-		SKIN_DATA skin;
-	};*/
-
 
 	struct TEMP_SKIN_DATA
 	{

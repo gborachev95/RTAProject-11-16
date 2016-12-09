@@ -6,21 +6,15 @@ struct INPUT_VERTEX
 	float3 uv         : UV;
 	float3 tangents   : TANGENTS;
 	float3 bitangents : BITANGENTS;
-	float3 shine      : SHINE;
-	//float4 indices : SKIN_INDICES;
-	//float4 weights : SKIN_WEIGHTS;
 };
 struct OUTPUT_VERTEX
 {
 	float4 projectedCoordinate : SV_POSITION;
+	float3 worldPosition       : POSITION;
 	float3 normals             : NORMALS;
 	float3 uv                  : UV;
 	float3 tangents            : TANGENTS;
 	float3 bitangents          : BITANGENTS;
-	float3 shine               : SHINE;
-	// Not part of the structure
-	float3 worldPosition       : WORLDPOS;
-	float3 cameraPosition      : CAMERA_POS;
 };
 
 cbuffer OBJECT : register(b0)
@@ -50,18 +44,16 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	float3 worldNormals = mul(float4(fromVertexBuffer.normals.xyz, 0), worldMatrix).xyz;
 	localCoordinate = mul(localCoordinate, viewMatrix);
 	localCoordinate = mul(localCoordinate, projectionMatrix);
+	float3 bitangent = cross(fromVertexBuffer.normals, fromVertexBuffer.tangents);
 
-	// Tangents and Bitangents
-	sendToRasterizer.tangents = mul(fromVertexBuffer.tangents, (float3x3)worldMatrix);
-	sendToRasterizer.bitangents = mul(fromVertexBuffer.bitangents, (float3x3)worldMatrix);
+
 
 	// Sending data
 	sendToRasterizer.projectedCoordinate = localCoordinate;
 	sendToRasterizer.normals = worldNormals;
-	sendToRasterizer.uv.xy = fromVertexBuffer.uv.xy;
-	sendToRasterizer.cameraPosition.xyz = cameraPosition.xyz;
-	sendToRasterizer.shine = fromVertexBuffer.shine;
-	
+	sendToRasterizer.uv.xy = fromVertexBuffer.uv.xy;	
+	sendToRasterizer.tangents = mul(fromVertexBuffer.tangents, (float3x3)worldMatrix);
+	sendToRasterizer.bitangents = mul(bitangent, (float3x3)worldMatrix);
 
 	return sendToRasterizer;
 }
