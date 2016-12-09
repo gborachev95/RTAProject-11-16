@@ -91,6 +91,7 @@ namespace FBXImporter
 		FbxMesh* currMesh = _inNode->GetMesh();
 		//currMesh->GetDeformer()
 		LoadMeshSkeleton(currMesh, _transformHierarchy, _animation);
+		
 		//Containers
 		vector<VERTEX> controlPointsList;
 
@@ -115,6 +116,8 @@ namespace FBXImporter
 			//currVertex.bitangents = { (float)bitangents[0],(float)bitangents[1],(float)bitangents[2] };
 			controlPointsList.push_back(currVertex);
 		}
+
+		LoadMeshSkin(currMesh, controlPointsList);
 
 		// Loop for each poly
 		for (int polyIndex = 0; polyIndex < currMesh->GetPolygonCount(); ++polyIndex)
@@ -142,6 +145,7 @@ namespace FBXImporter
 
 				// Set the current vertex
 				currVertex = controlPointsList[_indicies[polyIndex * 3 + Vertex]];
+				//currVertex.skin
 				currVertex.normals = { (float)fbxNormals.mData[0],(float)fbxNormals.mData[1] ,(float)fbxNormals.mData[2] };
 				currVertex.uv = { float(fbxTexCoord[0]),float(1.0f - fbxTexCoord[1]),0 };
 
@@ -200,8 +204,9 @@ namespace FBXImporter
 	}
 
 	// Loads the bind pose bones
-	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy,Animation& _animation)
-	{
+	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy,Animation& _animation){
+
+
 		//int numDeformers = _inMesh->GetDeformerCount();
 		vector<FbxNode*> bonesVector;
 		FbxSkin* skin = (FbxSkin*)_inMesh->GetDeformer(0, FbxDeformer::eSkin);
@@ -222,7 +227,7 @@ namespace FBXImporter
 				currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
 				currBone.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
 
-				/*
+				/*//Skin stuff
 				int *boneVertexIndices = cluster->GetControlPointIndices();
 				double *boneVertexWeights = cluster->GetControlPointWeights();
 				// Iterate through all the vertices, which are affected by the bone
@@ -231,8 +236,8 @@ namespace FBXImporter
 				{
 					int boneVertIndex = boneVertexIndices[boneVertexIndex];
 					float boneWeight = (float)boneVertexWeights[boneVertexIndex];
-				}
-				*/
+				}*/
+				
 
 				GetAnimationData(fbxScene, bone, _animation);
 				bonesVector.push_back(bone);
@@ -241,6 +246,61 @@ namespace FBXImporter
 			
 			SetBoneConnection(bonesVector, _transformHierarchy);
 		}
+	}
+
+	void LoadMeshSkin(FbxMesh *_inMesh, vector<VERTEX>& _vertecies) {
+
+		int amountOfVertecies = _vertecies.size();		
+		TEMP_SKIN_DATA * tempSkin = new TEMP_SKIN_DATA[amountOfVertecies]; //TO DO: DELETE
+		for (size_t i = 0; i < amountOfVertecies; i++)
+		{
+			tempSkin[i].bonesStored = 0;
+			for (size_t j = 0; j < 4; j++)
+			{
+				tempSkin[i].indices[j] = -1;
+				tempSkin[i].weights[j] = -1;
+			}
+		}
+
+		FbxSkin* skin = (FbxSkin*)_inMesh->GetDeformer(0, FbxDeformer::eSkin);
+		if (skin != 0)
+		{
+			int boneCount = skin->GetClusterCount();
+			for (int boneIndex = 0; boneIndex < boneCount; boneIndex++)
+			{
+				Transform currBone;
+				FbxCluster* cluster = skin->GetCluster(boneIndex);
+
+				//Skin stuff
+				int *boneVertexIndices = cluster->GetControlPointIndices();
+				double *boneVertexWeights = cluster->GetControlPointWeights();
+				// Iterate through all the vertices, which are affected by the bone
+				int numBoneVertexIndices = cluster->GetControlPointIndicesCount();
+				for (int boneVertexIndex = 0; boneVertexIndex < numBoneVertexIndices; boneVertexIndex++)
+				{
+					int boneVertIndex = boneVertexIndices[boneVertexIndex];
+					float boneWeight = (float)boneVertexWeights[boneVertexIndex];
+					if (tempSkin[boneVertIndex].bonesStored < 4){
+						tempSkin[boneVertIndex].indices[tempSkin[boneVertIndex].bonesStored] = boneIndex;
+						tempSkin[boneVertIndex].weights[tempSkin[boneVertIndex].bonesStored]= boneWeight;
+						tempSkin[boneVertIndex].bonesStored += 1;
+					}
+				}
+			}
+		}
+		for (size_t i = 0; i < amountOfVertecies; i++)
+		{
+			//_vertecies[i].skinIndices.x = tempSkin[i].indices[0];
+			//_vertecies[i].skinIndices.y = tempSkin[i].indices[1];
+			//_vertecies[i].skinIndices.z = tempSkin[i].indices[2];
+			//_vertecies[i].skinIndices.w = tempSkin[i].indices[3];
+			//
+			//_vertecies[i].skinWeights.x = tempSkin[i].weights[0];
+			//_vertecies[i].skinWeights.y = tempSkin[i].weights[1];
+			//_vertecies[i].skinWeights.z = tempSkin[i].weights[2];
+			//_vertecies[i].skinWeights.w = tempSkin[i].weights[3];
+		}
+		delete[] tempSkin;
 	}
 
 	// Exports fbx vertices data to a binary file

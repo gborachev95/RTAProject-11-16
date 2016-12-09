@@ -8,7 +8,7 @@ Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 {
 	// Helps debugging
 	//LogSetUp(L"RTA Project Application");
-	
+
 	// Creates the window
 	CreateAppWindow(_hinst, _proc);
 
@@ -41,7 +41,7 @@ Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 
 	// Initializing the start mouse position
 	GetCursorPos(&m_oldMousePos);
-	
+
 	m_currentFrameIndex = 0;
 }
 
@@ -83,7 +83,7 @@ void Application::Render()
 	// Setting the render target with the depth buffer
 	m_deviceContext->RSSetViewports(1, &m_viewPort);
 	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetViewToTexture.p, m_depthView.p);
-																				
+
 	// Clearing the screen
 	COLOR clearColor{ 0.39f, 0.58f, 0.92f, 1 };
 	ClearScreen(clearColor);
@@ -134,7 +134,7 @@ void Application::CreateAppWindow(HINSTANCE _hinst, WNDPROC _proc)
 	wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wndClass.hbrBackground = (HBRUSH)(COLOR_WINDOWFRAME);
 	RegisterClassEx(&wndClass);
-	
+
 	// Window size rectangle
 	RECT window_size = { 0, 0, WINDOW_HEIGHT, WINDOW_WIDTH };
 	AdjustWindowRect(&window_size, WS_OVERLAPPEDWINDOW, false);
@@ -147,7 +147,7 @@ void Application::CreateAppWindow(HINSTANCE _hinst, WNDPROC _proc)
 // Clears the screen
 void Application::ClearScreen(COLOR _color)
 {
-	m_deviceContext->ClearRenderTargetView(m_renderTargetViewToTexture.p, _color.GetColor()); 
+	m_deviceContext->ClearRenderTargetView(m_renderTargetViewToTexture.p, _color.GetColor());
 	m_deviceContext->ClearDepthStencilView(m_depthView.p, D3D11_CLEAR_DEPTH, 1, 0);
 }
 
@@ -240,9 +240,11 @@ void Application::CreateLayouts()
 		{ "TANGENTS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "BITANGENTS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "SHINE", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		//{ "SKIN_INDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		//{ "SKIN_WEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "WORLDPOS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "CAMERA_POS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "LIGHT_PROJ", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "LIGHT_PROJ", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	// Creating layout for object shader
 	m_device->CreateInputLayout(vLayoutObject, ARRAYSIZE(vLayoutObject), OBJECT_VS, sizeof(OBJECT_VS), &m_inputLayoutObject.p);
@@ -277,7 +279,7 @@ void Application::CreateSamplerState()
 // Loads objects
 void Application::LoadObjects()
 {
-	XMFLOAT3 groundPosition { 0, 0, 0 };
+	XMFLOAT3 groundPosition{ 0, 0, 0 };
 	m_groundObject.InstantiateModel(m_device, "..\\RTAProject\\Assets\\ground.obj", groundPosition, 0);
 	m_groundObject.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\groundTexture.dds");
 
@@ -317,7 +319,7 @@ void Application::InitializeToShader()
 {
 
 	// Setting the projection matrix
-	m_viewToShader.projectionMatrix = XMMatrixPerspectiveFovLH(45,WINDOW_HEIGHT/WINDOW_WIDTH, SCREEN_ZNEAR, SCREEN_ZFAR);
+	m_viewToShader.projectionMatrix = XMMatrixPerspectiveFovLH(45, WINDOW_HEIGHT / WINDOW_WIDTH, SCREEN_ZNEAR, SCREEN_ZFAR);
 
 	// Setting the View matrix
 	m_viewToShader.viewMatrix = XMMatrixIdentity();
@@ -522,7 +524,7 @@ void Application::FrameInput()
 		if (m_currentFrameIndex < 1)
 			m_currentFrameIndex = 36;
 		m_keyPressed = true;
-	
+
 		Animation currAnimation = m_fbxMage.GetAnimation();
 		vector<Transform> myBones = m_fbxMage.GetFBXBones();
 		for (unsigned int i = 4; i < 28; ++i)
@@ -537,16 +539,16 @@ void Application::FrameInput()
 		if (m_currentFrameIndex > 36)
 			m_currentFrameIndex = 1;
 		m_keyPressed = true;
-	
+
 		Animation currAnimation = m_fbxMage.GetAnimation();
 		for (unsigned int i = 4; i < 28; ++i)
 		{
 			currAnimation.m_keyFrame[i].m_bones[m_currentFrameIndex].m_worldMatrix.r[3].m128_f32[0] += 5.0f;
 			m_mageBonesVec[i]->SetWorldMatrix(currAnimation.m_keyFrame[i].m_bones[m_currentFrameIndex].m_worldMatrix);
-			
+
 		}
 	}
-	
+
 }
 
 

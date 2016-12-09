@@ -5,9 +5,11 @@ struct INPUT_VERTEX
 	float3 normals    : NORMALS;
 	float3 uv         : UV;
 	float3 tangents   : TANGENTS;
-	float3 bitangents : BITANGENTS;
+	float3 bitangents : BITANGENTS; 
 	float3 shine      : SHINE;
-};
+	//float4 indices : SKIN_INDICES;
+	//float4 weights : SKIN_WEIGHTS;
+};		   
 struct OUTPUT_VERTEX
 {
 	float4 projectedCoordinate : SV_POSITION;
