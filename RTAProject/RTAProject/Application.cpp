@@ -67,7 +67,7 @@ bool Application::Run()
 // Runs input
 void Application::Input()
 {
-	FPCamera(0.05f);
+	FPCamera(0.01f);
 	LightsControls(0.01f);
 	FrameInput();
 }
@@ -281,7 +281,7 @@ void Application::LoadObjects()
 {
 	XMFLOAT3 groundPosition{ 0, 0, 0 };
 	m_groundObject.InstantiateModel(m_device, "..\\RTAProject\\Assets\\ground.obj", groundPosition, 0);
-	m_groundObject.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\groundTexture.dds");
+	m_groundObject.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\groundTexture.dds", L"..\\RTAProject\\Assets\\Textures\\groundNormalMap.dds");
 
 	XMFLOAT3 fbXpos{ 0, 0, 0 };
 	m_fbxTest.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Testbox\\Box_Idle.fbx", fbXpos, 0);
@@ -301,7 +301,7 @@ void Application::LoadObjects()
 	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Walk.fbx", fbxPos2, 0);
 	//XMMATRIX rotMatrix = XMMatrixMultiply(XMMatrixRotationY(3.141f), m_fbxMage.GetWorldMatrix());
 	//m_fbxMage.SetWorldMatrix(rotMatrix);
-	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds");
+	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds");//, L"..\\RTAProject\\Assets\\Textures\\mageNormalMap.dds");//, L"..\\RTAProject\\Assets\\Textures\\mageSpecularMap.dds");
 	m_testBones = m_fbxMage.GetFBXBones();
 	for (unsigned int i = 0; i < m_testBones.size(); ++i)
 	{

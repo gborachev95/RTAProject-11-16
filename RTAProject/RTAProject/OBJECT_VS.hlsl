@@ -14,7 +14,7 @@ struct OUTPUT_VERTEX
 {
 	float4 projectedCoordinate : SV_POSITION;
 	float3 normals             : NORMALS;
-	float2 uv                  : UV;
+	float3 uv                  : UV;
 	float3 tangents            : TANGENTS;
 	float3 bitangents          : BITANGENTS;
 	float3 shine               : SHINE;
@@ -39,6 +39,11 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	OUTPUT_VERTEX sendToRasterizer = (OUTPUT_VERTEX)0;
 	float4 localCoordinate = float4(fromVertexBuffer.coordinate.xyz, 1);
 
+	// Mirroring value for flipping the uvs 
+	//float mirroringValue = 1;
+	//if (localCoordinate.x < 0.0f)
+	//	mirroringValue = 0;
+
 	// Shading
 	localCoordinate = mul(localCoordinate, worldMatrix);
 	sendToRasterizer.worldPosition = localCoordinate.xyz;
@@ -53,10 +58,10 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	// Sending data
 	sendToRasterizer.projectedCoordinate = localCoordinate;
 	sendToRasterizer.normals = worldNormals;
-	sendToRasterizer.uv = fromVertexBuffer.uv.xy;
+	sendToRasterizer.uv.xy = fromVertexBuffer.uv.xy;
 	sendToRasterizer.cameraPosition.xyz = cameraPosition.xyz;
-
 	sendToRasterizer.shine = fromVertexBuffer.shine;
+	
 
 	return sendToRasterizer;
 }

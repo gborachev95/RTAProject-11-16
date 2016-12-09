@@ -8,7 +8,9 @@ __declspec(align(16)) class Object
 	CComPtr<ID3D11Buffer>              m_vertexBuffer;
 	CComPtr<ID3D11Buffer>              m_instanceBuffer;
 	CComPtr<ID3D11Texture2D>           m_texture;
-	CComPtr<ID3D11ShaderResourceView>  m_shaderResourceView;
+	CComPtr<ID3D11ShaderResourceView>  m_defShaderResourceView;
+	CComPtr<ID3D11ShaderResourceView>  m_normalShaderResourceView;
+	CComPtr<ID3D11ShaderResourceView>  m_specularShaderResourceView;
 	CComPtr<ID3D11Buffer>              m_constBuffer;
 	OBJECT_TO_VRAM                     m_worldToShader;       
 	// Object variables
@@ -35,14 +37,13 @@ public:
 	~Object();
 	void InstantiateModel(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position, float _shine);
 	void InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position, float _shine);
-	void Render(ID3D11DeviceContext* _context, CComPtr<ID3D11ShaderResourceView> _shader = nullptr);
-	void TextureObject(ID3D11Device* _device, const wchar_t*  _filePath);
+	void Object::Render(ID3D11DeviceContext* _context);
+	void TextureObject(ID3D11Device* _device, const wchar_t*  _filePathToDefuse, const wchar_t*  _filePathToNormalMap = nullptr, const wchar_t*  _filePathToSpecular = nullptr);
 	// Getters
 	XMMATRIX GetWorldMatrix();
 	Animation GetAnimation();
 	vector<Transform> GetFBXBones();
 	// Setters
-	void SetShaderResourceView(CComPtr<ID3D11ShaderResourceView> _shader);
 	void SetWorldMatrix(XMMATRIX& _matrix);
 	void SetPosition(float _x, float _y, float _z);
 	// Loader

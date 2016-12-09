@@ -2,7 +2,7 @@ struct INPUT_PIXEL
 {
 	float4 projectedCoordinate : SV_POSITION;
 	float3 normals             : NORMALS;
-	float2 uv                  : UV;
+	float3 uv                  : UV;
 	float3 tangents            : TANGENTS;
 	float3 bitangents          : BITANGENTS;
 	float3 shine               : SHINE;
@@ -11,9 +11,8 @@ struct INPUT_PIXEL
 	float3 cameraPosition      : CAMERA_POS;
 };
 texture2D baseTexture : register(t0);
-
 texture2D normalTexture : register(t1);
-
+texture2D specularTexture : register(t2);
 SamplerState filter : register(s0);
 
 struct LIGHT_DATA
@@ -47,19 +46,29 @@ float4 main(INPUT_PIXEL _inputPixel) : SV_TARGET
 
 	// Getting the texture color
 	currColor = baseTexture.Sample(filter, _inputPixel.uv.xy);
+
 	// Normalize stuff
 	_inputPixel.normals.xyz = normalize(_inputPixel.normals.xyz);
 	_inputPixel.tangents.xyz = normalize(_inputPixel.tangents.xyz);
 	_inputPixel.bitangents.xyz = normalize(_inputPixel.bitangents.xyz);
 
+	// Calculating bitangent
+	//float3 bitangent = cross(_inputPixel.normals.xyz, _inputPixel.tangents);
+	//bitangent.xyz = normalize(bitangent.xyz);
+	//if (_inputPixel.uv.x == 0.0f)
+	//	bumpNormal = bumpNormal * -1.0f;
+
 	// Normal mapping
-	// Getting the normal map
 	float4 normalMap = normalTexture.Sample(filter, _inputPixel.uv.xy);
 	normalMap = (normalMap * 2.0f) - 1.0f;
-	// Getting the normal from the normal map.
-	float3 bumpNormal = (normalMap.x * _inputPixel.tangents.xyz) + (normalMap.y * _inputPixel.bitangents.xyz) + (normalMap.z * _inputPixel.normals.xyz);
-	// Normalize the resulting bump normal.
+	float3 bumpNormal = (normalMap.x * _inputPixel.tangents.xyz) + (normalMap.y *  _inputPixel.bitangents.xyz) + (normalMap.z * _inputPixel.normals.xyz);
 	bumpNormal = normalize(bumpNormal);
+
+	// Specular mapping
+	//float4 specularMap = specularTexture.Sample(filter, _inputPixel.uv.xy);
+	//specularMap = (specularMap * 2.0f) - 1.0f;
+	//float3 specNormal = (specularMap.x * _inputPixel.tangents.xyz) + (specularMap.y * _inputPixel.bitangents.xyz) + (specularMap.z * _inputPixel.normals.xyz);
+	//specularMap = normalize(specularMap);
 
 	// Directional light
 	if (dir_light.status)
@@ -67,23 +76,12 @@ float4 main(INPUT_PIXEL _inputPixel) : SV_TARGET
 		float lightRatio = saturate(dot(-dir_light.direction, bumpNormal.xyz));
 		dirLightColor = lightRatio * dir_light.color * currColor;
 		// Specular effect
-		float3 cameraDir = normalize(_inputPixel.cameraPosition - _inputPixel.worldPosition);
-		float3 reflectionVec = normalize(reflect(dir_light.direction, bumpNormal.xyz));
-		float specular = pow(saturate(dot(reflectionVec, cameraDir)), 1000) * _inputPixel.shine.x;
-		dirLightColor += saturate(currColor * 0.5f + specular);
+		//float3 cameraDir = normalize(_inputPixel.cameraPosition - _inputPixel.worldPosition);
+		//float3 reflectionVec = normalize(reflect(dir_light.direction, bumpNormal.xyz));
+		//float specular = pow(saturate(dot(reflectionVec, cameraDir)), 1000) * _inputPixel.shine.x;
+		dirLightColor += saturate(currColor *0.7f /*+ specular*/);
 	}
-	// Point light
-	if (point_light.status)
-	{
-		float3 lightDir = normalize(point_light.transform.xyz - _inputPixel.worldPosition.xyz);
-		float lightRatio = saturate(dot(lightDir.xyz, bumpNormal.xyz));
-		lightRatio *= 1 / dot(point_light.transform.xyz - _inputPixel.worldPosition.xyz, point_light.transform.xyz - _inputPixel.worldPosition.xyz);
-		// Specular effect
-		float3 cameraDir = normalize(_inputPixel.cameraPosition - _inputPixel.worldPosition);
-		float3 reflectionVec = normalize(reflect(-lightDir.xyz, bumpNormal.xyz));
-		float specular = pow(saturate(dot(reflectionVec, cameraDir)), 90) * _inputPixel.shine.x;
-		pointLightColor = saturate(lightRatio * point_light.color * currColor + (lightRatio*specular));
-	}
+
 	// Spot light
 	if (spot_light.status)
 	{
@@ -98,13 +96,13 @@ float4 main(INPUT_PIXEL _inputPixel) : SV_TARGET
 			spotFactor = 2.0f* aten;
 		else
 			spotFactor = aten * 0.7f;
-		float lightRatio = saturate(dot(lightDir.xyz, _inputPixel.normals.xyz));
+		float lightRatio = saturate(dot(lightDir.xyz, bumpNormal.xyz));
 		// Specular effect
-		float3 cameraDir = normalize(_inputPixel.cameraPosition - _inputPixel.worldPosition);
-		float3 reflectionVec = normalize(reflect(-lightDir.xyz, _inputPixel.normals.xyz));
-		float specular = pow(saturate(dot(cameraDir,reflectionVec)), 10) * _inputPixel.shine.x;
+		//float3 cameraDir = normalize(_inputPixel.cameraPosition - _inputPixel.worldPosition);
+		//float3 reflectionVec = normalize(reflect(lightDir.xyz, bumpNormal.xyz));
+		//float specular = pow(saturate(dot(cameraDir,reflectionVec)), 10) * _inputPixel.shine.x;
 		spotLightColor = saturate(spotFactor * lightRatio * aten * spot_light.color * currColor /*+ (aten* specular)*/);
 	}
 
-	return saturate(dirLightColor/* + pointLightColor*/ + spotLightColor);
+	return saturate(dirLightColor + spotLightColor);
 }
