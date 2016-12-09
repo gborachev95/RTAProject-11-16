@@ -197,7 +197,9 @@ namespace FBXImporter
 		_animation.m_keyFrame.push_back(currFrame);
 	}
 
-	// Loads the bind pose bones
+	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy, Animation& _animation)
+	{
+		// Loads the bind pose bones
 		//int numDeformers = _inMesh->GetDeformerCount();
 		vector<FbxNode*> bonesVector;
 		FbxSkin* skin = (FbxSkin*)_inMesh->GetDeformer(0, FbxDeformer::eSkin);
@@ -239,11 +241,12 @@ namespace FBXImporter
 		}
 	}
 
-	void LoadMeshSkin(FbxMesh *_inMesh, vector<VERTEX>& _vertecies) {
+	void LoadMeshSkin(FbxMesh *_inMesh, vector<VERTEX>& _vertecies) 
+	{
 
-		int amountOfVertecies = _vertecies.size();		
+		unsigned int amountOfVertecies = _vertecies.size();		
 		TEMP_SKIN_DATA * tempSkin = new TEMP_SKIN_DATA[amountOfVertecies]; //TO DO: DELETE
-		for (size_t i = 0; i < amountOfVertecies; i++)
+		for (unsigned int i = 0; i < amountOfVertecies; i++)
 		{
 			tempSkin[i].bonesStored = 0;
 			for (size_t j = 0; j < 4; j++)
@@ -271,7 +274,8 @@ namespace FBXImporter
 				{
 					int boneVertIndex = boneVertexIndices[boneVertexIndex];
 					float boneWeight = (float)boneVertexWeights[boneVertexIndex];
-					if (tempSkin[boneVertIndex].bonesStored < 4){
+					if (tempSkin[boneVertIndex].bonesStored < 4)
+					{
 						tempSkin[boneVertIndex].indices[tempSkin[boneVertIndex].bonesStored] = boneIndex;
 						tempSkin[boneVertIndex].weights[tempSkin[boneVertIndex].bonesStored]= boneWeight;
 						tempSkin[boneVertIndex].bonesStored += 1;
@@ -279,7 +283,7 @@ namespace FBXImporter
 				}
 			}
 		}
-		for (size_t i = 0; i < amountOfVertecies; i++)
+		for (unsigned int i = 0; i < amountOfVertecies; i++)
 		{
 			//_vertecies[i].skinIndices.x = tempSkin[i].indices[0];
 			//_vertecies[i].skinIndices.y = tempSkin[i].indices[1];
