@@ -1,6 +1,7 @@
 #include "Application.h"
 #include "OBJECT_VS.csh"
 #include "OBJECT_PS.csh"
+#include "ANIMATION_VS.csh"
 #include "Log.h"
 
 // Constructor
@@ -8,10 +9,10 @@ Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 {
 	// Helps debugging
 	//LogSetUp(L"RTA Project Application");
-	
+
 	// Creates the window
 	CreateAppWindow(_hinst, _proc);
-
+	
 	// Creates the swapchain and back buffer
 	InitGraphics();
 
@@ -41,7 +42,7 @@ Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 
 	// Initializing the start mouse position
 	GetCursorPos(&m_oldMousePos);
-	
+
 	m_currentFrameIndex = 0;
 }
 
@@ -53,6 +54,58 @@ Application::~Application()
 	for (unsigned int i = 0; i < m_mageBonesVec.size(); ++i)
 		delete m_mageBonesVec[i];
 	//dll_loader.UnloadDLL();
+}
+
+// Resize Window
+void Application::ResizeWindow(unsigned int _width, unsigned int _height)
+{
+	
+	// Resizing the depth buffer
+	m_depthBuffer.Release();
+	m_depthView.Release();
+	m_renderTargetView.Release();
+
+	m_swapChain->ResizeBuffers(1, _width, _height, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
+
+	// Creation of the texture
+	D3D11_TEXTURE2D_DESC textureDesc;
+	ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
+	textureDesc.Width = _width;
+	textureDesc.Height = _height;
+	textureDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	textureDesc.MipLevels = 1;
+	textureDesc.ArraySize = 1;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	m_device->CreateTexture2D(&textureDesc, nullptr, &m_depthBuffer.p);
+
+	// Creation of the depth stencil view
+	D3D11_DEPTH_STENCIL_VIEW_DESC depthDesc;
+	ZeroMemory(&depthDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+	depthDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	depthDesc.Texture2D.MipSlice = 0;
+	m_device->CreateDepthStencilView(m_depthBuffer.p, nullptr, &m_depthView.p);
+
+	// Resizing the viewport
+	ZeroMemory(&m_viewPort, sizeof(m_viewPort));
+	m_viewPort.Width = float(_width);
+	m_viewPort.Height = float(_height);
+	m_viewPort.MaxDepth = 1;
+
+	// Setting the backbuffer
+	ID3D11Texture2D *backBuffer;
+	m_swapChain->GetBuffer(0, __uuidof(backBuffer), reinterpret_cast<void**>(&backBuffer));
+	// Creating the render view
+	m_device->CreateRenderTargetView(backBuffer, NULL, &m_renderTargetView.p);
+
+	// It releases the back buffer from data so it can take new data
+	backBuffer->Release();
+
+	// Setting the projection matrix
+	m_viewToShader.projectionMatrix = XMMatrixPerspectiveFovLH(45, float(_width) / float(_height), SCREEN_ZNEAR, SCREEN_ZFAR);
 }
 
 // Loops the application
@@ -67,7 +120,7 @@ bool Application::Run()
 // Runs input
 void Application::Input()
 {
-	FPCamera(0.05f);
+	FPCamera(0.01f);
 	LightsControls(0.01f);
 	FrameInput();
 }
@@ -82,8 +135,8 @@ void Application::Render()
 {
 	// Setting the render target with the depth buffer
 	m_deviceContext->RSSetViewports(1, &m_viewPort);
-	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetViewToTexture.p, m_depthView.p);
-																				
+	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView.p, m_depthView.p);
+
 	// Clearing the screen
 	COLOR clearColor{ 0.39f, 0.58f, 0.92f, 1 };
 	ClearScreen(clearColor);
@@ -99,12 +152,17 @@ void Application::Render()
 
 	// Rendering objects
 	m_groundObject.Render(m_deviceContext);
-	m_fbxTest.Render(m_deviceContext);
-	m_fbxMage.Render(m_deviceContext);
 	for (unsigned int i = 0; i < m_mageBonesVec.size(); ++i)
 		m_mageBonesVec[i]->Render(m_deviceContext);
 	for (unsigned int i = 0; i < m_testbonesVec.size(); ++i)
 		m_testbonesVec[i]->Render(m_deviceContext);
+
+	// Render fbx objects
+	m_deviceContext->VSSetShader(m_VS_ANIMATION.p, NULL, NULL);
+	m_deviceContext->IASetInputLayout(m_inputLayoutAnimation);
+	m_fbxTest.Render(m_deviceContext);
+	m_fbxMage.Render(m_deviceContext);
+
 	// Presenting the screen
 	m_swapChain->Present(0, 0);
 }
@@ -134,7 +192,7 @@ void Application::CreateAppWindow(HINSTANCE _hinst, WNDPROC _proc)
 	wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wndClass.hbrBackground = (HBRUSH)(COLOR_WINDOWFRAME);
 	RegisterClassEx(&wndClass);
-	
+
 	// Window size rectangle
 	RECT window_size = { 0, 0, WINDOW_HEIGHT, WINDOW_WIDTH };
 	AdjustWindowRect(&window_size, WS_OVERLAPPEDWINDOW, false);
@@ -142,12 +200,14 @@ void Application::CreateAppWindow(HINSTANCE _hinst, WNDPROC _proc)
 	m_window = CreateWindow(L"RTAProject", L"RTA Project", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
 		window_size.right - window_size.left, window_size.bottom - window_size.top, NULL, NULL, m_application, this);
 	ShowWindow(m_window, SW_SHOW);
+
+	
 }
 
 // Clears the screen
 void Application::ClearScreen(COLOR _color)
 {
-	m_deviceContext->ClearRenderTargetView(m_renderTargetViewToTexture.p, _color.GetColor()); 
+	m_deviceContext->ClearRenderTargetView(m_renderTargetView.p, _color.GetColor());
 	m_deviceContext->ClearDepthStencilView(m_depthView.p, D3D11_CLEAR_DEPTH, 1, 0);
 }
 
@@ -183,7 +243,7 @@ void Application::InitGraphics()
 	m_swapChain->GetBuffer(0, __uuidof(backBuffer), reinterpret_cast<void**>(&backBuffer));
 
 	// Creating the render view
-	m_device->CreateRenderTargetView(backBuffer, NULL, &m_renderTargetViewToTexture.p);
+	m_device->CreateRenderTargetView(backBuffer, NULL, &m_renderTargetView.p);
 }
 
 // Creates depth buffer
@@ -238,14 +298,22 @@ void Application::CreateLayouts()
 		{ "NORMALS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "UV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TANGENTS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "BITANGENTS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "SHINE", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "WORLDPOS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "CAMERA_POS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "LIGHT_PROJ", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	    { "BITANGENTS", 0,  DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
+	D3D11_INPUT_ELEMENT_DESC vLayoutAnimation[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMALS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "UV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TANGENTS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BITANGENTS", 0,  DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "SKIN_INDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "SKIN_WEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	// Creating layout for object shader
-	m_device->CreateInputLayout(vLayoutObject, ARRAYSIZE(vLayoutObject), OBJECT_VS, sizeof(OBJECT_VS), &m_inputLayoutObject.p);
+	m_device->CreateInputLayout(vLayoutAnimation, ARRAYSIZE(vLayoutObject), OBJECT_VS, sizeof(OBJECT_VS), &m_inputLayoutObject.p);
+	m_device->CreateInputLayout(vLayoutAnimation, ARRAYSIZE(vLayoutAnimation), ANIMATION_VS, sizeof(ANIMATION_VS), &m_inputLayoutAnimation.p);
 }
 
 // Create shaders
@@ -254,6 +322,8 @@ void Application::CreateShaders()
 	// Creates the shaders for the Object
 	m_device->CreateVertexShader(OBJECT_VS, sizeof(OBJECT_VS), nullptr, &m_VS_OBJECT.p);
 	m_device->CreatePixelShader(OBJECT_PS, sizeof(OBJECT_PS), nullptr, &m_PS_OBJECT.p);
+
+	m_device->CreateVertexShader(ANIMATION_VS, sizeof(ANIMATION_VS), nullptr, &m_VS_ANIMATION.p);
 }
 
 // Creates the sampler state that goes to the pixel shader texture
@@ -277,9 +347,9 @@ void Application::CreateSamplerState()
 // Loads objects
 void Application::LoadObjects()
 {
-	XMFLOAT3 groundPosition { 0, 0, 0 };
+	XMFLOAT3 groundPosition{ 0, 0, 0 };
 	m_groundObject.InstantiateModel(m_device, "..\\RTAProject\\Assets\\ground.obj", groundPosition, 0);
-	m_groundObject.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\groundTexture.dds");
+	m_groundObject.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\groundTexture.dds", L"..\\RTAProject\\Assets\\Textures\\groundNormalMap.dds");
 
 	XMFLOAT3 fbXpos{ 0, 0, 0 };
 	m_fbxTest.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Testbox\\Box_Idle.fbx", fbXpos, 0);
@@ -299,7 +369,8 @@ void Application::LoadObjects()
 	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Walk.fbx", fbxPos2, 0);
 	//XMMATRIX rotMatrix = XMMatrixMultiply(XMMatrixRotationY(3.141f), m_fbxMage.GetWorldMatrix());
 	//m_fbxMage.SetWorldMatrix(rotMatrix);
-	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds");
+	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds");//, L"..\\RTAProject\\Assets\\Textures\\mageNormalMap.dds");//, L"..\\RTAProject\\Assets\\Textures\\mageSpecularMap.dds");
+	m_testBones.clear();
 	m_testBones = m_fbxMage.GetFBXBones();
 	for (unsigned int i = 0; i < m_testBones.size(); ++i)
 	{
@@ -317,7 +388,7 @@ void Application::InitializeToShader()
 {
 
 	// Setting the projection matrix
-	m_viewToShader.projectionMatrix = XMMatrixPerspectiveFovLH(45,WINDOW_HEIGHT/WINDOW_WIDTH, SCREEN_ZNEAR, SCREEN_ZFAR);
+	m_viewToShader.projectionMatrix = XMMatrixPerspectiveFovLH(45, WINDOW_HEIGHT / WINDOW_WIDTH, SCREEN_ZNEAR, SCREEN_ZFAR);
 
 	// Setting the View matrix
 	m_viewToShader.viewMatrix = XMMatrixIdentity();
@@ -522,7 +593,7 @@ void Application::FrameInput()
 		if (m_currentFrameIndex < 1)
 			m_currentFrameIndex = 36;
 		m_keyPressed = true;
-	
+
 		Animation currAnimation = m_fbxMage.GetAnimation();
 		vector<Transform> myBones = m_fbxMage.GetFBXBones();
 		for (unsigned int i = 4; i < 28; ++i)
@@ -537,16 +608,16 @@ void Application::FrameInput()
 		if (m_currentFrameIndex > 36)
 			m_currentFrameIndex = 1;
 		m_keyPressed = true;
-	
+
 		Animation currAnimation = m_fbxMage.GetAnimation();
 		for (unsigned int i = 4; i < 28; ++i)
 		{
 			currAnimation.m_keyFrame[i].m_bones[m_currentFrameIndex].m_worldMatrix.r[3].m128_f32[0] += 5.0f;
 			m_mageBonesVec[i]->SetWorldMatrix(currAnimation.m_keyFrame[i].m_bones[m_currentFrameIndex].m_worldMatrix);
-			
+
 		}
 	}
-	
+
 }
 
 

@@ -90,8 +90,8 @@ namespace FBXImporter
 	{
 
 		FbxMesh* currMesh = _inNode->GetMesh();
-		//currMesh->GetDeformer()
 		LoadMeshSkeleton(currMesh, _transformHierarchy, _animation);
+		
 		//Containers
 		vector<VERTEX> controlPointsList;
 
@@ -110,12 +110,10 @@ namespace FBXImporter
 			// Setting Vertecies
 			VERTEX currVertex;
 			currVertex.transform = XMFLOAT3(float(currMesh->GetControlPointAt(j).mData[0]), float(currMesh->GetControlPointAt(j).mData[1]), float(currMesh->GetControlPointAt(j).mData[2]));
-			//FbxVector4 tangents = currMesh->GetElementTangent(j)->GetDirectArray().GetAt(j);
-			//FbxVector4 bitangents = currMesh->GetElementBinormal(j)->GetDirectArray().GetAt(j);
-			//currVertex.tangents = { (float)tangents[0],(float)tangents[1],(float)tangents[2] };
-			//currVertex.bitangents = { (float)bitangents[0],(float)bitangents[1],(float)bitangents[2] };
 			controlPointsList.push_back(currVertex);
 		}
+
+		LoadMeshSkin(currMesh, controlPointsList);
 
 		// Loop for each poly
 		for (int polyIndex = 0; polyIndex < currMesh->GetPolygonCount(); ++polyIndex)
@@ -128,8 +126,8 @@ namespace FBXImporter
 			{
 				FbxVector2 fbxTexCoord;
 				FbxVector4 fbxNormals;
-				FbxVector4 fbxTangents;
 				FbxStringList UVSetNameList;
+				
 				VERTEX currVertex;
 
 				// Get the name of each set of UV coords
@@ -140,12 +138,12 @@ namespace FBXImporter
 				currMesh->GetPolygonVertexUV(polyIndex, Vertex, UVSetNameList.GetStringAt(0), fbxTexCoord, map);
 				currMesh->GetPolygonVertexNormal(polyIndex, Vertex, fbxNormals);
 
-
 				// Set the current vertex
 				currVertex = controlPointsList[_indicies[polyIndex * 3 + Vertex]];
+				//currVertex.skin
 				currVertex.normals = { (float)fbxNormals.mData[0],(float)fbxNormals.mData[1] ,(float)fbxNormals.mData[2] };
 				currVertex.uv = { float(fbxTexCoord[0]),float(1.0f - fbxTexCoord[1]),0 };
-
+				
 				// Store Data
 				_vertecies.push_back(currVertex);
 				_indicies[polyIndex * 3 + Vertex] = polyIndex * 3 + Vertex;
@@ -198,9 +196,9 @@ namespace FBXImporter
 		_animation.m_keyFrame.push_back(currFrame);
 	}
 
-	// Loads the bind pose bones
-	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy,Animation& _animation)
+	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy, Animation& _animation)
 	{
+		// Loads the bind pose bones
 		//int numDeformers = _inMesh->GetDeformerCount();
 		vector<FbxNode*> bonesVector;
 		FbxSkin* skin = (FbxSkin*)_inMesh->GetDeformer(0, FbxDeformer::eSkin);
@@ -221,7 +219,7 @@ namespace FBXImporter
 				currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
 				currBone.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
 
-				/*
+				/*//Skin stuff
 				int *boneVertexIndices = cluster->GetControlPointIndices();
 				double *boneVertexWeights = cluster->GetControlPointWeights();
 				// Iterate through all the vertices, which are affected by the bone
@@ -230,8 +228,8 @@ namespace FBXImporter
 				{
 					int boneVertIndex = boneVertexIndices[boneVertexIndex];
 					float boneWeight = (float)boneVertexWeights[boneVertexIndex];
-				}
-				*/
+				}*/
+				
 
 				GetAnimationData(fbxScene, bone, _animation);
 				bonesVector.push_back(bone);
@@ -240,6 +238,66 @@ namespace FBXImporter
 			
 			SetBoneConnection(bonesVector, _transformHierarchy);
 		}
+	}
+
+	void LoadMeshSkin(FbxMesh *_inMesh, vector<VERTEX>& _vertecies) 
+	{
+		FbxSkin* skin = (FbxSkin*)_inMesh->GetDeformer(0, FbxDeformer::eSkin);
+		if (skin != 0)
+		{
+			// Initializing for debugging purposes
+			unsigned int amountOfVertecies = _vertecies.size();
+			TEMP_SKIN_DATA * tempSkin = new TEMP_SKIN_DATA[amountOfVertecies];
+			for (unsigned int i = 0; i < amountOfVertecies; i++)
+			{
+				tempSkin[i].bonesStored = 0;
+				for (unsigned int j = 0; j < 4; j++)
+				{
+					tempSkin[i].indices[j] = -1;
+					tempSkin[i].weights[j] = -1;
+				}
+			}
+
+
+			int boneCount = skin->GetClusterCount();
+			for (int boneIndex = 0; boneIndex < boneCount; boneIndex++)
+			{
+				Transform currBone;
+				FbxCluster* cluster = skin->GetCluster(boneIndex);
+
+				//Skin stuff
+				int *boneVertexIndices = cluster->GetControlPointIndices();
+				double *boneVertexWeights = cluster->GetControlPointWeights();
+				// Iterate through all the vertices, which are affected by the bone
+				int numBoneVertexIndices = cluster->GetControlPointIndicesCount();
+				for (int boneVertexIndex = 0; boneVertexIndex < numBoneVertexIndices; boneVertexIndex++)
+				{
+					int boneVertIndex = boneVertexIndices[boneVertexIndex];
+					float boneWeight = (float)boneVertexWeights[boneVertexIndex];
+					if (tempSkin[boneVertIndex].bonesStored < 4)
+					{
+						tempSkin[boneVertIndex].indices[tempSkin[boneVertIndex].bonesStored] = boneIndex;
+						tempSkin[boneVertIndex].weights[tempSkin[boneVertIndex].bonesStored]= boneWeight;
+						tempSkin[boneVertIndex].bonesStored += 1;
+					}
+				}
+			}
+
+			for (unsigned int i = 0; i < amountOfVertecies; i++)
+			{
+				_vertecies[i].skinIndices.x = (float)tempSkin[i].indices[0];
+				_vertecies[i].skinIndices.y = (float)tempSkin[i].indices[1];
+				_vertecies[i].skinIndices.z = (float)tempSkin[i].indices[2];
+				_vertecies[i].skinIndices.w = (float)tempSkin[i].indices[3];
+
+				_vertecies[i].skinWeights.x = tempSkin[i].weights[0];
+				_vertecies[i].skinWeights.y = tempSkin[i].weights[1];
+				_vertecies[i].skinWeights.z = tempSkin[i].weights[2];
+				_vertecies[i].skinWeights.w = tempSkin[i].weights[3];
+			}
+			delete[] tempSkin;
+		}
+
 	}
 
 	// Exports fbx vertices data to a binary file
