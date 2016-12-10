@@ -3,7 +3,7 @@
 
 // Prototypes
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-
+Application* myAppAccessor;
 // Main loop 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 {
@@ -12,6 +12,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 
 	srand(unsigned int(time(0)));
 	Application mainApp(hInstance, (WNDPROC)WndProc);
+	myAppAccessor = &mainApp;
 	MSG msg; ZeroMemory(&msg, sizeof(msg));
 	while (msg.message != WM_QUIT && mainApp.Run())
 	{
@@ -30,12 +31,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	if (GetAsyncKeyState(VK_ESCAPE))
 		message = WM_DESTROY;
+
 	switch (message)
 	{
 	case (WM_DESTROY) : { PostQuitMessage(0); }
 		break;
 	case WM_SIZE:
 	{
+		// Getting the new height and width
+		int newWidth = (int)LOWORD(lParam);
+		int newHeight = (int)HIWORD(lParam);
+		if (myAppAccessor)
+			myAppAccessor->ResizeWindow(newWidth, newHeight);
 		break;
 	}
 	}
