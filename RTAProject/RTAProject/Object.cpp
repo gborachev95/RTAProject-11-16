@@ -457,6 +457,8 @@ void Object::LoadBinaryFile(std::string _filePath, Animation& _animation)
 	}
 }
 
+// Load Binary File (OBJ)
+
 // Getter for the bones
 vector<Transform> Object::GetFBXBones()
 {
