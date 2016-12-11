@@ -28,16 +28,17 @@
 		CComPtr<ID3D11Buffer>             m_spotLightConstBuffer;
         // Test variables
 		Object                            m_groundObject;
-		Object							  m_fbxTest;
-		Object                            m_fbxMage;
-		SCENE_TO_VRAM				      m_viewToShader;
-		POINT                             m_oldMousePos;
-		LIGHT_TO_VRAM                     m_dirLightToShader;
-		LIGHT_TO_VRAM                     m_spotLightToShader;
-		bool                              m_keyPressed;
-		vector<Transform>				  m_testBones;
 		vector<Object*>                   m_testbonesVec;
 		vector<Object*>                   m_mageBonesVec;
+		// Fbx files
+		Object							  m_fbxTest;
+		Object                            m_fbxMage;
+		vector<Transform>				  m_testBones;
+		SCENE_TO_VRAM				      m_viewToShader;
+		LIGHT_TO_VRAM                     m_dirLightToShader;
+		LIGHT_TO_VRAM                     m_spotLightToShader;
+		POINT                             m_oldMousePos;
+		bool                              m_keyPressed;
 		int                               m_currentFrameIndex;
 
 		// Private methods that are called only inside of the class

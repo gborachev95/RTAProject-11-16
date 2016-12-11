@@ -359,11 +359,7 @@ namespace FBXImporter
 		if (binFile.is_open())
 		{
 			binFile.write((char*)&header, sizeof(FileInfo::ExporterHeader));
-			for (size_t i = 0; i < _bones.size(); i++)
-			{
-				Transform temp = _bones[i];		
-				binFile.write((char*)&_bones[i], sizeof(Transform) * header.bind.numBones);
-			}
+			binFile.write((char*)&_bones[0], sizeof(Transform) * header.bind.numBones);
 		}
 		binFile.close();
 	}
