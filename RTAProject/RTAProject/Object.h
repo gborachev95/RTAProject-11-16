@@ -49,6 +49,8 @@ public:
 	// Loader
 	void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
 	void LoadBinaryFile(std::string _filePath, vector<Transform>& _bones);
+	void LoadBinaryFile(std::string _filePath, Animation& _animation);
+
 	// Alligning by 16 bytes so we don't get a warning 
 	void* operator new(size_t i)
 	{

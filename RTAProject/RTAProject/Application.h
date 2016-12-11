@@ -15,7 +15,7 @@
 		CComPtr<ID3D11DeviceContext>	  m_deviceContext = NULL;
 		CComPtr<ID3D11Texture2D>		  m_depthBuffer = NULL;
 		CComPtr<ID3D11DepthStencilView>   m_depthView = NULL;
-		CComPtr<ID3D11RenderTargetView>   m_renderTargetViewToTexture = NULL;
+		CComPtr<ID3D11RenderTargetView>   m_renderTargetView = NULL;
 		D3D11_VIEWPORT					  m_viewPort;
 		CComPtr<ID3D11VertexShader>       m_VS_OBJECT;
 		CComPtr<ID3D11VertexShader>       m_VS_ANIMATION;
@@ -69,5 +69,6 @@
 		Application(HINSTANCE _hinst, WNDPROC _proc);
 		~Application();
 		bool Run();
+		void ResizeWindow(unsigned int _width, unsigned int _height);
 		bool ShutDown();
 	};

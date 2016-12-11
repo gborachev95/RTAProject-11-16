@@ -43,8 +43,10 @@ namespace FBXImporter
 	void GetDataFromMesh(FbxNode* inNode, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, std::vector<Transform>& _transformHierarchy, Animation& _animation);
 	void GetAnimationData(FbxScene* _inScene, FbxNode* _inNode, Animation& _animation);
 
+	// Overloaded Export to Binary Functions
 	void ExportBinaryFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
-	void ExportBinaryFile(const string & _fileName, vector<Transform> _bones);
+	void ExportBinaryFile(const string & _fileName, vector<Transform>& _bones);
+	void ExportBinaryFile(const string & _fileName, Animation& _animation);
 
 	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy, Animation& _animation);
 	void LoadMeshSkin(FbxMesh *_inMesh, vector<VERTEX>& _vertecies);

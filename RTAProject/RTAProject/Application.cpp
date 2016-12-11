@@ -12,7 +12,7 @@ Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 
 	// Creates the window
 	CreateAppWindow(_hinst, _proc);
-
+	
 	// Creates the swapchain and back buffer
 	InitGraphics();
 
@@ -56,6 +56,58 @@ Application::~Application()
 	//dll_loader.UnloadDLL();
 }
 
+// Resize Window
+void Application::ResizeWindow(unsigned int _width, unsigned int _height)
+{
+	
+	// Resizing the depth buffer
+	m_depthBuffer.Release();
+	m_depthView.Release();
+	m_renderTargetView.Release();
+
+	m_swapChain->ResizeBuffers(1, _width, _height, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
+
+	// Creation of the texture
+	D3D11_TEXTURE2D_DESC textureDesc;
+	ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
+	textureDesc.Width = _width;
+	textureDesc.Height = _height;
+	textureDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	textureDesc.MipLevels = 1;
+	textureDesc.ArraySize = 1;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	m_device->CreateTexture2D(&textureDesc, nullptr, &m_depthBuffer.p);
+
+	// Creation of the depth stencil view
+	D3D11_DEPTH_STENCIL_VIEW_DESC depthDesc;
+	ZeroMemory(&depthDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+	depthDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	depthDesc.Texture2D.MipSlice = 0;
+	m_device->CreateDepthStencilView(m_depthBuffer.p, nullptr, &m_depthView.p);
+
+	// Resizing the viewport
+	ZeroMemory(&m_viewPort, sizeof(m_viewPort));
+	m_viewPort.Width = float(_width);
+	m_viewPort.Height = float(_height);
+	m_viewPort.MaxDepth = 1;
+
+	// Setting the backbuffer
+	ID3D11Texture2D *backBuffer;
+	m_swapChain->GetBuffer(0, __uuidof(backBuffer), reinterpret_cast<void**>(&backBuffer));
+	// Creating the render view
+	m_device->CreateRenderTargetView(backBuffer, NULL, &m_renderTargetView.p);
+
+	// It releases the back buffer from data so it can take new data
+	backBuffer->Release();
+
+	// Setting the projection matrix
+	m_viewToShader.projectionMatrix = XMMatrixPerspectiveFovLH(45, float(_width) / float(_height), SCREEN_ZNEAR, SCREEN_ZFAR);
+}
+
 // Loops the application
 bool Application::Run()
 {
@@ -83,7 +135,7 @@ void Application::Render()
 {
 	// Setting the render target with the depth buffer
 	m_deviceContext->RSSetViewports(1, &m_viewPort);
-	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetViewToTexture.p, m_depthView.p);
+	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView.p, m_depthView.p);
 
 	// Clearing the screen
 	COLOR clearColor{ 0.39f, 0.58f, 0.92f, 1 };
@@ -148,12 +200,14 @@ void Application::CreateAppWindow(HINSTANCE _hinst, WNDPROC _proc)
 	m_window = CreateWindow(L"RTAProject", L"RTA Project", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
 		window_size.right - window_size.left, window_size.bottom - window_size.top, NULL, NULL, m_application, this);
 	ShowWindow(m_window, SW_SHOW);
+
+	
 }
 
 // Clears the screen
 void Application::ClearScreen(COLOR _color)
 {
-	m_deviceContext->ClearRenderTargetView(m_renderTargetViewToTexture.p, _color.GetColor());
+	m_deviceContext->ClearRenderTargetView(m_renderTargetView.p, _color.GetColor());
 	m_deviceContext->ClearDepthStencilView(m_depthView.p, D3D11_CLEAR_DEPTH, 1, 0);
 }
 
@@ -189,7 +243,7 @@ void Application::InitGraphics()
 	m_swapChain->GetBuffer(0, __uuidof(backBuffer), reinterpret_cast<void**>(&backBuffer));
 
 	// Creating the render view
-	m_device->CreateRenderTargetView(backBuffer, NULL, &m_renderTargetViewToTexture.p);
+	m_device->CreateRenderTargetView(backBuffer, NULL, &m_renderTargetView.p);
 }
 
 // Creates depth buffer

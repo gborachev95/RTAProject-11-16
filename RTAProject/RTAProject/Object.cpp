@@ -44,8 +44,12 @@ void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOA
 	temp_vertices.clear();
 	vertexIndices.clear();
 	m_bones.clear();
+	m_animation.SetKeyFramesNumber(0);
+	m_animation.SetTotalTime(0);
+	m_animation.m_keyFrame.clear();
 	LoadBinaryFile(_filePath, temp_vertices, vertexIndices);
 	LoadBinaryFile(_filePath, m_bones);
+	LoadBinaryFile(_filePath, m_animation);
 
 	// Setting the members
 	m_numVerts = temp_vertices.size();
@@ -406,6 +410,44 @@ void Object::LoadBinaryFile(std::string _filePath, vector<Transform>& _bones)
 			binFile.seekp(sizeof(FileInfo::ExporterHeader), ios::beg);
 			_bones.resize(header.bind.numBones);
 			binFile.read((char*)&_bones[0], header.bind.numBones * sizeof(Transform));
+		}
+		binFile.close();
+	}
+}
+
+// Load binary file animation
+void Object::LoadBinaryFile(std::string _filePath, Animation& _animation)
+{
+	FILE* file = nullptr;
+	FileInfo::ExporterHeader header;
+	fstream binFile;
+	string binName;
+
+	const char* theName = strrchr(_filePath.c_str(), '\\');
+	binName = strrchr(theName, theName[1]);
+	binName.pop_back();
+	binName.pop_back();
+	binName.pop_back();
+	binName.pop_back();
+	binName.append("_anim.bin");
+
+	if (header.ReadHeader(&file, binName.c_str(), _filePath.c_str()))
+	{
+		binFile.open(binName.c_str(), std::ios::in | std::ios::binary);
+		if (binFile.is_open())
+		{
+			binFile.seekp(sizeof(FileInfo::ExporterHeader), ios::beg);
+			binFile.read((char*)&_animation, sizeof(Animation) - sizeof(vector<KeyFrame>));
+			_animation.m_keyFrame.resize(header.anim.numFrames);
+			for (size_t i = 0; i < header.anim.numFrames; i++)
+			{
+				binFile.read((char*)&_animation.m_keyFrame[i], sizeof(KeyFrame) - sizeof(vector<Transform>));
+				_animation.m_keyFrame[i].m_bones.resize(header.anim.numBones);
+				for (size_t j = 0; j < header.anim.numBones; j++)
+				{
+					binFile.read((char*)&_animation.m_keyFrame[i].m_bones[j], sizeof(Transform));
+				}
+			}
 		}
 		binFile.close();
 	}
