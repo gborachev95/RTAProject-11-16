@@ -32,6 +32,7 @@ void Object::InstantiateModel(ID3D11Device* _device, std::string _filePath, XMFL
 // Instantiates the object using an FBX file
 void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position, float _shine)
 {
+	m_currentFrameIndex = 0;
 	// Gets us the function from the DLL
 	//OpenFBXFile LoadFBXFile = LinkFBXDll();
 
@@ -466,4 +467,28 @@ vector<Transform> Object::GetFBXBones()
 Animation Object::GetAnimation()
 {
 	return m_animation;
+}
+
+// Adds a frame to the animation
+void Object::ForwardFrame()
+{
+	if (m_currentFrameIndex >= m_animation.GetKeyFramesNumber() - 2)
+		m_currentFrameIndex = 1;
+	else
+		++m_currentFrameIndex;
+}
+
+// Subtracts a frame form the animation
+void Object::BackwardFrame()
+{
+	if (m_currentFrameIndex <= 1)
+		m_currentFrameIndex = m_animation.GetKeyFramesNumber() - 2;
+	else
+		--m_currentFrameIndex;
+}
+
+// Returns the current frame index
+unsigned int Object::GetCurrFrame()
+{
+	return m_currentFrameIndex;
 }

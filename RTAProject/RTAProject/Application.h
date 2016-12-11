@@ -2,6 +2,7 @@
 #include "includes.h"
 #include "Object.h"
 
+//enum INPUT_ACTION {TOGGLE_FLASH,TOGGLE_DIRLIGHT,};
  class Application
 	{
 	private:
@@ -30,16 +31,20 @@
 		Object                            m_groundObject;
 		vector<Object*>                   m_testbonesVec;
 		vector<Object*>                   m_mageBonesVec;
+		vector<Object*>                   m_bearBonesVec;
 		// Fbx files
 		Object							  m_fbxTest;
 		Object                            m_fbxMage;
+		Object                            m_fbxBear;
+		// Other
 		vector<Transform>				  m_testBones;
 		SCENE_TO_VRAM				      m_viewToShader;
 		LIGHT_TO_VRAM                     m_dirLightToShader;
 		LIGHT_TO_VRAM                     m_spotLightToShader;
 		POINT                             m_oldMousePos;
 		bool                              m_keyPressed;
-		int                               m_currentFrameIndex;
+		bool                              m_loopAnimation;
+		unsigned int					  m_temptimeer;
 
 		// Private methods that are called only inside of the class
 	private:
@@ -63,7 +68,8 @@
 		void MapShaders();
 		void InitilizeLights();
 		void FrameInput();
-
+		void UpdateFrames(Object& _object, vector<Object*> _renderedBones, XMVECTOR _offset);
+		void LoopAnimation(Object& _object, unsigned int _speed);
 		// Public methods that are called outside of the class
 	public:
 		// Application Methods
