@@ -6,7 +6,6 @@ class KeyFrame
 {
 	float m_time;
 	unsigned int m_boneIndex;
-	
 public:
 	std::vector<Transform> m_bones;
 	// Setters

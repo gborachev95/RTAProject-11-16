@@ -54,6 +54,7 @@ namespace FBXImporter
 		TraverseScene(root, _vertecies, _indices, _transformHierarchy, _animation);
 		ExportBinaryFile(_fileName, _vertecies, _indices);
 		ExportBinaryFile(_fileName, _transformHierarchy);
+		ExportBinaryFile(_fileName, _animation);
 
 		fbxScene->Destroy();
 		lSdkManager->Destroy();
@@ -158,8 +159,6 @@ namespace FBXImporter
 
 		FbxAnimStack* animStack = (FbxAnimStack*)_inScene->GetSrcObject<FbxAnimStack>(0);
 		const char* animStackName = animStack->GetName();
-		// Setting name of the animation
-		_animation.SetAnimationName(animStackName);
 
 		// Getting the frame times
 		FbxTimeSpan animTime = animStack->GetLocalTimeSpan();
@@ -340,7 +339,8 @@ namespace FBXImporter
 	}
 
 	// Exports fbx transform data 
-	void ExportBinaryFile(const string & _fileName, vector<Transform> _bones)
+
+	void ExportBinaryFile(const string & _fileName, vector<Transform>& _bones)
 	{
 		ExporterHeader header(FileInfo::FILE_TYPES::BIND_POSE, _fileName.c_str());
 		header.version = EXPORTER_VERSION_NUMBER;
@@ -360,6 +360,41 @@ namespace FBXImporter
 		{
 			binFile.write((char*)&header, sizeof(FileInfo::ExporterHeader));
 			binFile.write((char*)&_bones[0], sizeof(Transform) * header.bind.numBones);
+		}
+		binFile.close();
+	}
+
+	void ExportBinaryFile(const string & _fileName, Animation& _animation)
+	{
+		ExporterHeader header(FileInfo::FILE_TYPES::ANIMATION, _fileName.c_str());
+		header.version = EXPORTER_VERSION_NUMBER;
+		header.anim.endTime = _animation.GetTotalTime();
+		header.anim.startTime = 0.0f;
+		header.anim.numBones = _animation.m_keyFrame[0].GetBoneIndex() + 1;
+		header.anim.numFrames = _animation.m_keyFrame.size();
+
+		string binName;
+		fstream binFile;
+		const char* theName = strrchr(_fileName.c_str(), '\\');
+		binName = strrchr(theName, theName[1]);
+		binName.pop_back();
+		binName.pop_back();
+		binName.pop_back();
+		binName.pop_back();
+		binName.append("_anim.bin");
+		binFile.open(binName.c_str(), std::ios::out | std::ios::binary);
+		if (binFile.is_open())
+		{
+			binFile.write((char*)&header, sizeof(FileInfo::ExporterHeader));
+			binFile.write((char*)&_animation, sizeof(Animation) - sizeof(vector<KeyFrame>));
+			for (size_t i = 0; i < header.anim.numFrames; i++)
+			{
+				binFile.write((char*)&_animation.m_keyFrame[i], sizeof(KeyFrame) - sizeof(vector<Transform>));
+				for (size_t j = 0; j < header.anim.numBones; j++)
+				{
+					binFile.write((char*)&_animation.m_keyFrame[i].m_bones[j], sizeof(Transform));
+				}
+			}
 		}
 		binFile.close();
 	}
