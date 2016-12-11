@@ -33,11 +33,6 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	OUTPUT_VERTEX sendToRasterizer = (OUTPUT_VERTEX)0;
 	float4 localCoordinate = float4(fromVertexBuffer.coordinate.xyz, 1);
 
-	// Mirroring value for flipping the uvs 
-	//float mirroringValue = 1;
-	//if (localCoordinate.x < 0.0f)
-	//	mirroringValue = 0;
-
 	// Shading
 	localCoordinate = mul(localCoordinate, worldMatrix);
 	sendToRasterizer.worldPosition = localCoordinate.xyz;
@@ -51,7 +46,7 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	// Sending data
 	sendToRasterizer.projectedCoordinate = localCoordinate;
 	sendToRasterizer.normals = worldNormals;
-	sendToRasterizer.uv.xy = fromVertexBuffer.uv.xy;	
+	sendToRasterizer.uv.xyz = fromVertexBuffer.uv.xyz;
 	sendToRasterizer.tangents = mul(fromVertexBuffer.tangents, (float3x3)worldMatrix);
 	sendToRasterizer.bitangents = mul(bitangent, (float3x3)worldMatrix);
 

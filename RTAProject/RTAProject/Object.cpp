@@ -57,8 +57,11 @@ void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOA
 
 	// Setting vertecies
 	for (unsigned int i = 0; i < m_numVerts; ++i)
+	{
 		m_vertecies[i] = temp_vertices[i];
-
+		// Setting the shine value
+		m_vertecies[i].uv.z = _shine;
+	}
 	m_numIndicies = vertexIndices.size();
 	m_indexList = new unsigned int[m_numIndicies];
 	for (unsigned int i = 0; i < m_numIndicies; ++i)

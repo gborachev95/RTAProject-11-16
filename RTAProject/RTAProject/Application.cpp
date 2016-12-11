@@ -366,10 +366,10 @@ void Application::LoadObjects()
 	}
 
 	XMFLOAT3 fbxPos2{ 5.0f, 0.0f, 0.0f };
-	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Walk.fbx", fbxPos2, 0);
+	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Walk.fbx", fbxPos2, 1);
 	//XMMATRIX rotMatrix = XMMatrixMultiply(XMMatrixRotationY(3.141f), m_fbxMage.GetWorldMatrix());
 	//m_fbxMage.SetWorldMatrix(rotMatrix);
-	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds");//, L"..\\RTAProject\\Assets\\Textures\\mageNormalMap.dds");//, L"..\\RTAProject\\Assets\\Textures\\mageSpecularMap.dds");
+	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds", L"..\\RTAProject\\Assets\\Textures\\mageNormalMap.dds", L"..\\RTAProject\\Assets\\Textures\\mageSpecularMap.dds");
 	m_testBones.clear();
 	m_testBones = m_fbxMage.GetFBXBones();
 	for (unsigned int i = 0; i < m_testBones.size(); ++i)
@@ -393,7 +393,9 @@ void Application::InitializeToShader()
 	// Setting the View matrix
 	m_viewToShader.viewMatrix = XMMatrixIdentity();
 	m_viewToShader.viewMatrix.r[3].m128_f32[1] = 2.0f;
-	m_viewToShader.viewMatrix.r[3].m128_f32[2] = -7.0f;
+	m_viewToShader.viewMatrix.r[3].m128_f32[2] = 7.0f;
+	XMMATRIX nintyRotMatrix = XMMatrixMultiply(XMMatrixRotationY(3.141f), m_viewToShader.viewMatrix);
+	m_viewToShader.viewMatrix = nintyRotMatrix;
 
 	// Inversing the camera
 	m_viewToShader.viewMatrix = XMMatrixInverse(nullptr, m_viewToShader.viewMatrix);
@@ -430,6 +432,7 @@ void Application::CreateConstBuffers()
 	constBufferDesc.StructureByteStride = sizeof(float);
 	constBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	m_device->CreateBuffer(&constBufferDesc, NULL, &m_spotLightConstBuffer.p);
+
 }
 
 // Movement for the camera
@@ -485,13 +488,14 @@ void Application::FPCamera(float _speed)
 
 	// Spot light 
 	m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
+	
 	m_spotLightToShader.transform.m128_f32[0] = m_viewToShader.viewMatrix.r[3].m128_f32[0];
 	m_spotLightToShader.transform.m128_f32[1] = m_viewToShader.viewMatrix.r[3].m128_f32[1];
 	m_spotLightToShader.transform.m128_f32[2] = m_viewToShader.viewMatrix.r[3].m128_f32[2];
 	m_spotLightToShader.direction.x = m_viewToShader.viewMatrix.r[2].m128_f32[0];
 	m_spotLightToShader.direction.y = m_viewToShader.viewMatrix.r[2].m128_f32[1];
 	m_spotLightToShader.direction.z = m_viewToShader.viewMatrix.r[2].m128_f32[2];
-
+	
 	m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
 }
 
@@ -513,21 +517,21 @@ void Application::LightsControls(float _speed)
 		m_keyPressed = false;
 
 	// Move point light
-	//if (m_spotLightToShader.status)
-	//{
-	//	if (GetAsyncKeyState(VK_DOWN))
-	//		m_spotLightToShader.transform.m128_f32[2] -= _speed;//float(Timer.Delta())* 2.0f;
-	//	else if (GetAsyncKeyState(VK_UP))
-	//		m_spotLightToShader.transform.m128_f32[2] += _speed;
-	//	if (GetAsyncKeyState(VK_LEFT))
-	//		m_spotLightToShader.transform.m128_f32[0] -= _speed;
-	//	else if (GetAsyncKeyState(VK_RIGHT))
-	//		m_spotLightToShader.transform.m128_f32[0] += _speed;
-	//	if (GetAsyncKeyState('Z'))
-	//		m_spotLightToShader.transform.m128_f32[1] += _speed;
-	//	else if (GetAsyncKeyState('X'))
-	//		m_spotLightToShader.transform.m128_f32[1] -= _speed;
-	//}
+	if (m_spotLightToShader.status)
+	{
+		if (GetAsyncKeyState(VK_DOWN))
+			m_spotLightToShader.transform.m128_f32[2] -= _speed;//float(Timer.Delta())* 2.0f;
+		else if (GetAsyncKeyState(VK_UP))
+			m_spotLightToShader.transform.m128_f32[2] += _speed;
+		if (GetAsyncKeyState(VK_LEFT))
+			m_spotLightToShader.transform.m128_f32[0] -= _speed;
+		else if (GetAsyncKeyState(VK_RIGHT))
+			m_spotLightToShader.transform.m128_f32[0] += _speed;
+		if (GetAsyncKeyState('Z'))
+			m_spotLightToShader.transform.m128_f32[1] += _speed;
+		else if (GetAsyncKeyState('X'))
+			m_spotLightToShader.transform.m128_f32[1] -= _speed;
+	}
 }
 
 // Maps shaders before rendering
@@ -535,7 +539,7 @@ void Application::MapShaders()
 {
 	// Set constant buffers
 	m_deviceContext->VSSetConstantBuffers(1, 1, &m_constBufferScene.p);
-	m_deviceContext->PSSetConstantBuffers(1, 1, &m_constBufferScene.p);
+	m_deviceContext->PSSetConstantBuffers(5, 1, &m_constBufferScene.p);
 	// Lights const buffer
 	m_deviceContext->PSSetConstantBuffers(2, 1, &m_dirLightConstBuffer.p);
 	m_deviceContext->PSSetConstantBuffers(4, 1, &m_spotLightConstBuffer.p);
@@ -556,6 +560,9 @@ void Application::MapShaders()
 	m_deviceContext->Map(m_spotLightConstBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mapSubresource);
 	memcpy(mapSubresource.pData, &m_spotLightToShader, sizeof(LIGHT_TO_VRAM));
 	m_deviceContext->Unmap(m_spotLightConstBuffer, NULL);
+
+	
+
 }
 
 // Initilizes the light for the shader
