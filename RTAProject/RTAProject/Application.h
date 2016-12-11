@@ -26,6 +26,10 @@
 		CComPtr<ID3D11Buffer>             m_constBufferScene;
 		CComPtr<ID3D11Buffer>             m_dirLightConstBuffer;
 		CComPtr<ID3D11Buffer>             m_spotLightConstBuffer;
+
+		//Skin
+		CComPtr<ID3D11Buffer>             m_bonesConstBuffer;
+
         // Test variables
 		Object                            m_groundObject;
 		Object							  m_fbxTest;
@@ -34,6 +38,7 @@
 		POINT                             m_oldMousePos;
 		LIGHT_TO_VRAM                     m_dirLightToShader;
 		LIGHT_TO_VRAM                     m_spotLightToShader;
+		BONES_TO_VRAM					  m_bonesToShader;
 		bool                              m_keyPressed;
 		vector<Transform>				  m_testBones;
 		vector<Object*>                   m_testbonesVec;

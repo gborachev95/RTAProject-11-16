@@ -296,6 +296,7 @@ namespace FBXImporter
 				_vertecies[i].skinWeights.w = tempSkin[i].weights[3];
 			}
 			delete[] tempSkin;
+			int a = 0;
 		}
 
 	}

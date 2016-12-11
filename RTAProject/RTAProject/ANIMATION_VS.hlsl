@@ -30,8 +30,11 @@ cbuffer SCENE : register(b1)
 	float4x4 projectionMatrix;
 	float4 cameraPosition;
 }
+cbuffer BONES : register(b2)
+{
+	float4x4 BoneOffset[256];
+}
 
-float4x4 BoneOffset[256] : register(b2);
 
 OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 {
@@ -44,11 +47,12 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	I am still not sure if we receive the values but give it a try.  I think that there might be some kind of missmatch stil because we are using float4s for them but idk.
 	Dont forget to: Create const buffer in the const buffer function, Set it before rendering the fbx files in the render function and map and unmap it in the mapping function.
 	*/ 
+	int a = fromVertexBuffer.indices[0];
 	// Local coordinate with smooth skinning 
-	//localCoordinate =  /*BoneOffset[fromVertexBuffer.indices[0]] * */ localCoordinate * fromVertexBuffer.weights[0];
-	//localCoordinate += /*BoneOffset[fromVertexBuffer.indices[1]] * */ localCoordinate * fromVertexBuffer.weights[1];
-	//localCoordinate += /*BoneOffset[fromVertexBuffer.indices[2]] * */ localCoordinate * fromVertexBuffer.weights[2];
-	//localCoordinate += /*BoneOffset[fromVertexBuffer.indices[3]] * */ localCoordinate * fromVertexBuffer.weights[3];
+	//localCoordinate =  float4(BoneOffset[fromVertexBuffer.indices[0]]._41, BoneOffset[fromVertexBuffer.indices[0]]._42, BoneOffset[fromVertexBuffer.indices[0]]._43, BoneOffset[fromVertexBuffer.indices[0]]._44)* fromVertexBuffer.weights[0];
+	//localCoordinate += BoneOffset[fromVertexBuffer.indices[1]] * fromVertexBuffer.weights[1];
+	//localCoordinate += BoneOffset[fromVertexBuffer.indices[2]] * fromVertexBuffer.weights[2];
+	//localCoordinate += BoneOffset[fromVertexBuffer.indices[3]] * fromVertexBuffer.weights[3];
 
 	// Local coordinate in world space
 	localCoordinate = mul(localCoordinate, worldMatrix);

@@ -76,6 +76,11 @@ struct SCENE_TO_VRAM
 	XMFLOAT3 cameraPosition;
 };
 
+struct BONES_TO_VRAM
+{
+	XMMATRIX bones[256];
+};
+
 struct LIGHT_TO_VRAM
 {
 	XMVECTOR transform;

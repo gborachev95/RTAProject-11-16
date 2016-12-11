@@ -312,7 +312,7 @@ void Application::CreateLayouts()
 		{ "SKIN_WEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	// Creating layout for object shader
-	m_device->CreateInputLayout(vLayoutAnimation, ARRAYSIZE(vLayoutObject), OBJECT_VS, sizeof(OBJECT_VS), &m_inputLayoutObject.p);
+	m_device->CreateInputLayout(vLayoutObject, ARRAYSIZE(vLayoutObject), OBJECT_VS, sizeof(OBJECT_VS), &m_inputLayoutObject.p);
 	m_device->CreateInputLayout(vLayoutAnimation, ARRAYSIZE(vLayoutAnimation), ANIMATION_VS, sizeof(ANIMATION_VS), &m_inputLayoutAnimation.p);
 }
 
@@ -372,6 +372,15 @@ void Application::LoadObjects()
 	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds");//, L"..\\RTAProject\\Assets\\Textures\\mageNormalMap.dds");//, L"..\\RTAProject\\Assets\\Textures\\mageSpecularMap.dds");
 	m_testBones.clear();
 	m_testBones = m_fbxMage.GetFBXBones();
+
+	//Bones info for model
+	for (size_t i = 0; i < m_testBones.size(); i++)
+	{
+		m_bonesToShader.bones[i] = m_testBones[i].m_worldMatrix;
+	}
+	
+
+
 	for (unsigned int i = 0; i < m_testBones.size(); ++i)
 	{
 		XMFLOAT3 bonePos = XMFLOAT3(m_testBones[i].m_worldMatrix.r[3].m128_f32[0], m_testBones[i].m_worldMatrix.r[3].m128_f32[1], m_testBones[i].m_worldMatrix.r[3].m128_f32[2]);
@@ -430,6 +439,15 @@ void Application::CreateConstBuffers()
 	constBufferDesc.StructureByteStride = sizeof(float);
 	constBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	m_device->CreateBuffer(&constBufferDesc, NULL, &m_spotLightConstBuffer.p);
+
+
+	ZeroMemory(&constBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	constBufferDesc.ByteWidth = sizeof(BONES_TO_VRAM);
+	constBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	constBufferDesc.StructureByteStride = sizeof(float);
+	constBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	m_device->CreateBuffer(&constBufferDesc, NULL, &m_bonesConstBuffer.p);
 }
 
 // Movement for the camera
@@ -540,6 +558,9 @@ void Application::MapShaders()
 	m_deviceContext->PSSetConstantBuffers(2, 1, &m_dirLightConstBuffer.p);
 	m_deviceContext->PSSetConstantBuffers(4, 1, &m_spotLightConstBuffer.p);
 
+	// Bones const buffer
+	m_deviceContext->VSSetConstantBuffers(2,1, &m_bonesConstBuffer.p);
+
 	// Scene mapping
 	D3D11_MAPPED_SUBRESOURCE mapSubresource;
 	ZeroMemory(&mapSubresource, sizeof(mapSubresource));
@@ -556,6 +577,12 @@ void Application::MapShaders()
 	m_deviceContext->Map(m_spotLightConstBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mapSubresource);
 	memcpy(mapSubresource.pData, &m_spotLightToShader, sizeof(LIGHT_TO_VRAM));
 	m_deviceContext->Unmap(m_spotLightConstBuffer, NULL);
+
+	// Skin
+	ZeroMemory(&mapSubresource, sizeof(mapSubresource));
+	m_deviceContext->Map(m_bonesConstBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mapSubresource);
+	memcpy(mapSubresource.pData, &m_bonesToShader, sizeof(BONES_TO_VRAM));
+	m_deviceContext->Unmap(m_bonesConstBuffer, NULL);
 }
 
 // Initilizes the light for the shader
