@@ -152,8 +152,8 @@ void Application::Render()
 
 	// Rendering objects
 	m_groundObject.Render(m_deviceContext);
-	//for (unsigned int i = 0; i < m_mageBonesVec.size(); ++i)
-	//	m_mageBonesVec[i]->Render(m_deviceContext);
+	for (unsigned int i = 0; i < m_mageBonesVec.size(); ++i)
+		m_mageBonesVec[i]->Render(m_deviceContext);
 	for (unsigned int i = 0; i < m_testbonesVec.size(); ++i)
 		m_testbonesVec[i]->Render(m_deviceContext);
 
@@ -393,7 +393,9 @@ void Application::InitializeToShader()
 	// Setting the View matrix
 	m_viewToShader.viewMatrix = XMMatrixIdentity();
 	m_viewToShader.viewMatrix.r[3].m128_f32[1] = 2.0f;
-	m_viewToShader.viewMatrix.r[3].m128_f32[2] = -7.0f;
+	m_viewToShader.viewMatrix.r[3].m128_f32[2] = 7.0f;
+	XMMATRIX nintyRotMatrix = XMMatrixMultiply(XMMatrixRotationY(3.141f), m_viewToShader.viewMatrix);
+	m_viewToShader.viewMatrix = nintyRotMatrix;
 
 	// Inversing the camera
 	m_viewToShader.viewMatrix = XMMatrixInverse(nullptr, m_viewToShader.viewMatrix);
