@@ -67,7 +67,7 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 
 	// Normals in world space
 	sendToRasterizer.normals = mul(float4(fromVertexBuffer.normals.xyz, 0), worldMatrix).xyz;
-	sendToRasterizer.uv = fromVertexBuffer.uv.xyz;
+	sendToRasterizer.uv.xyz = fromVertexBuffer.uv.xyz;
 
 	// Tangends and bitangents in worldspace
 	sendToRasterizer.tangents = mul(fromVertexBuffer.tangents, (float3x3)worldMatrix);

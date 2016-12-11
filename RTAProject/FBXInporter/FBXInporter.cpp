@@ -340,6 +340,7 @@ namespace FBXImporter
 	}
 
 	// Exports fbx transform data 
+
 	void ExportBinaryFile(const string & _fileName, vector<Transform>& _bones)
 	{
 		ExporterHeader header(FileInfo::FILE_TYPES::BIND_POSE, _fileName.c_str());
