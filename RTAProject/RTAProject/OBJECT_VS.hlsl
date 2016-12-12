@@ -1,11 +1,11 @@
 #pragma pack_matrix( row_major )
 struct INPUT_VERTEX
 {
-	float3 coordinate : POSITION;
-	float3 normals    : NORMALS;
-	float3 uv         : UV;
-	float3 tangents   : TANGENTS;
-	float3 bitangents : BITANGENTS;
+	float4 coordinate : POSITION;
+	float4 normals    : NORMALS;
+	float4 uv         : UV;
+	float4 tangents   : TANGENTS;
+	float4 bitangents : BITANGENTS;
 };
 struct OUTPUT_VERTEX
 {
@@ -39,7 +39,7 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	float3 worldNormals = mul(float4(fromVertexBuffer.normals.xyz, 0), worldMatrix).xyz;
 	localCoordinate = mul(localCoordinate, viewMatrix);
 	localCoordinate = mul(localCoordinate, projectionMatrix);
-	float3 bitangent = cross(fromVertexBuffer.normals, fromVertexBuffer.tangents);
+	//float3 bitangent = cross(fromVertexBuffer.normals, fromVertexBuffer.tangents);
 
 
 
@@ -47,8 +47,8 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	sendToRasterizer.projectedCoordinate = localCoordinate;
 	sendToRasterizer.normals = worldNormals;
 	sendToRasterizer.uv.xyz = fromVertexBuffer.uv.xyz;
-	sendToRasterizer.tangents = mul(fromVertexBuffer.tangents, (float3x3)worldMatrix);
-	sendToRasterizer.bitangents = mul(bitangent, (float3x3)worldMatrix);
+	sendToRasterizer.tangents = mul(fromVertexBuffer.tangents, worldMatrix).xyz;
+	sendToRasterizer.bitangents = mul(fromVertexBuffer.bitangents, worldMatrix).xyz;
 
 	return sendToRasterizer;
 }

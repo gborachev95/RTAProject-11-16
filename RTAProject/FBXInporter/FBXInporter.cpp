@@ -109,7 +109,7 @@ namespace FBXImporter
 		{
 			// Setting Vertecies
 			VERTEX currVertex;
-			currVertex.transform = XMFLOAT3(float(currMesh->GetControlPointAt(j).mData[0]), float(currMesh->GetControlPointAt(j).mData[1]), float(currMesh->GetControlPointAt(j).mData[2]));
+			currVertex.transform = XMFLOAT4(float(currMesh->GetControlPointAt(j).mData[0]), float(currMesh->GetControlPointAt(j).mData[1]), float(currMesh->GetControlPointAt(j).mData[2]),0);
 			controlPointsList.push_back(currVertex);
 		}
 
@@ -141,8 +141,8 @@ namespace FBXImporter
 				// Set the current vertex
 				currVertex = controlPointsList[_indicies[polyIndex * 3 + Vertex]];
 				//currVertex.skin
-				currVertex.normals = { (float)fbxNormals.mData[0],(float)fbxNormals.mData[1] ,(float)fbxNormals.mData[2] };
-				currVertex.uv = { float(fbxTexCoord[0]),float(1.0f - fbxTexCoord[1]),0 };
+				currVertex.normals = { (float)fbxNormals.mData[0],(float)fbxNormals.mData[1] ,(float)fbxNormals.mData[2],0 };
+				currVertex.uv = { float(fbxTexCoord[0]),float(1.0f - fbxTexCoord[1]),0,0 };
 				
 				// Store Data
 				_vertecies.push_back(currVertex);

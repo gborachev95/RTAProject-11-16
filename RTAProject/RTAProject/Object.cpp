@@ -165,9 +165,9 @@ bool Object::ReadObject(std::string _filePath,float _shine)
 {
 	// Local variables
 	vector<unsigned int> vertexIndices, uvIndices, normalIndices;
-	vector<XMFLOAT3> temp_vertices;
-	vector<XMFLOAT3> temp_normals;
-	vector<XMFLOAT2> temp_uvs;
+	vector<XMFLOAT4> temp_vertices;
+	vector<XMFLOAT4> temp_normals;
+	vector<XMFLOAT4> temp_uvs;
 	FILE *file;
 	
 	// Opening file - "r" -> read in
@@ -190,21 +190,21 @@ bool Object::ReadObject(std::string _filePath,float _shine)
 		// Check if the line is a vertex
 		if (strcmp(lineHeader, "v") == 0)
 		{
-			XMFLOAT3 vertex;
+			XMFLOAT4 vertex;
 			fscanf_s(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
 			temp_vertices.push_back(vertex);
 		}
 		// Check if the line is a UV
 		else if (strcmp(lineHeader, "vt") == 0)
 		{
-			XMFLOAT2 uv;
+			XMFLOAT4 uv;
 			fscanf_s(file, "%f %f\n", &uv.x, &uv.y);
 			temp_uvs.push_back(uv);
 		}
 		// Check if the line is a normal
 		else if (strcmp(lineHeader, "vn") == 0)
 		{
-			XMFLOAT3 normal;
+			XMFLOAT4 normal;
 			fscanf_s(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
 			temp_normals.push_back(normal);
 		}
@@ -301,38 +301,38 @@ Parameters:
 */
 void Object::ComputeTangents()
 {
-	vector<XMFLOAT3> temp_tangents;
-	vector<XMFLOAT3> temp_bitangents;
+	vector<XMFLOAT4> temp_tangents;
+	vector<XMFLOAT4> temp_bitangents;
 	
 	for (unsigned int i = 0; i < m_numVerts; i += 3)
 	{
 		// Getting the triangles 
-		XMFLOAT3 tempV0 = m_vertecies[i].transform;
-		XMFLOAT3 tempV1 = m_vertecies[i + 1].transform;
-		XMFLOAT3 tempV2 = m_vertecies[i + 2].transform;
+		XMFLOAT4 tempV0 = m_vertecies[i].transform;
+		XMFLOAT4 tempV1 = m_vertecies[i + 1].transform;
+		XMFLOAT4 tempV2 = m_vertecies[i + 2].transform;
 	
-		XMFLOAT3 tempUV0 = m_vertecies[i].uv;
-		XMFLOAT3 tempUV1 = m_vertecies[i + 1].uv;
-		XMFLOAT3 tempUV2 = m_vertecies[i + 2].uv;
+		XMFLOAT4 tempUV0 = m_vertecies[i].uv;
+		XMFLOAT4 tempUV1 = m_vertecies[i + 1].uv;
+		XMFLOAT4 tempUV2 = m_vertecies[i + 2].uv;
 	
 		// Edges of the triangle 
-		XMFLOAT3 deltaPos1{ tempV1.x - tempV0.x, tempV1.y - tempV0.y, tempV1.z - tempV0.z };
-		XMFLOAT3 deltaPos2{ tempV2.x - tempV0.x, tempV2.y - tempV0.y, tempV2.z - tempV0.z };
+		XMFLOAT4 deltaPos1{ tempV1.x - tempV0.x, tempV1.y - tempV0.y, tempV1.z - tempV0.z,0 };
+		XMFLOAT4 deltaPos2{ tempV2.x - tempV0.x, tempV2.y - tempV0.y, tempV2.z - tempV0.z,0 };
 	
-		XMFLOAT3 deltaUV1 = { tempUV1.x - tempUV0.x, tempUV1.y - tempUV0.y, 0 };
-		XMFLOAT3 deltaUV2 = { tempUV2.x - tempUV0.x, tempUV2.y - tempUV0.y, 0 };
+		XMFLOAT4 deltaUV1 = { tempUV1.x - tempUV0.x, tempUV1.y - tempUV0.y, 0,0 };
+		XMFLOAT4 deltaUV2 = { tempUV2.x - tempUV0.x, tempUV2.y - tempUV0.y, 0 ,0};
 	
 		float ratio = (1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x));
 	
 		// Calculating tangent
-		XMFLOAT3 tempTangent1 { deltaPos1.x * deltaUV2.y, deltaPos1.y * deltaUV2.y, deltaPos1.z * deltaUV2.y };
-		XMFLOAT3 tempTangent2{ deltaPos2.x * deltaUV1.y, deltaPos2.y * deltaUV1.y, deltaPos2.z * deltaUV1.y };
-		XMFLOAT3 tempTangent3{ tempTangent1.x - tempTangent2.x, tempTangent1.y - tempTangent2.y, tempTangent1.z - tempTangent2.z };
-		XMFLOAT3 tangent{ tempTangent3.x*ratio, tempTangent3.y*ratio, tempTangent3.z*ratio };
+		XMFLOAT4 tempTangent1 { deltaPos1.x * deltaUV2.y, deltaPos1.y * deltaUV2.y, deltaPos1.z * deltaUV2.y,0 };
+		XMFLOAT4 tempTangent2{ deltaPos2.x * deltaUV1.y, deltaPos2.y * deltaUV1.y, deltaPos2.z * deltaUV1.y,0 };
+		XMFLOAT4 tempTangent3{ tempTangent1.x - tempTangent2.x, tempTangent1.y - tempTangent2.y, tempTangent1.z - tempTangent2.z,0 };
+		XMFLOAT4 tangent{ tempTangent3.x*ratio, tempTangent3.y*ratio, tempTangent3.z*ratio,0 };
 	
 		// Calculating bitangent
-		XMFLOAT3 tempBitangent{ tempTangent2.x - tempTangent1.x, tempTangent2.y - tempTangent1.y, tempTangent2.z - tempTangent1.z };
-		XMFLOAT3 bitangent{ tempBitangent.x*ratio, tempBitangent.y*ratio, tempBitangent.z*ratio };
+		XMFLOAT4 tempBitangent{ tempTangent2.x - tempTangent1.x, tempTangent2.y - tempTangent1.y, tempTangent2.z - tempTangent1.z,0 };
+		XMFLOAT4 bitangent{ tempBitangent.x*ratio, tempBitangent.y*ratio, tempBitangent.z*ratio,0 };
 	
 		// Setting them 
 		m_vertecies[i].tangents = tangent;

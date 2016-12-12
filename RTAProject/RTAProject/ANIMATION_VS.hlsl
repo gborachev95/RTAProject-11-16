@@ -1,13 +1,14 @@
 #pragma pack_matrix( row_major )
 struct INPUT_VERTEX
 {
-	float3 coordinate : POSITION;
-	float3 normals    : NORMALS;
-	float3 uv         : UV;
-	float3 tangents   : TANGENTS;
-	float3 bitangents : BITANGENTS;
+	float4 coordinate : POSITION;
+	float4 normals    : NORMALS;
+	float4 uv         : UV;
+	float4 tangents   : TANGENTS;
+	float4 bitangents : BITANGENTS;
 	float4 indices    : SKIN_INDICES;
 	float4 weights    : SKIN_WEIGHT;
+	
 };		   
 struct OUTPUT_VERTEX
 {
@@ -30,9 +31,10 @@ cbuffer SCENE : register(b1)
 	float4x4 projectionMatrix;
 	float4 cameraPosition;
 }
+
 cbuffer BONES : register(b2)
 {
-	float4x4 BoneOffset[256];
+	float4x4 boneOffset[38];
 }
 
 
@@ -47,13 +49,37 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	I am still not sure if we receive the values but give it a try.  I think that there might be some kind of missmatch stil because we are using float4s for them but idk.
 	Dont forget to: Create const buffer in the const buffer function, Set it before rendering the fbx files in the render function and map and unmap it in the mapping function.
 	*/ 
-	int a = fromVertexBuffer.indices[0];
-	// Local coordinate with smooth skinning 
-	//localCoordinate =  float4(BoneOffset[fromVertexBuffer.indices[0]]._41, BoneOffset[fromVertexBuffer.indices[0]]._42, BoneOffset[fromVertexBuffer.indices[0]]._43, BoneOffset[fromVertexBuffer.indices[0]]._44)* fromVertexBuffer.weights[0];
-	//localCoordinate += BoneOffset[fromVertexBuffer.indices[1]] * fromVertexBuffer.weights[1];
-	//localCoordinate += BoneOffset[fromVertexBuffer.indices[2]] * fromVertexBuffer.weights[2];
-	//localCoordinate += BoneOffset[fromVertexBuffer.indices[3]] * fromVertexBuffer.weights[3];
 
+	// Local coordinate with smooth skinning 
+	if (fromVertexBuffer.indices[0] >= 0)
+	{
+		localCoordinate += float4(boneOffset[fromVertexBuffer.indices[0]]._41,
+			boneOffset[fromVertexBuffer.indices[0]]._42,
+			boneOffset[fromVertexBuffer.indices[0]]._43,
+			boneOffset[fromVertexBuffer.indices[0]]._44) * fromVertexBuffer.weights[0];
+	}
+	if (fromVertexBuffer.indices[1] >= 0)
+	{
+		localCoordinate += float4(boneOffset[fromVertexBuffer.indices[1]]._41,
+			boneOffset[fromVertexBuffer.indices[1]]._42,
+			boneOffset[fromVertexBuffer.indices[1]]._43,
+			boneOffset[fromVertexBuffer.indices[1]]._44) * fromVertexBuffer.weights[1];
+	}
+	if (fromVertexBuffer.indices[2] >= 0)
+	{
+		localCoordinate += float4(boneOffset[fromVertexBuffer.indices[2]]._41,
+			boneOffset[fromVertexBuffer.indices[2]]._42,
+			boneOffset[fromVertexBuffer.indices[2]]._43,
+			boneOffset[fromVertexBuffer.indices[2]]._44) * fromVertexBuffer.weights[2];
+	}
+	if (fromVertexBuffer.indices[3] >= 0)
+	{
+		localCoordinate += float4(boneOffset[fromVertexBuffer.indices[3]]._41,
+			boneOffset[fromVertexBuffer.indices[3]]._42,
+			boneOffset[fromVertexBuffer.indices[3]]._43,
+			boneOffset[fromVertexBuffer.indices[3]]._44) * fromVertexBuffer.weights[3];
+	}
+	
 	// Local coordinate in world space
 	localCoordinate = mul(localCoordinate, worldMatrix);
 	sendToRasterizer.worldPosition = localCoordinate.xyz;
@@ -70,8 +96,8 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	sendToRasterizer.uv.xyz = fromVertexBuffer.uv.xyz;
 
 	// Tangends and bitangents in worldspace
-	sendToRasterizer.tangents = mul(fromVertexBuffer.tangents, (float3x3)worldMatrix);
-	sendToRasterizer.bitangents = mul(fromVertexBuffer.bitangents, (float3x3)worldMatrix);
+	sendToRasterizer.tangents = mul(fromVertexBuffer.tangents, worldMatrix).xyz;
+	sendToRasterizer.bitangents = mul(fromVertexBuffer.bitangents, worldMatrix).xyz;
 
 	// Sending data to Rasterizer
 	return sendToRasterizer;

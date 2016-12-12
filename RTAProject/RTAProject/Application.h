@@ -75,6 +75,8 @@
 		void FrameInput();
 		void UpdateFrames(Object& _object, vector<Object*> _renderedBones, XMVECTOR _offset);
 		void LoopAnimation(Object& _object, unsigned int _speed);
+		void GetBonesAtCurrentFrame(Object& _object, vector<Object*> _renderedBones, XMVECTOR _offset);
+
 		// Public methods that are called outside of the class
 	public:
 		// Application Methods
