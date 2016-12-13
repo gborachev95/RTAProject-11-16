@@ -28,7 +28,7 @@ KeyFrame Interpolator::Interpolate(unsigned int previousFrame, unsigned int next
 	XMVECTOR scaleCur, rotationCur, positionCur, scaleNext, rotationNext, positionNext;
 	KeyFrame ret;
 	Transform trns; //Fill in before getting it into ret
-	float ratio; //Need to calculate
+	float ratio = 0.0f; //Need to calculate
 
 	//for each bone
 	for (size_t i = 0; i < animationPtr->m_keyFrame.size(); i++)
