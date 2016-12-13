@@ -188,7 +188,7 @@ namespace FBXImporter
 
 			// Get bone matrix
 			Transform currBone;
-			FbxAMatrix wTransformMatrix = /*currentTransformOffset.Inverse() * */_inNode->EvaluateGlobalTransform(currTime);
+			FbxAMatrix wTransformMatrix = /*currentTransformOffset.Inverse() **/_inNode->EvaluateGlobalTransform(currTime);
 			FbxAMatrix lTransformMatrix = _inNode->EvaluateLocalTransform();
 			currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
 			currBone.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
@@ -220,18 +220,7 @@ namespace FBXImporter
 
 				currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
 				currBone.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
-
-				/*//Skin stuff
-				int *boneVertexIndices = cluster->GetControlPointIndices();
-				double *boneVertexWeights = cluster->GetControlPointWeights();
-				// Iterate through all the vertices, which are affected by the bone
-				int numBoneVertexIndices = cluster->GetControlPointIndicesCount();
-				for (int boneVertexIndex = 0; boneVertexIndex < numBoneVertexIndices; boneVertexIndex++)
-				{
-					int boneVertIndex = boneVertexIndices[boneVertexIndex];
-					float boneWeight = (float)boneVertexWeights[boneVertexIndex];
-				}*/
-				
+			
 
 				GetAnimationData(fbxScene, bone, _animation);
 				bonesVector.push_back(bone);
@@ -260,7 +249,6 @@ namespace FBXImporter
 				}
 			}
 
-
 			int boneCount = skin->GetClusterCount();
 			for (int boneIndex = 0; boneIndex < boneCount; boneIndex++)
 			{
@@ -276,15 +264,17 @@ namespace FBXImporter
 				{
 					int boneVertIndex = boneVertexIndices[boneVertexIndex];
 					float boneWeight = (float)boneVertexWeights[boneVertexIndex];
+					// Safety check so we do not have more than four bones
 					if (tempSkin[boneVertIndex].bonesStored < 4)
 					{
 						tempSkin[boneVertIndex].indices[tempSkin[boneVertIndex].bonesStored] = boneIndex;
-						tempSkin[boneVertIndex].weights[tempSkin[boneVertIndex].bonesStored]= boneWeight;
+						tempSkin[boneVertIndex].weights[tempSkin[boneVertIndex].bonesStored] = boneWeight;
 						tempSkin[boneVertIndex].bonesStored += 1;
 					}
 				}
 			}
 
+			// Setting the each vertex with its proper weights
 			for (unsigned int i = 0; i < amountOfVertecies; i++)
 			{
 				_vertecies[i].skinIndices.x = (float)tempSkin[i].indices[0];
@@ -298,7 +288,6 @@ namespace FBXImporter
 				_vertecies[i].skinWeights.w = tempSkin[i].weights[3];
 			}
 			delete[] tempSkin;
-			int a = 0;
 		}
 
 	}

@@ -41,17 +41,22 @@ cbuffer BONES : register(b2)
 OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 {
 	OUTPUT_VERTEX sendToRasterizer = (OUTPUT_VERTEX)0;
-	// localCoordinate = float4(fromVertexBuffer.coordinate.xyz, 1);
+	float4 localCoordinate = float4(fromVertexBuffer.coordinate.xyz, 1);
 
 	// Local coordinate with smooth skinning 
-	float4 localCoordinate = mul(float4(fromVertexBuffer.coordinate.xyz, 1), boneOffset[fromVertexBuffer.indices[0]]) * fromVertexBuffer.weights[0];
-	localCoordinate +=       mul(float4(fromVertexBuffer.coordinate.xyz, 1), boneOffset[fromVertexBuffer.indices[1]]) * fromVertexBuffer.weights[1];
-	localCoordinate +=       mul(float4(fromVertexBuffer.coordinate.xyz, 1), boneOffset[fromVertexBuffer.indices[2]]) * fromVertexBuffer.weights[2];
-	localCoordinate +=       mul(float4(fromVertexBuffer.coordinate.xyz, 1), boneOffset[fromVertexBuffer.indices[3]]) * fromVertexBuffer.weights[3];
+	localCoordinate =  mul(boneOffset[fromVertexBuffer.indices[0]], float4(fromVertexBuffer.coordinate.xyz, 1) * fromVertexBuffer.weights[0]);
+	localCoordinate += mul(boneOffset[fromVertexBuffer.indices[1]], float4(fromVertexBuffer.coordinate.xyz, 1) * fromVertexBuffer.weights[1]);
+	localCoordinate += mul(boneOffset[fromVertexBuffer.indices[2]], float4(fromVertexBuffer.coordinate.xyz, 1) * fromVertexBuffer.weights[2]);
+	localCoordinate += mul(boneOffset[fromVertexBuffer.indices[3]], float4(fromVertexBuffer.coordinate.xyz, 1) * fromVertexBuffer.weights[3]);
+
+	//localCoordinate += float4(boneOffset[fromVertexBuffer.indices[0]]._41, boneOffset[fromVertexBuffer.indices[0]]._42, boneOffset[fromVertexBuffer.indices[0]]._43, 1) * fromVertexBuffer.weights[0];
+	//localCoordinate += float4(boneOffset[fromVertexBuffer.indices[1]]._41, boneOffset[fromVertexBuffer.indices[1]]._42, boneOffset[fromVertexBuffer.indices[1]]._43, 1) * fromVertexBuffer.weights[1];
+	//localCoordinate += float4(boneOffset[fromVertexBuffer.indices[2]]._41, boneOffset[fromVertexBuffer.indices[2]]._42, boneOffset[fromVertexBuffer.indices[2]]._43, 1) * fromVertexBuffer.weights[2];
+	//localCoordinate += float4(boneOffset[fromVertexBuffer.indices[3]]._41, boneOffset[fromVertexBuffer.indices[3]]._42, boneOffset[fromVertexBuffer.indices[3]]._43, 1) * fromVertexBuffer.weights[3];
+
 
 	// same for normals
 
-	
 	// Local coordinate in world space
 	localCoordinate = mul(localCoordinate, worldMatrix);
 	sendToRasterizer.worldPosition = localCoordinate.xyz;

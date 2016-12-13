@@ -407,23 +407,21 @@ Animation Object::GetAnimation()
 // Adds a frame to the animation
 void Object::ForwardFrame()
 {
-	if (m_currentFrameIndex >= m_animation.GetKeyFramesNumber() - 2)
-		m_currentFrameIndex = 1;
-	else
-		++m_currentFrameIndex;
+	++m_currentFrameIndex;
+	if (unsigned int(m_currentFrameIndex) >= m_animation.GetKeyFramesNumber() - 2)
+		m_currentFrameIndex = 1;		
 }
 
 // Subtracts a frame form the animation
 void Object::BackwardFrame()
 {
+	--m_currentFrameIndex;
 	if (m_currentFrameIndex <= 1)
-		m_currentFrameIndex = m_animation.GetKeyFramesNumber() - 2;
-	else
-		--m_currentFrameIndex;
+		m_currentFrameIndex = m_animation.GetKeyFramesNumber() - 2;	
 }
 
 // Returns the current frame index
-unsigned int Object::GetCurrFrame()
+int Object::GetCurrFrame()
 {
 	return m_currentFrameIndex;
 }
