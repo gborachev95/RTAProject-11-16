@@ -20,10 +20,10 @@ Object::~Object()
 
 // Instantiates the object using his buffers
 
-void Object::InstantiateModel(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position)
+void Object::InstantiateModel(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position, float _shine)
 {
 	
-	ExportObject(_filePath);
+	ExportObject(_filePath,_shine);
 	LoadBinaryFile(_filePath);
 	CreateVertexBuffer(_device);
 	CreateIndexBuffer(_device);

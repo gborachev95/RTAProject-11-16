@@ -255,8 +255,8 @@ namespace FBXImporter
 				tempSkin[i].bonesStored = 0;
 				for (unsigned int j = 0; j < 4; j++)
 				{
-					tempSkin[i].indices[j] = -1;
-					tempSkin[i].weights[j] = -1;
+					tempSkin[i].indices[j] = 0;
+					tempSkin[i].weights[j] = 0;
 				}
 			}
 
@@ -501,7 +501,7 @@ namespace FBXImporter
 	Reads vertecies, uvs, normals and other object stuff from a .obj file
 	Followed http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/ tutorial
 	*/
-	bool ExportObject(string filePath)
+	bool ExportObject(string filePath,float _shine)
 	{
 		// Local Variables
 		vector<unsigned int> vertexIndices, uvIndices, normalIndices;
@@ -510,7 +510,6 @@ namespace FBXImporter
 		vector<XMFLOAT4> temp_uvs;
 
 		FILE *file;
-		float shine = 0.0f;
 
 		// Opening file - "r" -> read in
 		fopen_s(&file, filePath.c_str(), "r");
@@ -588,7 +587,7 @@ namespace FBXImporter
 			// Setting UVs
 			m_vertecies[i].uv.x = temp_uvs[uvIndices[i]].x;
 			m_vertecies[i].uv.y = temp_uvs[uvIndices[i]].y;
-			m_vertecies[i].uv.z = shine;
+			m_vertecies[i].uv.z = _shine;
 		}
 
 		// Setting indecies member

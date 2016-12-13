@@ -41,7 +41,7 @@ public:
 	// Destructor
 	~Object();
 
-	void InstantiateModel(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position);
+	void InstantiateModel(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position, float _shine);
 	void InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position, float _shine);
 	void Object::Render(ID3D11DeviceContext* _context);
 	void TextureObject(ID3D11Device* _device, const wchar_t*  _filePathToDefuse, const wchar_t*  _filePathToNormalMap = nullptr, const wchar_t*  _filePathToSpecular = nullptr);

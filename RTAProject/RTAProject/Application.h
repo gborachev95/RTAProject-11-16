@@ -49,6 +49,7 @@
 		POINT                             m_oldMousePos;
 		bool                              m_keyPressed;
 		bool                              m_loopAnimation;
+		bool                              m_thirdPersonCam;
 		unsigned int					  m_temptimeer;
 
 		// Private methods that are called only inside of the class
@@ -69,13 +70,14 @@
 		void InitializeToShader();
 		void CreateConstBuffers();
 		void FPCamera(float _speed);
+		void TPCamera(Object& _object, float _speed);
 		void LightsControls(float _speed);
 		void MapShaders();
 		void InitilizeLights();
 		void FrameInput();
-		void UpdateFrames(Object& _object, vector<Object*> _renderedBones, XMVECTOR _offset);
+		void UpdateFrames(Object& _object, vector<Object*> _renderedBones);
 		void LoopAnimation(Object& _object, unsigned int _speed);
-		void GetBonesAtCurrentFrame(Object& _object, vector<Object*> _renderedBones, XMVECTOR _offset);
+		
 
 		// Public methods that are called outside of the class
 	public:
