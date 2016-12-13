@@ -44,9 +44,6 @@
     <ClInclude Include="Log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FBXDLL.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\FBXInporter\ExporterHeader.h">
       <Filter>Header Files</Filter>
     </ClInclude>

@@ -17,5 +17,6 @@ extern "C"
 namespace FBXImporter
 {
 	FBXImporter_API int LoadFBXFile(const string & _fileName, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices, vector<Transform>& _transformHierarchy, Animation& _animation);
+	FBXImporter_API bool ExportObject(string filePath);
 }
 #endif
