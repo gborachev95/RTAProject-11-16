@@ -49,7 +49,7 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	I am still not sure if we receive the values but give it a try.  I think that there might be some kind of missmatch stil because we are using float4s for them but idk.
 	Dont forget to: Create const buffer in the const buffer function, Set it before rendering the fbx files in the render function and map and unmap it in the mapping function.
 	*/ 
-
+	//localCoordinate = float4(0, 0, 0, 0);
 	// Local coordinate with smooth skinning 
 	if (fromVertexBuffer.indices[0] >= 0)
 	{
@@ -79,6 +79,8 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 			boneOffset[fromVertexBuffer.indices[3]]._43,
 			boneOffset[fromVertexBuffer.indices[3]]._44) * fromVertexBuffer.weights[3];
 	}
+
+	localCoordinate.w = 1;
 	
 	// Local coordinate in world space
 	localCoordinate = mul(localCoordinate, worldMatrix);

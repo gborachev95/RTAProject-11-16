@@ -137,12 +137,12 @@ void Application::Input()
 void Application::Update()
 {
 	++m_temptimeer;
-	XMVECTOR mageMovement = { 5,0,0,0 };
+	XMVECTOR mageMovement = { 0,0,0,0 };
 
 	if (m_loopAnimation)
-	LoopAnimation(m_fbxMage,30);
+	LoopAnimation(m_fbxTest,30);
 
-	UpdateFrames(m_fbxMage, m_mageBonesVec, mageMovement);
+	UpdateFrames(m_fbxTest, m_testbonesVec, mageMovement);
 }
 
 // Renders the scene
@@ -167,18 +167,18 @@ void Application::Render()
 
 	// Rendering objects
 	m_groundObject.Render(m_deviceContext);
-	for (unsigned int i = 0; i < m_mageBonesVec.size(); ++i)
-		m_mageBonesVec[i]->Render(m_deviceContext);
-	//for (unsigned int i = 0; i < m_testbonesVec.size(); ++i)
-	//	m_testbonesVec[i]->Render(m_deviceContext);
+	//for (unsigned int i = 0; i < m_mageBonesVec.size(); ++i)
+	//	m_mageBonesVec[i]->Render(m_deviceContext);
+	for (unsigned int i = 0; i < m_testbonesVec.size(); ++i)
+		m_testbonesVec[i]->Render(m_deviceContext);
 	//for (unsigned int i = 0; i < m_bearBonesVec.size(); ++i)
 		//m_bearBonesVec[i]->Render(m_deviceContext);
 
 	// Render fbx objects
 	m_deviceContext->IASetInputLayout(m_inputLayoutAnimation);
 	m_deviceContext->VSSetShader(m_VS_ANIMATION.p, NULL, NULL);
-	//m_fbxTest.Render(m_deviceContext);
-	m_fbxMage.Render(m_deviceContext);
+	m_fbxTest.Render(m_deviceContext);
+	//m_fbxMage.Render(m_deviceContext);
 	//m_fbxBear.Render(m_deviceContext);
 
 	// Presenting the screen
@@ -680,6 +680,6 @@ void Application::LoopAnimation(Object& _object, unsigned int _speed)
 	if (m_temptimeer > _speed)
 	{
 		m_temptimeer = 0;
-		m_fbxMage.ForwardFrame();
+		_object.ForwardFrame();
 	}
 }
