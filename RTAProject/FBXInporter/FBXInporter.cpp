@@ -253,8 +253,8 @@ namespace FBXImporter
 				tempSkin[i].bonesStored = 0;
 				for (unsigned int j = 0; j < 4; j++)
 				{
-					tempSkin[i].indices[j] = -1;
-					tempSkin[i].weights[j] = -1;
+					tempSkin[i].indices[j] = 0;
+					tempSkin[i].weights[j] = 0;
 				}
 			}
 

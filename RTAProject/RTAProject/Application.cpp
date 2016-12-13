@@ -11,6 +11,7 @@ Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 	//LogSetUp(L"RTA Project Application");
 	m_temptimeer = 0;
 	m_loopAnimation = false;
+	m_thirdPersonCam = false;
 
 	// Creates the window
 	CreateAppWindow(_hinst, _proc);
@@ -126,23 +127,20 @@ bool Application::Run()
 void Application::Input()
 {
 	FPCamera(0.01f);
+	TPCamera(m_fbxMage,0.03f);
 	LightsControls(0.01f);
 	FrameInput();
 
-	if (!GetAsyncKeyState('I') && !GetAsyncKeyState('O') && !GetAsyncKeyState('R') && !GetAsyncKeyState('T') && !GetAsyncKeyState('Y') && m_keyPressed)
+	if (!GetAsyncKeyState('I') && !GetAsyncKeyState('O') && !GetAsyncKeyState('R') && 
+		!GetAsyncKeyState('T') && !GetAsyncKeyState('Y') && !GetAsyncKeyState('B') && m_keyPressed)
 		m_keyPressed = false;
 }
 
 // Updates the scene
 void Application::Update()
 {
-	++m_temptimeer;
-	XMVECTOR mageMovement = { 5,0,0,0 };
-
-	if (m_loopAnimation)
 	LoopAnimation(m_fbxMage,30);
-
-	UpdateFrames(m_fbxMage, m_mageBonesVec, mageMovement);
+	UpdateFrames(m_fbxMage, m_mageBonesVec);
 }
 
 // Renders the scene
@@ -169,17 +167,21 @@ void Application::Render()
 	m_groundObject.Render(m_deviceContext);
 	for (unsigned int i = 0; i < m_mageBonesVec.size(); ++i)
 		m_mageBonesVec[i]->Render(m_deviceContext);
-	//for (unsigned int i = 0; i < m_testbonesVec.size(); ++i)
-	//	m_testbonesVec[i]->Render(m_deviceContext);
+	for (unsigned int i = 0; i < m_testbonesVec.size(); ++i)
+		m_testbonesVec[i]->Render(m_deviceContext);
 	//for (unsigned int i = 0; i < m_bearBonesVec.size(); ++i)
 		//m_bearBonesVec[i]->Render(m_deviceContext);
-
-	// Render fbx objects
-	m_deviceContext->IASetInputLayout(m_inputLayoutAnimation);
-	m_deviceContext->VSSetShader(m_VS_ANIMATION.p, NULL, NULL);
 	//m_fbxTest.Render(m_deviceContext);
 	m_fbxMage.Render(m_deviceContext);
-	//m_fbxBear.Render(m_deviceContext);
+
+	m_fbxBear.Render(m_deviceContext);
+	// Render animated objects
+	m_deviceContext->IASetInputLayout(m_inputLayoutAnimation);
+	m_deviceContext->VSSetShader(m_VS_ANIMATION.p, NULL, NULL);
+
+
+
+
 
 	// Presenting the screen
 	m_swapChain->Present(0, 0);
@@ -399,10 +401,11 @@ void Application::LoadObjects()
 		m_mageBonesVec.push_back(bone);
 	}
 
-	XMFLOAT3 fbxPos3{ -200.0f, 0.0f, 0.0f };
-	m_fbxBear.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Teddy\\Teddy_Attack2.fbx", fbxPos3, 1);
+
+	m_fbxBear.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Teddy\\Teddy_Attack2.fbx", fbXpos, 1);
  	m_fbxBear.SetWorldMatrix(XMMatrixMultiply(m_fbxBear.GetWorldMatrix(),XMMatrixScaling(0.03f,0.03f,0.03f)));
 	m_fbxBear.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\bearTexture.dds");
+	m_fbxBear.SetPosition(-5.0f, 0, 0);
 	m_testBones.clear();
 	m_testBones = m_fbxBear.GetFBXBones();
 	for (unsigned int i = 0; i < m_testBones.size(); ++i)
@@ -484,65 +487,68 @@ void Application::CreateConstBuffers()
 // Movement for the camera
 void Application::FPCamera(float _speed)
 {
-	// Get the cursor position
-	POINT mousePos;
-	ZeroMemory(&mousePos, sizeof(POINT));
-	GetCursorPos(&mousePos);
-
-	// Calculating the difference of the mouse position
-	float deltaX = float(m_oldMousePos.x - mousePos.x);
-	float deltaY = float(m_oldMousePos.y - mousePos.y);
-
-	// Rotating when holding left key
-	if (GetAsyncKeyState(VK_LBUTTON))
+	if (!m_thirdPersonCam)
 	{
+		// Get the cursor position
+		POINT mousePos;
+		ZeroMemory(&mousePos, sizeof(POINT));
+		GetCursorPos(&mousePos);
+
+		// Calculating the difference of the mouse position
+		float deltaX = float(m_oldMousePos.x - mousePos.x);
+		float deltaY = float(m_oldMousePos.y - mousePos.y);
+
+		// Rotating when holding left key
+		if (GetAsyncKeyState(VK_LBUTTON))
+		{
+			m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
+			XMVECTOR storePosition;
+			storePosition.m128_f32[0] = m_viewToShader.viewMatrix.r[3].m128_f32[0];
+			storePosition.m128_f32[1] = m_viewToShader.viewMatrix.r[3].m128_f32[1];
+			storePosition.m128_f32[2] = m_viewToShader.viewMatrix.r[3].m128_f32[2];
+
+			m_viewToShader.viewMatrix.r[3].m128_f32[0] = 0;
+			m_viewToShader.viewMatrix.r[3].m128_f32[1] = 0;
+			m_viewToShader.viewMatrix.r[3].m128_f32[2] = 0;
+
+			m_viewToShader.viewMatrix = XMMatrixMultiply(XMMatrixRotationX(-deltaY*0.0005f), m_viewToShader.viewMatrix);
+			m_viewToShader.viewMatrix = XMMatrixMultiply(m_viewToShader.viewMatrix, XMMatrixRotationY(-deltaX*0.0005f));
+
+			m_viewToShader.viewMatrix.r[3].m128_f32[0] = storePosition.m128_f32[0];
+			m_viewToShader.viewMatrix.r[3].m128_f32[1] = storePosition.m128_f32[1];
+			m_viewToShader.viewMatrix.r[3].m128_f32[2] = storePosition.m128_f32[2];
+
+			m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
+		}
+
+		m_oldMousePos = mousePos;
+
+		if (GetAsyncKeyState('W'))
+			m_viewToShader.viewMatrix.r[3].m128_f32[2] -= _speed;
+		else if (GetAsyncKeyState('S'))
+			m_viewToShader.viewMatrix.r[3].m128_f32[2] += _speed;
+		if (GetAsyncKeyState('D'))
+			m_viewToShader.viewMatrix.r[3].m128_f32[0] -= _speed;
+		else if (GetAsyncKeyState('A'))
+			m_viewToShader.viewMatrix.r[3].m128_f32[0] += _speed;
+
+		if (GetAsyncKeyState('Q'))
+			m_viewToShader.viewMatrix.r[3].m128_f32[1] += _speed;
+		else if (GetAsyncKeyState('E'))
+			m_viewToShader.viewMatrix.r[3].m128_f32[1] -= _speed;
+
+		// Spot light 
 		m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
-		XMVECTOR storePosition;
-		storePosition.m128_f32[0] = m_viewToShader.viewMatrix.r[3].m128_f32[0];
-		storePosition.m128_f32[1] = m_viewToShader.viewMatrix.r[3].m128_f32[1];
-		storePosition.m128_f32[2] = m_viewToShader.viewMatrix.r[3].m128_f32[2];
 
-		m_viewToShader.viewMatrix.r[3].m128_f32[0] = 0;
-		m_viewToShader.viewMatrix.r[3].m128_f32[1] = 0;
-		m_viewToShader.viewMatrix.r[3].m128_f32[2] = 0;
-
-		m_viewToShader.viewMatrix = XMMatrixMultiply(XMMatrixRotationX(-deltaY*0.0005f), m_viewToShader.viewMatrix);
-		m_viewToShader.viewMatrix = XMMatrixMultiply(m_viewToShader.viewMatrix, XMMatrixRotationY(-deltaX*0.0005f));
-
-		m_viewToShader.viewMatrix.r[3].m128_f32[0] = storePosition.m128_f32[0];
-		m_viewToShader.viewMatrix.r[3].m128_f32[1] = storePosition.m128_f32[1];
-		m_viewToShader.viewMatrix.r[3].m128_f32[2] = storePosition.m128_f32[2];
+		m_spotLightToShader.transform.m128_f32[0] = m_viewToShader.viewMatrix.r[3].m128_f32[0];
+		m_spotLightToShader.transform.m128_f32[1] = m_viewToShader.viewMatrix.r[3].m128_f32[1];
+		m_spotLightToShader.transform.m128_f32[2] = m_viewToShader.viewMatrix.r[3].m128_f32[2];
+		m_spotLightToShader.direction.x = m_viewToShader.viewMatrix.r[2].m128_f32[0];
+		m_spotLightToShader.direction.y = m_viewToShader.viewMatrix.r[2].m128_f32[1];
+		m_spotLightToShader.direction.z = m_viewToShader.viewMatrix.r[2].m128_f32[2];
 
 		m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
 	}
-
-	m_oldMousePos = mousePos;
-
-	if (GetAsyncKeyState('W'))
-		m_viewToShader.viewMatrix.r[3].m128_f32[2] -= _speed;
-	else if (GetAsyncKeyState('S'))
-		m_viewToShader.viewMatrix.r[3].m128_f32[2] += _speed;
-	if (GetAsyncKeyState('D'))
-		m_viewToShader.viewMatrix.r[3].m128_f32[0] -= _speed;
-	else if (GetAsyncKeyState('A'))
-		m_viewToShader.viewMatrix.r[3].m128_f32[0] += _speed;
-
-	if (GetAsyncKeyState('Q'))
-		m_viewToShader.viewMatrix.r[3].m128_f32[1] += _speed;
-	else if (GetAsyncKeyState('E'))
-		m_viewToShader.viewMatrix.r[3].m128_f32[1] -= _speed;
-
-	// Spot light 
-	m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
-	
-	m_spotLightToShader.transform.m128_f32[0] = m_viewToShader.viewMatrix.r[3].m128_f32[0];
-	m_spotLightToShader.transform.m128_f32[1] = m_viewToShader.viewMatrix.r[3].m128_f32[1];
-	m_spotLightToShader.transform.m128_f32[2] = m_viewToShader.viewMatrix.r[3].m128_f32[2];
-	m_spotLightToShader.direction.x = m_viewToShader.viewMatrix.r[2].m128_f32[0];
-	m_spotLightToShader.direction.y = m_viewToShader.viewMatrix.r[2].m128_f32[1];
-	m_spotLightToShader.direction.z = m_viewToShader.viewMatrix.r[2].m128_f32[2];
-	
-	m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
 }
 
 // Controls for the lights
@@ -662,12 +668,12 @@ void Application::FrameInput()
 	}
 }
 
-void Application::UpdateFrames(Object& _object, vector<Object*> _renderedBones, XMVECTOR _offset)
+void Application::UpdateFrames(Object& _object, vector<Object*> _renderedBones)
 {
 	Animation currAnimation = _object.GetAnimation();
 	for (unsigned int i = 0; i < currAnimation.m_keyFrame.size(); ++i)
 	{
-		currAnimation.m_keyFrame[i].m_bones[_object.GetCurrFrame()].m_worldMatrix.r[3] += _offset;
+		currAnimation.m_keyFrame[i].m_bones[_object.GetCurrFrame()].m_worldMatrix.r[3];
 		_renderedBones[i]->SetWorldMatrix(currAnimation.m_keyFrame[i].m_bones[_object.GetCurrFrame()].m_worldMatrix);
 		// Data that goes to the shader
 		m_bonesToShader.bones[i] = currAnimation.m_keyFrame[i].m_bones[_object.GetCurrFrame()].m_worldMatrix;
@@ -676,10 +682,63 @@ void Application::UpdateFrames(Object& _object, vector<Object*> _renderedBones, 
 
 void Application::LoopAnimation(Object& _object, unsigned int _speed)
 {
-
-	if (m_temptimeer > _speed)
+	if (m_loopAnimation)
 	{
-		m_temptimeer = 0;
-		m_fbxMage.ForwardFrame();
+		++m_temptimeer;
+		if (m_temptimeer > _speed)
+		{
+			m_temptimeer = 0;
+			m_fbxMage.ForwardFrame();
+		}
+	}
+}
+
+void Application::TPCamera(Object& _object, float _speed)
+{
+	if (GetAsyncKeyState('B'))
+		m_thirdPersonCam = !m_thirdPersonCam;
+	if (m_thirdPersonCam)
+	{
+		XMFLOAT3 newPosition = XMFLOAT3(_object.GetWorldMatrix().r[3].m128_f32[0], _object.GetWorldMatrix().r[3].m128_f32[1], _object.GetWorldMatrix().r[3].m128_f32[2]);
+		if (GetAsyncKeyState('W'))
+		{			
+			++m_temptimeer;
+			newPosition.z += _speed;
+			if (m_temptimeer > 10)
+			{
+				m_temptimeer = 0;
+				_object.ForwardFrame();
+			}
+		}
+		else if (GetAsyncKeyState('S'))
+		{
+			++m_temptimeer;
+			newPosition.z -= _speed;
+			if (m_temptimeer > 10)
+			{
+				m_temptimeer = 0;
+				_object.ForwardFrame();
+			}
+		}
+		if (GetAsyncKeyState('D'))
+		{
+			_object.SetWorldMatrix(XMMatrixMultiply(_object.GetWorldMatrix(), XMMatrixRotationY(_speed)));
+		}
+		else if (GetAsyncKeyState('A'))
+		{
+			_object.SetWorldMatrix(XMMatrixMultiply(_object.GetWorldMatrix(), XMMatrixRotationY(-_speed)));
+		}
+		_object.SetPosition(newPosition.x, newPosition.y, newPosition.z);
+		//_object.SetWorldMatrix(XMMatrixMultiply());
+		m_viewToShader.viewMatrix = XMMatrixInverse(0, _object.GetWorldMatrix());
+
+
+		m_viewToShader.viewMatrix.r[3].m128_f32[1] = m_viewToShader.viewMatrix.r[3].m128_f32[1] - 10.0f;
+		m_viewToShader.viewMatrix.r[3].m128_f32[2] = m_viewToShader.viewMatrix.r[3].m128_f32[2] + 6.0f;
+
+		m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
+		m_viewToShader.viewMatrix = XMMatrixMultiply(XMMatrixRotationX(0.5853f), m_viewToShader.viewMatrix);
+		m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
+
 	}
 }
