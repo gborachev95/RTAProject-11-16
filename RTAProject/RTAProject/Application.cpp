@@ -699,11 +699,11 @@ void Application::TPCamera(Object& _object, float _speed)
 		m_thirdPersonCam = !m_thirdPersonCam;
 	if (m_thirdPersonCam)
 	{
-		XMFLOAT3 newPosition = XMFLOAT3(_object.GetWorldMatrix().r[3].m128_f32[0], _object.GetWorldMatrix().r[3].m128_f32[1], _object.GetWorldMatrix().r[3].m128_f32[2]);
+		XMMATRIX newPos = _object.GetWorldMatrix();
 		if (GetAsyncKeyState('W'))
 		{			
 			++m_temptimeer;
-			newPosition.z += _speed;
+			newPos.r[3] = newPos.r[3] + newPos.r[2] * _speed;
 			if (m_temptimeer > 10)
 			{
 				m_temptimeer = 0;
@@ -713,7 +713,7 @@ void Application::TPCamera(Object& _object, float _speed)
 		else if (GetAsyncKeyState('S'))
 		{
 			++m_temptimeer;
-			newPosition.z -= _speed;
+			newPos.r[3] = newPos.r[3] + newPos.r[2] * -_speed;
 			if (m_temptimeer > 10)
 			{
 				m_temptimeer = 0;
@@ -722,14 +722,13 @@ void Application::TPCamera(Object& _object, float _speed)
 		}
 		if (GetAsyncKeyState('D'))
 		{
-			_object.SetWorldMatrix(XMMatrixMultiply(_object.GetWorldMatrix(), XMMatrixRotationY(_speed)));
+			newPos = XMMatrixMultiply(newPos, XMMatrixRotationY(_speed));
 		}
 		else if (GetAsyncKeyState('A'))
 		{
-			_object.SetWorldMatrix(XMMatrixMultiply(_object.GetWorldMatrix(), XMMatrixRotationY(-_speed)));
+			newPos = XMMatrixMultiply(newPos, XMMatrixRotationY(-_speed));
 		}
-		_object.SetPosition(newPosition.x, newPosition.y, newPosition.z);
-		//_object.SetWorldMatrix(XMMatrixMultiply());
+		_object.SetWorldMatrix(newPos);
 		m_viewToShader.viewMatrix = XMMatrixInverse(0, _object.GetWorldMatrix());
 
 
