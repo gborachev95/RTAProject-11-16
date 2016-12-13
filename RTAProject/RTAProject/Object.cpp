@@ -13,25 +13,30 @@ Object::Object()
 // Destructor
 Object::~Object()
 {
+	
 	delete m_vertecies;
 	delete m_indexList;
 }
 
 // Instantiates the object using his buffers
+
 void Object::InstantiateModel(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position)
 {
+	
 	ExportObject(_filePath);
 	LoadBinaryFile(_filePath);
 	CreateVertexBuffer(_device);
 	CreateIndexBuffer(_device);
 	CreateConstBuffer(_device);
 	m_worldToShader.worldMatrix = XMMatrixIdentity();
+	
 	m_worldToShader.worldMatrix.r[3] = { _position.x,_position.y, _position.z, 1};
 }
 
 // Instantiates the object using an FBX file
 void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position, float _shine)
 {
+	m_currentFrameIndex = 0;
 	// Gets us the function from the DLL
 	//OpenFBXFile LoadFBXFile = LinkFBXDll();
 
@@ -53,6 +58,7 @@ void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOA
 
 	// Setting the members
 	m_numVerts = temp_vertices.size();
+	
 	m_vertecies = new VERTEX[m_numVerts];
 
 	// Setting vertecies
@@ -87,6 +93,7 @@ void Object::Render(ID3D11DeviceContext* _context)
 	_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// Set the shader resource - for the texture
+	
 	_context->PSSetShaderResources(0, 1, &m_defShaderResourceView.p);
 
 	// If there is normal mapping
@@ -108,7 +115,7 @@ void Object::Render(ID3D11DeviceContext* _context)
 	memcpy(mapSubresource.pData, &m_worldToShader, sizeof(OBJECT_TO_VRAM));
 	_context->Unmap(m_constBuffer, NULL);
 
-	// Draw the object
+    // Draw the object
 	_context->DrawIndexed(m_numIndicies, 0, 0);
 
 	// Turn off shaders
@@ -156,11 +163,10 @@ void Object::CreateIndexBuffer(ID3D11Device* _device)
 	_device->CreateBuffer(&bufferDesc, &initData, &m_indexBuffer.p);
 }
 
-
-
 // Textures the object 
 void Object::TextureObject(ID3D11Device* _device, const wchar_t*  _filePathToDefuse, const wchar_t*  _filePathToNormalMap, const wchar_t*  _filePathToSpecular)
 {
+	
 	CreateDDSTextureFromFile(_device, _filePathToDefuse, NULL, &m_defShaderResourceView.p);
 	if (_filePathToNormalMap)
 		CreateDDSTextureFromFile(_device, _filePathToNormalMap, NULL, &m_normalShaderResourceView.p);
@@ -198,38 +204,38 @@ Parameters:
 */
 void Object::ComputeTangents()
 {
-	vector<XMFLOAT3> temp_tangents;
-	vector<XMFLOAT3> temp_bitangents;
+	vector<XMFLOAT4> temp_tangents;
+	vector<XMFLOAT4> temp_bitangents;
 
 	for (unsigned int i = 0; i < m_numVerts; i += 3)
 	{
 		// Getting the triangles 
-		XMFLOAT3 tempV0 = m_vertecies[i].transform;
-		XMFLOAT3 tempV1 = m_vertecies[i + 1].transform;
-		XMFLOAT3 tempV2 = m_vertecies[i + 2].transform;
+		XMFLOAT4 tempV0 = m_vertecies[i].transform;
+		XMFLOAT4 tempV1 = m_vertecies[i + 1].transform;
+		XMFLOAT4 tempV2 = m_vertecies[i + 2].transform;
 
-		XMFLOAT3 tempUV0 = m_vertecies[i].uv;
-		XMFLOAT3 tempUV1 = m_vertecies[i + 1].uv;
-		XMFLOAT3 tempUV2 = m_vertecies[i + 2].uv;
+		XMFLOAT4 tempUV0 = m_vertecies[i].uv;
+		XMFLOAT4 tempUV1 = m_vertecies[i + 1].uv;
+		XMFLOAT4 tempUV2 = m_vertecies[i + 2].uv;
 
 		// Edges of the triangle 
-		XMFLOAT3 deltaPos1{ tempV1.x - tempV0.x, tempV1.y - tempV0.y, tempV1.z - tempV0.z };
-		XMFLOAT3 deltaPos2{ tempV2.x - tempV0.x, tempV2.y - tempV0.y, tempV2.z - tempV0.z };
+		XMFLOAT4 deltaPos1{ tempV1.x - tempV0.x, tempV1.y - tempV0.y, tempV1.z - tempV0.z,0 };
+		XMFLOAT4 deltaPos2{ tempV2.x - tempV0.x, tempV2.y - tempV0.y, tempV2.z - tempV0.z,0 };
 
-		XMFLOAT3 deltaUV1 = { tempUV1.x - tempUV0.x, tempUV1.y - tempUV0.y, 0 };
-		XMFLOAT3 deltaUV2 = { tempUV2.x - tempUV0.x, tempUV2.y - tempUV0.y, 0 };
+		XMFLOAT4 deltaUV1 = { tempUV1.x - tempUV0.x, tempUV1.y - tempUV0.y, 0,0 };
+		XMFLOAT4 deltaUV2 = { tempUV2.x - tempUV0.x, tempUV2.y - tempUV0.y, 0 ,0 };
 
 		float ratio = (1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x));
 
 		// Calculating tangent
-		XMFLOAT3 tempTangent1{ deltaPos1.x * deltaUV2.y, deltaPos1.y * deltaUV2.y, deltaPos1.z * deltaUV2.y };
-		XMFLOAT3 tempTangent2{ deltaPos2.x * deltaUV1.y, deltaPos2.y * deltaUV1.y, deltaPos2.z * deltaUV1.y };
-		XMFLOAT3 tempTangent3{ tempTangent1.x - tempTangent2.x, tempTangent1.y - tempTangent2.y, tempTangent1.z - tempTangent2.z };
-		XMFLOAT3 tangent{ tempTangent3.x*ratio, tempTangent3.y*ratio, tempTangent3.z*ratio };
+		XMFLOAT4 tempTangent1{ deltaPos1.x * deltaUV2.y, deltaPos1.y * deltaUV2.y, deltaPos1.z * deltaUV2.y,0 };
+		XMFLOAT4 tempTangent2{ deltaPos2.x * deltaUV1.y, deltaPos2.y * deltaUV1.y, deltaPos2.z * deltaUV1.y,0 };
+		XMFLOAT4 tempTangent3{ tempTangent1.x - tempTangent2.x, tempTangent1.y - tempTangent2.y, tempTangent1.z - tempTangent2.z,0 };
+		XMFLOAT4 tangent{ tempTangent3.x*ratio, tempTangent3.y*ratio, tempTangent3.z*ratio,0 };
 
 		// Calculating bitangent
-		XMFLOAT3 tempBitangent{ tempTangent2.x - tempTangent1.x, tempTangent2.y - tempTangent1.y, tempTangent2.z - tempTangent1.z };
-		XMFLOAT3 bitangent{ tempBitangent.x*ratio, tempBitangent.y*ratio, tempBitangent.z*ratio };
+		XMFLOAT4 tempBitangent{ tempTangent2.x - tempTangent1.x, tempTangent2.y - tempTangent1.y, tempTangent2.z - tempTangent1.z,0 };
+		XMFLOAT4 bitangent{ tempBitangent.x*ratio, tempBitangent.y*ratio, tempBitangent.z*ratio,0 };
 
 		// Setting them 
 		m_vertecies[i].tangents = tangent;
@@ -394,4 +400,28 @@ vector<Transform> Object::GetFBXBones()
 Animation Object::GetAnimation()
 {
 	return m_animation;
+}
+
+// Adds a frame to the animation
+void Object::ForwardFrame()
+{
+	if (m_currentFrameIndex >= m_animation.GetKeyFramesNumber() - 2)
+		m_currentFrameIndex = 1;
+	else
+		++m_currentFrameIndex;
+}
+
+// Subtracts a frame form the animation
+void Object::BackwardFrame()
+{
+	if (m_currentFrameIndex <= 1)
+		m_currentFrameIndex = m_animation.GetKeyFramesNumber() - 2;
+	else
+		--m_currentFrameIndex;
+}
+
+// Returns the current frame index
+unsigned int Object::GetCurrFrame()
+{
+	return m_currentFrameIndex;
 }

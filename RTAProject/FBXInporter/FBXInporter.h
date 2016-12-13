@@ -23,11 +23,11 @@ namespace FBXImporter
 
 	struct VERTEX
 	{
-		XMFLOAT3 transform;
-		XMFLOAT3 normals;
-		XMFLOAT3 uv;
-		XMFLOAT3 tangents;
-		XMFLOAT3 bitangents;
+		XMFLOAT4 transform;
+		XMFLOAT4 normals;
+		XMFLOAT4 uv;
+		XMFLOAT4 tangents;
+		XMFLOAT4 bitangents;
 		XMFLOAT4 skinIndices;
 		XMFLOAT4 skinWeights;
 	};

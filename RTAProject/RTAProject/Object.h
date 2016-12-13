@@ -18,6 +18,7 @@ __declspec(align(16)) class Object
 	unsigned int                       *m_indexList;
 	unsigned int                        m_numVerts;
 	unsigned int                        m_numIndicies;
+	unsigned int                        m_currentFrameIndex;
 	Animation                           m_animation;
 	vector<Transform>                   m_bones;
 
@@ -26,8 +27,12 @@ private:
 	void CreateVertexBuffer(ID3D11Device* _device);
 	void CreateIndexBuffer(ID3D11Device* _device);
 	void ComputeTangents();
-	//bool ReadObject(std::string _filePath, float _shine);
+	
 	void CreateConstBuffer(ID3D11Device* _device);
+	// Loader
+	void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
+	void LoadBinaryFile(std::string _filePath, vector<Transform>& _bones);
+	void LoadBinaryFile(std::string _filePath, Animation& _animation);
 	// Public methods that are called outside of the class
 public:
 
@@ -35,6 +40,7 @@ public:
 	Object();
 	// Destructor
 	~Object();
+
 	void InstantiateModel(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position);
 	void InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position, float _shine);
 	void Object::Render(ID3D11DeviceContext* _context);
@@ -46,10 +52,9 @@ public:
 	// Setters
 	void SetWorldMatrix(XMMATRIX& _matrix);
 	void SetPosition(float _x, float _y, float _z);
-	// Loader
-	void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
-	void LoadBinaryFile(std::string _filePath, vector<Transform>& _bones);
-	void LoadBinaryFile(std::string _filePath, Animation& _animation);
+	void ForwardFrame();
+	void BackwardFrame();
+	unsigned int GetCurrFrame();
 	void LoadBinaryFile(std::string _filePath);
 
 	// Alligning by 16 bytes so we don't get a warning 

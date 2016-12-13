@@ -9,6 +9,8 @@ Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 {
 	// Helps debugging
 	//LogSetUp(L"RTA Project Application");
+	m_temptimeer = 0;
+	m_loopAnimation = false;
 
 	// Creates the window
 	CreateAppWindow(_hinst, _proc);
@@ -31,19 +33,19 @@ Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 	// Create a sampler state
 	CreateSamplerState();
 
-	// Initilizing data that is being send to the  VS_Shader
-	InitializeToShader();
-
 	// Creating const buffers
 	CreateConstBuffers();
 
 	// Loading the models
 	LoadObjects();
 
+	// Initilizing data that is being send to the  VS_Shader
+	InitializeToShader();
+
 	// Initializing the start mouse position
 	GetCursorPos(&m_oldMousePos);
 
-	m_currentFrameIndex = 0;
+
 }
 
 // Destructor
@@ -53,6 +55,9 @@ Application::~Application()
 		delete m_testbonesVec[i];
 	for (unsigned int i = 0; i < m_mageBonesVec.size(); ++i)
 		delete m_mageBonesVec[i];
+	for (unsigned int i = 0; i < m_bearBonesVec.size(); ++i)
+		delete m_bearBonesVec[i];
+	
 	//dll_loader.UnloadDLL();
 }
 
@@ -123,11 +128,21 @@ void Application::Input()
 	FPCamera(0.01f);
 	LightsControls(0.01f);
 	FrameInput();
+
+	if (!GetAsyncKeyState('I') && !GetAsyncKeyState('O') && !GetAsyncKeyState('R') && !GetAsyncKeyState('T') && !GetAsyncKeyState('Y') && m_keyPressed)
+		m_keyPressed = false;
 }
 
 // Updates the scene
 void Application::Update()
 {
+	++m_temptimeer;
+	XMVECTOR mageMovement = { 5,0,0,0 };
+
+	if (m_loopAnimation)
+	LoopAnimation(m_fbxMage,30);
+
+	UpdateFrames(m_fbxMage, m_mageBonesVec, mageMovement);
 }
 
 // Renders the scene
@@ -154,14 +169,17 @@ void Application::Render()
 	m_groundObject.Render(m_deviceContext);
 	for (unsigned int i = 0; i < m_mageBonesVec.size(); ++i)
 		m_mageBonesVec[i]->Render(m_deviceContext);
-	for (unsigned int i = 0; i < m_testbonesVec.size(); ++i)
-		m_testbonesVec[i]->Render(m_deviceContext);
+	//for (unsigned int i = 0; i < m_testbonesVec.size(); ++i)
+	//	m_testbonesVec[i]->Render(m_deviceContext);
+	//for (unsigned int i = 0; i < m_bearBonesVec.size(); ++i)
+		//m_bearBonesVec[i]->Render(m_deviceContext);
 
 	// Render fbx objects
-	m_deviceContext->VSSetShader(m_VS_ANIMATION.p, NULL, NULL);
 	m_deviceContext->IASetInputLayout(m_inputLayoutAnimation);
-	m_fbxTest.Render(m_deviceContext);
+	m_deviceContext->VSSetShader(m_VS_ANIMATION.p, NULL, NULL);
+	//m_fbxTest.Render(m_deviceContext);
 	m_fbxMage.Render(m_deviceContext);
+	//m_fbxBear.Render(m_deviceContext);
 
 	// Presenting the screen
 	m_swapChain->Present(0, 0);
@@ -291,28 +309,29 @@ void Application::CreateViewPorts()
 // Creates the layouts
 void Application::CreateLayouts()
 {
-
 	D3D11_INPUT_ELEMENT_DESC vLayoutObject[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMALS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "UV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TANGENTS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	    { "BITANGENTS", 0,  DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMALS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "UV", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TANGENTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	    { "BITANGENTS", 0,  DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "SKIN_INDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "SKIN_WEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
 	D3D11_INPUT_ELEMENT_DESC vLayoutAnimation[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMALS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "UV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TANGENTS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "BITANGENTS", 0,  DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMALS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "UV", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TANGENTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BITANGENTS", 0,  DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "SKIN_INDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "SKIN_WEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	// Creating layout for object shader
-	m_device->CreateInputLayout(vLayoutAnimation, ARRAYSIZE(vLayoutObject), OBJECT_VS, sizeof(OBJECT_VS), &m_inputLayoutObject.p);
+	m_device->CreateInputLayout(vLayoutObject, ARRAYSIZE(vLayoutObject), OBJECT_VS, sizeof(OBJECT_VS), &m_inputLayoutObject.p);
 	m_device->CreateInputLayout(vLayoutAnimation, ARRAYSIZE(vLayoutAnimation), ANIMATION_VS, sizeof(ANIMATION_VS), &m_inputLayoutAnimation.p);
 }
 
@@ -322,7 +341,6 @@ void Application::CreateShaders()
 	// Creates the shaders for the Object
 	m_device->CreateVertexShader(OBJECT_VS, sizeof(OBJECT_VS), nullptr, &m_VS_OBJECT.p);
 	m_device->CreatePixelShader(OBJECT_PS, sizeof(OBJECT_PS), nullptr, &m_PS_OBJECT.p);
-
 	m_device->CreateVertexShader(ANIMATION_VS, sizeof(ANIMATION_VS), nullptr, &m_VS_ANIMATION.p);
 }
 
@@ -367,11 +385,10 @@ void Application::LoadObjects()
 
 	XMFLOAT3 fbxPos2{ 5.0f, 0.0f, 0.0f };
 	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Walk.fbx", fbxPos2, 1);
-	//XMMATRIX rotMatrix = XMMatrixMultiply(XMMatrixRotationY(3.141f), m_fbxMage.GetWorldMatrix());
-	//m_fbxMage.SetWorldMatrix(rotMatrix);
 	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds", L"..\\RTAProject\\Assets\\Textures\\mageNormalMap.dds", L"..\\RTAProject\\Assets\\Textures\\mageSpecularMap.dds");
 	m_testBones.clear();
 	m_testBones = m_fbxMage.GetFBXBones();
+
 	for (unsigned int i = 0; i < m_testBones.size(); ++i)
 	{
 		XMFLOAT3 bonePos = XMFLOAT3(m_testBones[i].m_worldMatrix.r[3].m128_f32[0], m_testBones[i].m_worldMatrix.r[3].m128_f32[1], m_testBones[i].m_worldMatrix.r[3].m128_f32[2]);
@@ -380,6 +397,21 @@ void Application::LoadObjects()
 		bone->InstantiateModel(m_device, "..\\RTAProject\\Assets\\boneSphere.obj", bonePos);
 		bone->TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\groundTexture.dds");
 		m_mageBonesVec.push_back(bone);
+	}
+
+	XMFLOAT3 fbxPos3{ -200.0f, 0.0f, 0.0f };
+	m_fbxBear.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Teddy\\Teddy_Attack2.fbx", fbxPos3, 1);
+ 	m_fbxBear.SetWorldMatrix(XMMatrixMultiply(m_fbxBear.GetWorldMatrix(),XMMatrixScaling(0.03f,0.03f,0.03f)));
+	m_fbxBear.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\bearTexture.dds");
+	m_testBones.clear();
+	m_testBones = m_fbxBear.GetFBXBones();
+	for (unsigned int i = 0; i < m_testBones.size(); ++i)
+	{
+		XMFLOAT3 bonePos = XMFLOAT3(m_testBones[i].m_worldMatrix.r[3].m128_f32[0], m_testBones[i].m_worldMatrix.r[3].m128_f32[1], m_testBones[i].m_worldMatrix.r[3].m128_f32[2]);
+		bonePos = XMFLOAT3(bonePos.x + fbxPos2.x, bonePos.y + fbxPos2.y, bonePos.z + fbxPos2.z);
+		Object* bone = new Object();
+		bone->InstantiateModel(m_device, "..\\RTAProject\\Assets\\boneSphere.obj", bonePos);
+		m_bearBonesVec.push_back(bone);
 	}
 }
 
@@ -392,8 +424,8 @@ void Application::InitializeToShader()
 
 	// Setting the View matrix
 	m_viewToShader.viewMatrix = XMMatrixIdentity();
-	m_viewToShader.viewMatrix.r[3].m128_f32[1] = 2.0f;
-	m_viewToShader.viewMatrix.r[3].m128_f32[2] = 7.0f;
+	m_viewToShader.viewMatrix.r[3].m128_f32[1] = 5.0f;
+	m_viewToShader.viewMatrix.r[3].m128_f32[2] = 15.0f;
 	XMMATRIX nintyRotMatrix = XMMatrixMultiply(XMMatrixRotationY(3.141f), m_viewToShader.viewMatrix);
 	m_viewToShader.viewMatrix = nintyRotMatrix;
 
@@ -402,6 +434,11 @@ void Application::InitializeToShader()
 
 	// Initilizes lights data
 	InitilizeLights();
+
+	// Initialize bones data for the shader
+	for (unsigned int i = 0; i < m_mageBonesVec.size(); i++)
+		m_bonesToShader.bones[i] = m_mageBonesVec[i]->GetWorldMatrix();
+
 }
 
 // Creates constant buffers
@@ -432,6 +469,15 @@ void Application::CreateConstBuffers()
 	constBufferDesc.StructureByteStride = sizeof(float);
 	constBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	m_device->CreateBuffer(&constBufferDesc, NULL, &m_spotLightConstBuffer.p);
+
+
+	ZeroMemory(&constBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	constBufferDesc.ByteWidth = sizeof(BONES_TO_VRAM);
+	constBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	constBufferDesc.StructureByteStride = sizeof(float);
+	constBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	m_device->CreateBuffer(&constBufferDesc, NULL, &m_bonesConstBuffer.p);
 
 }
 
@@ -513,25 +559,23 @@ void Application::LightsControls(float _speed)
 		m_spotLightToShader.status = !m_spotLightToShader.status;
 		m_keyPressed = true;
 	}
-	if (!GetAsyncKeyState('I') && !GetAsyncKeyState('O') && !GetAsyncKeyState('R') && !GetAsyncKeyState('T') && m_keyPressed)
-		m_keyPressed = false;
 
 	// Move point light
-	if (m_spotLightToShader.status)
-	{
-		if (GetAsyncKeyState(VK_DOWN))
-			m_spotLightToShader.transform.m128_f32[2] -= _speed;//float(Timer.Delta())* 2.0f;
-		else if (GetAsyncKeyState(VK_UP))
-			m_spotLightToShader.transform.m128_f32[2] += _speed;
-		if (GetAsyncKeyState(VK_LEFT))
-			m_spotLightToShader.transform.m128_f32[0] -= _speed;
-		else if (GetAsyncKeyState(VK_RIGHT))
-			m_spotLightToShader.transform.m128_f32[0] += _speed;
-		if (GetAsyncKeyState('Z'))
-			m_spotLightToShader.transform.m128_f32[1] += _speed;
-		else if (GetAsyncKeyState('X'))
-			m_spotLightToShader.transform.m128_f32[1] -= _speed;
-	}
+	//if (m_spotLightToShader.status)
+	//{
+	//	if (GetAsyncKeyState(VK_DOWN))
+	//		m_spotLightToShader.transform.m128_f32[2] -= _speed;//float(Timer.Delta())* 2.0f;
+	//	else if (GetAsyncKeyState(VK_UP))
+	//		m_spotLightToShader.transform.m128_f32[2] += _speed;
+	//	if (GetAsyncKeyState(VK_LEFT))
+	//		m_spotLightToShader.transform.m128_f32[0] -= _speed;
+	//	else if (GetAsyncKeyState(VK_RIGHT))
+	//		m_spotLightToShader.transform.m128_f32[0] += _speed;
+	//	if (GetAsyncKeyState('Z'))
+	//		m_spotLightToShader.transform.m128_f32[1] += _speed;
+	//	else if (GetAsyncKeyState('X'))
+	//		m_spotLightToShader.transform.m128_f32[1] -= _speed;
+	//}
 }
 
 // Maps shaders before rendering
@@ -543,6 +587,9 @@ void Application::MapShaders()
 	// Lights const buffer
 	m_deviceContext->PSSetConstantBuffers(2, 1, &m_dirLightConstBuffer.p);
 	m_deviceContext->PSSetConstantBuffers(4, 1, &m_spotLightConstBuffer.p);
+
+	// Bones const buffer
+	m_deviceContext->VSSetConstantBuffers(2,1, &m_bonesConstBuffer.p);
 
 	// Scene mapping
 	D3D11_MAPPED_SUBRESOURCE mapSubresource;
@@ -561,8 +608,11 @@ void Application::MapShaders()
 	memcpy(mapSubresource.pData, &m_spotLightToShader, sizeof(LIGHT_TO_VRAM));
 	m_deviceContext->Unmap(m_spotLightConstBuffer, NULL);
 
-	
-
+	// Bones data
+	ZeroMemory(&mapSubresource, sizeof(mapSubresource));
+	m_deviceContext->Map(m_bonesConstBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mapSubresource);
+	memcpy(mapSubresource.pData, &m_bonesToShader, sizeof(BONES_TO_VRAM));
+	m_deviceContext->Unmap(m_bonesConstBuffer, NULL);
 }
 
 // Initilizes the light for the shader
@@ -596,36 +646,40 @@ void Application::FrameInput()
 {
 	if (GetAsyncKeyState('R') && !m_keyPressed)
 	{
-		--m_currentFrameIndex;
-		if (m_currentFrameIndex < 1)
-			m_currentFrameIndex = 36;
 		m_keyPressed = true;
-
-		Animation currAnimation = m_fbxMage.GetAnimation();
-		vector<Transform> myBones = m_fbxMage.GetFBXBones();
-		for (unsigned int i = 4; i < 28; ++i)
-		{
-			currAnimation.m_keyFrame[i].m_bones[m_currentFrameIndex].m_worldMatrix.r[3].m128_f32[0] += 5.0f;
-			m_mageBonesVec[i]->SetWorldMatrix(currAnimation.m_keyFrame[i].m_bones[m_currentFrameIndex].m_worldMatrix);
-		}
+		m_fbxMage.BackwardFrame();
 	}
 	if (GetAsyncKeyState('T') && !m_keyPressed)
 	{
-		++m_currentFrameIndex;
-		if (m_currentFrameIndex > 36)
-			m_currentFrameIndex = 1;
 		m_keyPressed = true;
-
-		Animation currAnimation = m_fbxMage.GetAnimation();
-		for (unsigned int i = 4; i < 28; ++i)
-		{
-			currAnimation.m_keyFrame[i].m_bones[m_currentFrameIndex].m_worldMatrix.r[3].m128_f32[0] += 5.0f;
-			m_mageBonesVec[i]->SetWorldMatrix(currAnimation.m_keyFrame[i].m_bones[m_currentFrameIndex].m_worldMatrix);
-
-		}
+		m_fbxMage.ForwardFrame();
 	}
 
+	if (GetAsyncKeyState('Y') && !m_keyPressed)
+	{
+		m_keyPressed = true;
+		m_loopAnimation = !m_loopAnimation;
+	}
 }
 
+void Application::UpdateFrames(Object& _object, vector<Object*> _renderedBones, XMVECTOR _offset)
+{
+	Animation currAnimation = _object.GetAnimation();
+	for (unsigned int i = 0; i < currAnimation.m_keyFrame.size(); ++i)
+	{
+		currAnimation.m_keyFrame[i].m_bones[_object.GetCurrFrame()].m_worldMatrix.r[3] += _offset;
+		_renderedBones[i]->SetWorldMatrix(currAnimation.m_keyFrame[i].m_bones[_object.GetCurrFrame()].m_worldMatrix);
+		// Data that goes to the shader
+		m_bonesToShader.bones[i] = currAnimation.m_keyFrame[i].m_bones[_object.GetCurrFrame()].m_worldMatrix;
+	}
+}
 
+void Application::LoopAnimation(Object& _object, unsigned int _speed)
+{
 
+	if (m_temptimeer > _speed)
+	{
+		m_temptimeer = 0;
+		m_fbxMage.ForwardFrame();
+	}
+}

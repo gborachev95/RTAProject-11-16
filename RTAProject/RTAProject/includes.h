@@ -35,11 +35,11 @@ using namespace std;
 // Structures
 struct VERTEX
 {
-	XMFLOAT3 transform;
-	XMFLOAT3 normals;
-	XMFLOAT3 uv;
-	XMFLOAT3 tangents;
-	XMFLOAT3 bitangents;
+	XMFLOAT4 transform;
+	XMFLOAT4 normals;
+	XMFLOAT4 uv;
+	XMFLOAT4 tangents;
+	XMFLOAT4 bitangents;
 	XMFLOAT4 skinIndices;
 	XMFLOAT4 skinWeights;
 };
@@ -74,6 +74,11 @@ struct SCENE_TO_VRAM
 	XMMATRIX viewMatrix;
 	XMMATRIX projectionMatrix;
 	XMFLOAT3 cameraPosition;
+};
+
+struct BONES_TO_VRAM
+{
+	XMMATRIX bones[38];
 };
 
 struct LIGHT_TO_VRAM

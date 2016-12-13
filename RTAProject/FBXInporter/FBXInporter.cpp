@@ -111,7 +111,7 @@ namespace FBXImporter
 		{
 			// Setting Vertecies
 			VERTEX currVertex;
-			currVertex.transform = XMFLOAT3(float(currMesh->GetControlPointAt(j).mData[0]), float(currMesh->GetControlPointAt(j).mData[1]), float(currMesh->GetControlPointAt(j).mData[2]));
+			currVertex.transform = XMFLOAT4(float(currMesh->GetControlPointAt(j).mData[0]), float(currMesh->GetControlPointAt(j).mData[1]), float(currMesh->GetControlPointAt(j).mData[2]),0);
 			controlPointsList.push_back(currVertex);
 		}
 
@@ -143,8 +143,8 @@ namespace FBXImporter
 				// Set the current vertex
 				currVertex = controlPointsList[_indicies[polyIndex * 3 + Vertex]];
 				//currVertex.skin
-				currVertex.normals = { (float)fbxNormals.mData[0],(float)fbxNormals.mData[1] ,(float)fbxNormals.mData[2] };
-				currVertex.uv = { float(fbxTexCoord[0]),float(1.0f - fbxTexCoord[1]),0 };
+				currVertex.normals = { (float)fbxNormals.mData[0],(float)fbxNormals.mData[1] ,(float)fbxNormals.mData[2],0 };
+				currVertex.uv = { float(fbxTexCoord[0]),float(1.0f - fbxTexCoord[1]),0,0 };
 				
 				// Store Data
 				_vertecies.push_back(currVertex);
@@ -298,6 +298,7 @@ namespace FBXImporter
 				_vertecies[i].skinWeights.w = tempSkin[i].weights[3];
 			}
 			delete[] tempSkin;
+			int a = 0;
 		}
 
 	}
@@ -504,9 +505,9 @@ namespace FBXImporter
 	{
 		// Local Variables
 		vector<unsigned int> vertexIndices, uvIndices, normalIndices;
-		vector<XMFLOAT3> temp_vertices;
-		vector<XMFLOAT3> temp_normals;
-		vector<XMFLOAT2> temp_uvs;
+		vector<XMFLOAT4> temp_vertices;
+		vector<XMFLOAT4> temp_normals;
+		vector<XMFLOAT4> temp_uvs;
 
 		FILE *file;
 		float shine = 0.0f;
@@ -531,21 +532,21 @@ namespace FBXImporter
 			// Check if the line is a vertex
 			if (strcmp(lineHeader, "v") == 0)
 			{
-				XMFLOAT3 vertex;
+				XMFLOAT4 vertex;
 				fscanf_s(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
 				temp_vertices.push_back(vertex);
 			}
 			// Check if the line is a UV
 			else if (strcmp(lineHeader, "vt") == 0)
 			{
-				XMFLOAT2 uv;
+				XMFLOAT4 uv;
 				fscanf_s(file, "%f %f\n", &uv.x, &uv.y);
 				temp_uvs.push_back(uv);
 			}
 			// Check if the line is a normal
 			else if (strcmp(lineHeader, "vn") == 0)
 			{
-				XMFLOAT3 normal;
+				XMFLOAT4 normal;
 				fscanf_s(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
 				temp_normals.push_back(normal);
 			}
