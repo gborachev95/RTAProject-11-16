@@ -388,6 +388,8 @@ void Object::LoadBinaryFile(std::string _filePath)
 		binFile.read((char*)&m_indexList[0], sizeof(unsigned int) * m_numIndicies);
 	}
 	binFile.close();
+
+	ComputeTangents();
 }
 
 // Getter for the bones
