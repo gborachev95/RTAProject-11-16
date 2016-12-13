@@ -42,7 +42,7 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 {
 	OUTPUT_VERTEX sendToRasterizer = (OUTPUT_VERTEX)0;
 	float4 localCoordinate = float4(fromVertexBuffer.coordinate.xyz, 1);
-
+	float4 test = localCoordinate;
 	// THIS HAS TO BE DONE FIRST IN ORDER TO BE PLACED IN THE CORRECT SPACE AFTER //
 	/*
 	I believe you will have to create a constant buffer with which you need to send all the bones to the shader at register 2.
@@ -53,7 +53,7 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	// Local coordinate with smooth skinning 
 	if (fromVertexBuffer.indices[0] >= 0)
 	{
-		localCoordinate += float4(boneOffset[fromVertexBuffer.indices[0]]._41,
+		localCoordinate = float4(boneOffset[fromVertexBuffer.indices[0]]._41,
 			boneOffset[fromVertexBuffer.indices[0]]._42,
 			boneOffset[fromVertexBuffer.indices[0]]._43,
 			boneOffset[fromVertexBuffer.indices[0]]._44) * fromVertexBuffer.weights[0];
@@ -79,8 +79,7 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 			boneOffset[fromVertexBuffer.indices[3]]._43,
 			boneOffset[fromVertexBuffer.indices[3]]._44) * fromVertexBuffer.weights[3];
 	}
-
-	localCoordinate.w = 1;
+	localCoordinate += test;
 	
 	// Local coordinate in world space
 	localCoordinate = mul(localCoordinate, worldMatrix);

@@ -370,7 +370,7 @@ void Application::LoadObjects()
 	m_groundObject.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\groundTexture.dds", L"..\\RTAProject\\Assets\\Textures\\groundNormalMap.dds");
 
 	XMFLOAT3 fbXpos{ 0, 0, 0 };
-	m_fbxTest.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Testbox\\Box_Idle.fbx", fbXpos, 0);
+	m_fbxTest.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Testbox\\Box_Jump.fbx", fbXpos, 0);
 	m_fbxTest.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\TestCubeTexture.dds");
 	// Setiing the bones of the test object
 	m_testBones = m_fbxTest.GetFBXBones();
