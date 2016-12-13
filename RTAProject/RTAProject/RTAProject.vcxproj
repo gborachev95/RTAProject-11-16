@@ -92,7 +92,6 @@
     <ClInclude Include="Animation.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="DDSTextureLoader.h" />
-    <ClInclude Include="FBXDLL.h" />
     <ClInclude Include="includes.h" />
     <ClInclude Include="KeyFrame.h" />
     <ClInclude Include="Log.h" />
