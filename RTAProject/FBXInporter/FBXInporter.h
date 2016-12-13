@@ -48,6 +48,8 @@ namespace FBXImporter
 	void ExportBinaryFile(const string & _fileName, vector<Transform>& _bones);
 	void ExportBinaryFile(const string & _fileName, Animation& _animation);
 
+	//bool ExportObject(string filePath);
+
 	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy, Animation& _animation);
 	void LoadMeshSkin(FbxMesh *_inMesh, vector<VERTEX>& _vertecies);
 	XMMATRIX CreateXMMatrixFromFBXVectors(FbxVector4 _rotVec, FbxVector4 _translVec, FbxVector4 _scaleVec);

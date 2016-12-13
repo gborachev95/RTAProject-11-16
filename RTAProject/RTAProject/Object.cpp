@@ -1,5 +1,4 @@
 #include "Object.h"
-#include "FBXDLL.h"
 #include "..//FBXInporter//FBXLib.h"
 #include "DDSTextureLoader.h"
 #include <fstream>
@@ -14,19 +13,24 @@ Object::Object()
 // Destructor
 Object::~Object()
 {
-		delete m_vertecies;
-        delete m_indexList;
+	
+	delete m_vertecies;
+	delete m_indexList;
 }
 
 // Instantiates the object using his buffers
+
 void Object::InstantiateModel(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position, float _shine)
 {
-	bool result = ReadObject(_filePath, _shine);
+	
+	ExportObject(_filePath,_shine);
+	LoadBinaryFile(_filePath);
 	CreateVertexBuffer(_device);
 	CreateIndexBuffer(_device);
 	CreateConstBuffer(_device);
 	m_worldToShader.worldMatrix = XMMatrixIdentity();
-	m_worldToShader.worldMatrix.r[3] = { _position.x,_position.y, _position.z,1};
+	
+	m_worldToShader.worldMatrix.r[3] = { _position.x,_position.y, _position.z, 1};
 }
 
 // Instantiates the object using an FBX file
@@ -54,7 +58,8 @@ void Object::InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOA
 
 	// Setting the members
 	m_numVerts = temp_vertices.size();
-	m_vertecies = new VERTEX [m_numVerts];
+	
+	m_vertecies = new VERTEX[m_numVerts];
 
 	// Setting vertecies
 	for (unsigned int i = 0; i < m_numVerts; ++i)
@@ -81,19 +86,20 @@ void Object::Render(ID3D11DeviceContext* _context)
 {
 	unsigned int stride = sizeof(VERTEX);
 	unsigned int offset = 0;
-	
+
 	// Set the buffers for the current object
 	_context->IASetVertexBuffers(0, 1, &m_vertexBuffer.p, &stride, &offset);
 	_context->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	
+
 	// Set the shader resource - for the texture
-	_context->PSSetShaderResources(0, 1,&m_defShaderResourceView.p);
 	
+	_context->PSSetShaderResources(0, 1, &m_defShaderResourceView.p);
+
 	// If there is normal mapping
 	if (m_normalShaderResourceView.p != nullptr)
 		_context->PSSetShaderResources(1, 1, &m_normalShaderResourceView.p);
-	
+
 	// If there is specular mapping
 	if (m_specularShaderResourceView.p != nullptr)
 		_context->PSSetShaderResources(2, 1, &m_specularShaderResourceView.p);
@@ -129,7 +135,7 @@ void Object::CreateVertexBuffer(ID3D11Device* _device)
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 	bufferDesc.StructureByteStride = sizeof(VERTEX);
-	
+
 	// Setting the resource data
 	D3D11_SUBRESOURCE_DATA resourceData;
 	ZeroMemory(&resourceData, sizeof(resourceData));
@@ -152,123 +158,20 @@ void Object::CreateIndexBuffer(ID3D11Device* _device)
 	D3D11_SUBRESOURCE_DATA initData;
 	ZeroMemory(&initData, sizeof(D3D11_SUBRESOURCE_DATA));
 	initData.pSysMem = m_indexList;
-   
+
 	// Create the buffer with the device.
 	_device->CreateBuffer(&bufferDesc, &initData, &m_indexBuffer.p);
-}
-
-/*
-Reads vertecies, uvs, normals and other object stuff from a .obj file
-Followed http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/ tutorial
-*/
-bool Object::ReadObject(std::string _filePath,float _shine)
-{
-	// Local variables
-	vector<unsigned int> vertexIndices, uvIndices, normalIndices;
-	vector<XMFLOAT4> temp_vertices;
-	vector<XMFLOAT4> temp_normals;
-	vector<XMFLOAT4> temp_uvs;
-	FILE *file;
-	
-	// Opening file - "r" -> read in
-	fopen_s(&file, _filePath.c_str(), "r");
-	// Check if file opened
-	if (file == NULL)
-		return false;
-	
-	// Looping until the file finishes
-	while (true)
-	{
-		// Read the first word of the line
-		char lineHeader[128];
-		int res = fscanf_s(file, "%s", lineHeader, _countof(lineHeader));
-	
-		// Check if the file has finished
-		if (res == EOF)
-			break;
-	
-		// Check if the line is a vertex
-		if (strcmp(lineHeader, "v") == 0)
-		{
-			XMFLOAT4 vertex;
-			fscanf_s(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-			temp_vertices.push_back(vertex);
-		}
-		// Check if the line is a UV
-		else if (strcmp(lineHeader, "vt") == 0)
-		{
-			XMFLOAT4 uv;
-			fscanf_s(file, "%f %f\n", &uv.x, &uv.y);
-			temp_uvs.push_back(uv);
-		}
-		// Check if the line is a normal
-		else if (strcmp(lineHeader, "vn") == 0)
-		{
-			XMFLOAT4 normal;
-			fscanf_s(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
-			temp_normals.push_back(normal);
-		}
-		// Check if the line is a index
-		else if (strcmp(lineHeader, "f") == 0)
-		{
-			std::string vertex1, vertex2, vertex3;
-			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
-			int matches = fscanf_s(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
-			if (matches != 9)
-				return false;
-	
-			// Setting the indicies for the vertecies
-			vertexIndices.push_back(vertexIndex[0] - 1);
-			vertexIndices.push_back(vertexIndex[1] - 1);
-			vertexIndices.push_back(vertexIndex[2] - 1);
-	
-			// Setting the indicies for the UVs
-			uvIndices.push_back(uvIndex[0] - 1);
-			uvIndices.push_back(uvIndex[1] - 1);
-			uvIndices.push_back(uvIndex[2] - 1);
-	
-			// Setting the indicies for the normals
-			normalIndices.push_back(normalIndex[0] - 1);
-			normalIndices.push_back(normalIndex[1] - 1);
-			normalIndices.push_back(normalIndex[2] - 1);
-		}
-	}
-	
-	// Setting vertecies member
-	m_numVerts = vertexIndices.size();
-	m_vertecies = new VERTEX[m_numVerts];
-	for (unsigned int i = 0; i < m_numVerts; ++i)
-	{
-		// Setting vertecies
-		m_vertecies[i].transform = temp_vertices[vertexIndices[i]];
-		// Setting normals
-		m_vertecies[i].normals = temp_normals[normalIndices[i]];
-		// Setting UVs
-		m_vertecies[i].uv.x = temp_uvs[uvIndices[i]].x;
-		m_vertecies[i].uv.y = temp_uvs[uvIndices[i]].y;
-		m_vertecies[i].uv.z = _shine;
-	}
-	
-	// Computing the tangents and bitangents
-	ComputeTangents();
-	// Setting indecies member
-	m_numIndicies = vertexIndices.size();
-	m_indexList = new unsigned int[m_numIndicies];
-	for (unsigned int i = 0; i < m_numIndicies; ++i)
-		m_indexList[i] = i;
-	
-	// Return true if everything went right
-	return true;
 }
 
 // Textures the object 
 void Object::TextureObject(ID3D11Device* _device, const wchar_t*  _filePathToDefuse, const wchar_t*  _filePathToNormalMap, const wchar_t*  _filePathToSpecular)
 {
-	 CreateDDSTextureFromFile(_device, _filePathToDefuse, NULL, &m_defShaderResourceView.p);
-	 if(_filePathToNormalMap)
-	 CreateDDSTextureFromFile(_device, _filePathToNormalMap, NULL, &m_normalShaderResourceView.p);
-	 if(_filePathToSpecular)
-	 CreateDDSTextureFromFile(_device, _filePathToSpecular, NULL, &m_specularShaderResourceView.p);
+	
+	CreateDDSTextureFromFile(_device, _filePathToDefuse, NULL, &m_defShaderResourceView.p);
+	if (_filePathToNormalMap)
+		CreateDDSTextureFromFile(_device, _filePathToNormalMap, NULL, &m_normalShaderResourceView.p);
+	if (_filePathToSpecular)
+		CreateDDSTextureFromFile(_device, _filePathToSpecular, NULL, &m_specularShaderResourceView.p);
 }
 
 // Returns the world matrix of the object
@@ -291,10 +194,10 @@ void Object::SetPosition(float _x, float _y, float _z)
 	m_worldToShader.worldMatrix.r[3].m128_f32[2] = _z;
 }
 
-/* 
+/*
 Used for normal mapping.
 Followed http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-13-normal-mapping/ tutorial
-Parameters: 
+Parameters:
 [in] _verts       - vertecies of object
 [in] _uvs         - uv coordinates of object
 [in] _normals     - normals of object
@@ -303,42 +206,42 @@ void Object::ComputeTangents()
 {
 	vector<XMFLOAT4> temp_tangents;
 	vector<XMFLOAT4> temp_bitangents;
-	
+
 	for (unsigned int i = 0; i < m_numVerts; i += 3)
 	{
 		// Getting the triangles 
 		XMFLOAT4 tempV0 = m_vertecies[i].transform;
 		XMFLOAT4 tempV1 = m_vertecies[i + 1].transform;
 		XMFLOAT4 tempV2 = m_vertecies[i + 2].transform;
-	
+
 		XMFLOAT4 tempUV0 = m_vertecies[i].uv;
 		XMFLOAT4 tempUV1 = m_vertecies[i + 1].uv;
 		XMFLOAT4 tempUV2 = m_vertecies[i + 2].uv;
-	
+
 		// Edges of the triangle 
 		XMFLOAT4 deltaPos1{ tempV1.x - tempV0.x, tempV1.y - tempV0.y, tempV1.z - tempV0.z,0 };
 		XMFLOAT4 deltaPos2{ tempV2.x - tempV0.x, tempV2.y - tempV0.y, tempV2.z - tempV0.z,0 };
-	
+
 		XMFLOAT4 deltaUV1 = { tempUV1.x - tempUV0.x, tempUV1.y - tempUV0.y, 0,0 };
-		XMFLOAT4 deltaUV2 = { tempUV2.x - tempUV0.x, tempUV2.y - tempUV0.y, 0 ,0};
-	
+		XMFLOAT4 deltaUV2 = { tempUV2.x - tempUV0.x, tempUV2.y - tempUV0.y, 0 ,0 };
+
 		float ratio = (1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x));
-	
+
 		// Calculating tangent
-		XMFLOAT4 tempTangent1 { deltaPos1.x * deltaUV2.y, deltaPos1.y * deltaUV2.y, deltaPos1.z * deltaUV2.y,0 };
+		XMFLOAT4 tempTangent1{ deltaPos1.x * deltaUV2.y, deltaPos1.y * deltaUV2.y, deltaPos1.z * deltaUV2.y,0 };
 		XMFLOAT4 tempTangent2{ deltaPos2.x * deltaUV1.y, deltaPos2.y * deltaUV1.y, deltaPos2.z * deltaUV1.y,0 };
 		XMFLOAT4 tempTangent3{ tempTangent1.x - tempTangent2.x, tempTangent1.y - tempTangent2.y, tempTangent1.z - tempTangent2.z,0 };
 		XMFLOAT4 tangent{ tempTangent3.x*ratio, tempTangent3.y*ratio, tempTangent3.z*ratio,0 };
-	
+
 		// Calculating bitangent
 		XMFLOAT4 tempBitangent{ tempTangent2.x - tempTangent1.x, tempTangent2.y - tempTangent1.y, tempTangent2.z - tempTangent1.z,0 };
 		XMFLOAT4 bitangent{ tempBitangent.x*ratio, tempBitangent.y*ratio, tempBitangent.z*ratio,0 };
-	
+
 		// Setting them 
 		m_vertecies[i].tangents = tangent;
 		m_vertecies[i + 1].tangents = tangent;
 		m_vertecies[i + 2].tangents = tangent;
-	
+
 		m_vertecies[i].bitangents = bitangent;
 		m_vertecies[i + 1].bitangents = bitangent;
 		m_vertecies[i + 2].bitangents = bitangent;
@@ -458,6 +361,36 @@ void Object::LoadBinaryFile(std::string _filePath, Animation& _animation)
 }
 
 // Load Binary File (OBJ)
+// Note to Compute Tangents after receiving data
+void Object::LoadBinaryFile(std::string _filePath)
+{
+	fstream binFile;
+	string binName;
+
+	string theName = strrchr(_filePath.c_str(), '\\');
+	//binName = strrchr(theName.c_str(), theName[1]);
+	theName.erase(0,1);
+	binName = theName;
+	binName.pop_back();
+	binName.pop_back();
+	binName.pop_back();
+	binName.pop_back();
+	binName.append("_obj.bin");
+
+	binFile.open(binName.c_str(), std::ios::in | std::ios::binary);
+	if (binFile.is_open())
+	{
+		binFile.read((char*)&m_numVerts, sizeof(unsigned int));
+		m_vertecies = new VERTEX[m_numVerts];
+		binFile.read((char*)&m_vertecies[0], sizeof(VERTEX) * m_numVerts);
+		binFile.read((char*)&m_numIndicies, sizeof(unsigned int));
+		m_indexList = new unsigned int[m_numIndicies];
+		binFile.read((char*)&m_indexList[0], sizeof(unsigned int) * m_numIndicies);
+	}
+	binFile.close();
+
+	ComputeTangents();
+}
 
 // Getter for the bones
 vector<Transform> Object::GetFBXBones()

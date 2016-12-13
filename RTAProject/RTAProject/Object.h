@@ -27,7 +27,7 @@ private:
 	void CreateVertexBuffer(ID3D11Device* _device);
 	void CreateIndexBuffer(ID3D11Device* _device);
 	void ComputeTangents();
-	bool ReadObject(std::string _filePath, float _shine);
+	
 	void CreateConstBuffer(ID3D11Device* _device);
 	// Loader
 	void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
@@ -38,7 +38,6 @@ public:
 
 	// Construcor
 	Object();
-
 	// Destructor
 	~Object();
 
@@ -46,18 +45,17 @@ public:
 	void InstantiateFBX(ID3D11Device* _device, std::string _filePath, XMFLOAT3 _position, float _shine);
 	void Object::Render(ID3D11DeviceContext* _context);
 	void TextureObject(ID3D11Device* _device, const wchar_t*  _filePathToDefuse, const wchar_t*  _filePathToNormalMap = nullptr, const wchar_t*  _filePathToSpecular = nullptr);
-
 	// Getters
 	XMMATRIX GetWorldMatrix();
 	Animation GetAnimation();
 	vector<Transform> GetFBXBones();
-
 	// Setters
 	void SetWorldMatrix(XMMATRIX& _matrix);
 	void SetPosition(float _x, float _y, float _z);
 	void ForwardFrame();
 	void BackwardFrame();
 	unsigned int GetCurrFrame();
+	void LoadBinaryFile(std::string _filePath);
 
 	// Alligning by 16 bytes so we don't get a warning 
 	void* operator new(size_t i)

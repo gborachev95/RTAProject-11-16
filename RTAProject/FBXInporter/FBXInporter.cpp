@@ -52,6 +52,8 @@ namespace FBXImporter
 		FbxNode *root = fbxScene->GetRootNode();
 
 		TraverseScene(root, _vertecies, _indices, _transformHierarchy, _animation);
+
+		// Containers for OBJ
 		ExportBinaryFile(_fileName, _vertecies, _indices);
 		ExportBinaryFile(_fileName, _transformHierarchy);
 		ExportBinaryFile(_fileName, _animation);
@@ -495,4 +497,129 @@ namespace FBXImporter
 		return _transformHierarchy[0];
 	}
 
+	/*
+	Reads vertecies, uvs, normals and other object stuff from a .obj file
+	Followed http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/ tutorial
+	*/
+	bool ExportObject(string filePath,float _shine)
+	{
+		// Local Variables
+		vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+		vector<XMFLOAT4> temp_vertices;
+		vector<XMFLOAT4> temp_normals;
+		vector<XMFLOAT4> temp_uvs;
+
+		FILE *file;
+
+		// Opening file - "r" -> read in
+		fopen_s(&file, filePath.c_str(), "r");
+		// Check if file opened
+		if (file == NULL)
+			return false;
+
+		// Looping until the file finishes
+		while (true)
+		{
+			// Read the first word of the line
+			char lineHeader[128];
+			int res = fscanf_s(file, "%s", lineHeader, _countof(lineHeader));
+
+			// Check if the file has finished
+			if (res == EOF)
+				break;
+
+			// Check if the line is a vertex
+			if (strcmp(lineHeader, "v") == 0)
+			{
+				XMFLOAT4 vertex;
+				fscanf_s(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				temp_vertices.push_back(vertex);
+			}
+			// Check if the line is a UV
+			else if (strcmp(lineHeader, "vt") == 0)
+			{
+				XMFLOAT4 uv;
+				fscanf_s(file, "%f %f\n", &uv.x, &uv.y);
+				temp_uvs.push_back(uv);
+			}
+			// Check if the line is a normal
+			else if (strcmp(lineHeader, "vn") == 0)
+			{
+				XMFLOAT4 normal;
+				fscanf_s(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+				temp_normals.push_back(normal);
+			}
+			// Check if the line is a index
+			else if (strcmp(lineHeader, "f") == 0)
+			{
+				std::string vertex1, vertex2, vertex3;
+				unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+				int matches = fscanf_s(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+				if (matches != 9)
+					return false;
+
+				// Setting the indicies for the vertecies
+				vertexIndices.push_back(vertexIndex[0] - 1);
+				vertexIndices.push_back(vertexIndex[1] - 1);
+				vertexIndices.push_back(vertexIndex[2] - 1);
+
+				// Setting the indicies for the UVs
+				uvIndices.push_back(uvIndex[0] - 1);
+				uvIndices.push_back(uvIndex[1] - 1);
+				uvIndices.push_back(uvIndex[2] - 1);
+
+				// Setting the indicies for the normals
+				normalIndices.push_back(normalIndex[0] - 1);
+				normalIndices.push_back(normalIndex[1] - 1);
+				normalIndices.push_back(normalIndex[2] - 1);
+			}
+		}
+
+		// Setting vertecies member
+		unsigned int m_numVerts = vertexIndices.size();
+		VERTEX * m_vertecies = new VERTEX[m_numVerts];
+		for (unsigned int i = 0; i < m_numVerts; ++i)
+		{
+			// Setting vertecies
+			m_vertecies[i].transform = temp_vertices[vertexIndices[i]];
+			// Setting normals
+			m_vertecies[i].normals = temp_normals[normalIndices[i]];
+			// Setting UVs
+			m_vertecies[i].uv.x = temp_uvs[uvIndices[i]].x;
+			m_vertecies[i].uv.y = temp_uvs[uvIndices[i]].y;
+			m_vertecies[i].uv.z = _shine;
+		}
+
+		// Setting indecies member
+		unsigned int m_numIndicies = vertexIndices.size();
+		unsigned int * m_indexList = new unsigned int[m_numIndicies];
+		for (unsigned int i = 0; i < m_numIndicies; ++i)
+			m_indexList[i] = i;
+
+
+		// EXPORT THE DATA
+		string binName;
+		fstream binFile;
+		string theName = strrchr(filePath.c_str(), '\\');
+		theName.erase(0, 1);
+		binName = theName;
+		binName.pop_back();
+		binName.pop_back();
+		binName.pop_back();
+		binName.pop_back();
+		binName.append("_obj.bin");
+		binFile.open(binName.c_str(), std::ios::out | std::ios::binary);
+		if (binFile.is_open())
+		{
+			binFile.write((char*)&m_numVerts, sizeof(unsigned int));
+			binFile.write((char*)&m_vertecies[0], sizeof(VERTEX) * m_numVerts);
+			binFile.write((char*)&m_numIndicies, sizeof(unsigned int));
+			binFile.write((char*)&m_indexList[0], sizeof(unsigned int) * m_numIndicies);
+		}
+		binFile.close();
+		delete[] m_vertecies;
+		delete[] m_indexList;
+		// Return true if everything went right
+		return true;
+	}
 }// FBXImporter namespace
