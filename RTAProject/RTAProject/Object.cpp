@@ -408,16 +408,16 @@ Animation Object::GetAnimation()
 void Object::ForwardFrame()
 {
 	++m_currentFrameIndex;
-	if (unsigned int(m_currentFrameIndex) >= m_animation.GetKeyFramesNumber() - 2)
-		m_currentFrameIndex = 1;		
+	if (unsigned int(m_currentFrameIndex) >= m_animation.GetKeyFramesNumber() - 1)
+		m_currentFrameIndex = 0;		
 }
 
 // Subtracts a frame form the animation
 void Object::BackwardFrame()
 {
 	--m_currentFrameIndex;
-	if (m_currentFrameIndex <= 1)
-		m_currentFrameIndex = m_animation.GetKeyFramesNumber() - 2;	
+	if (m_currentFrameIndex < 0)//<= 1)
+		m_currentFrameIndex = m_animation.GetKeyFramesNumber() - 2;
 }
 
 // Returns the current frame index

@@ -15,10 +15,6 @@ namespace FBXImporter
 		// Initialize the SDK manager. This object handles memory management.
 		FbxManager* lSdkManager = FbxManager::Create();
 
-		/*To import the contents of an FBX file, a FbxIOSettings object and a FbxImporter object must be created.
-		A FbxImporter object is initialized by providing the filename of the file to import along with a
-		FbxIOSettings object that has been appropriately configured to suit the importing needs(see I / O Settings).*/
-
 		// Create the IO settings object.
 		FbxIOSettings *ios = FbxIOSettings::Create(lSdkManager, IOSROOT);
 		lSdkManager->SetIOSettings(ios);
@@ -33,12 +29,6 @@ namespace FBXImporter
 			printf("Error returned: %s\n\n", lImporter->GetStatus().GetErrorString());
 			exit(-1);
 		}
-
-		/*The FbxImporter object populates a provided FbxScene object with the elements contained in the FBX file.
-		Observe that an empty string is passed as the second parameter in the FbxScene::Create() function.
-		Objects created in the FBX SDK can be given arbitrary, non - unique names, that allow the user
-		or other programs to identify the object after it is exported.After the FbxScene is populated,
-		the FbxImporter can be safely destroyed.*/
 
 		// Create a new scene so that it can be populated by the imported file.
 	    fbxScene = FbxScene::Create(lSdkManager, "myScene");
@@ -81,8 +71,6 @@ namespace FBXImporter
 				TraverseScene(child, _vertecies, _indices, _transformHierarchy,_animation);
 				if (child->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::eMesh)
 					GetDataFromMesh(child, _vertecies, _indices, _transformHierarchy,_animation);
-				//else if (child->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::eSkeleton)
-					//	GetDataFromSkeleton(child, _transformHierarchy);
 			}
 		}
 	}
@@ -169,27 +157,28 @@ namespace FBXImporter
 		// Setting the lenght of the animation
 		_animation.SetTotalTime(float(animTime.GetDuration().GetMilliSeconds()));
 
-		unsigned int numFrames = (unsigned int)(endTime.GetFrameCount(FbxTime::eFrames30) - startTime.GetFrameCount(FbxTime::eFrames30) + 1);
+		unsigned int numFrames = (unsigned int)(endTime.GetFrameCount(FbxTime::eFrames24) - startTime.GetFrameCount(FbxTime::eFrames24) + 1);
 		// Setting the num of frames
 		_animation.SetKeyFramesNumber(numFrames);
 
-		FbxAMatrix boneTransform = _inNode->EvaluateGlobalTransform();
+		//FbxAMatrix boneBindPose = _inNode->EvaluateGlobalTransform();
+
 		KeyFrame currFrame;
 		// Getting data for each frame
-		for (FbxLongLong iFrame = startTime.GetFrameCount(FbxTime::eFrames30); iFrame < endTime.GetFrameCount(FbxTime::eFrames30); ++iFrame)
+		for (FbxLongLong iFrame = startTime.GetFrameCount(FbxTime::eFrames24); iFrame < endTime.GetFrameCount(FbxTime::eFrames24); ++iFrame)
 		{
-
 			FbxTime currTime;
-			currTime.SetFrame(iFrame, FbxTime::eFrames30);
+			currTime.SetFrame(iFrame, FbxTime::eFrames24);
 			currFrame.SetFrameTime(float(currTime.GetFramedTime(false).GetMilliSeconds()));
 			// Set the number of the currFrame
 			currFrame.SetBoneIndex((unsigned int)iFrame);
-			FbxAMatrix currentTransformOffset = _inNode->EvaluateGlobalTransform(currTime) * boneTransform;
-
+			
+			FbxVector4 identityVS = FbxVector4(1,1,1,1);
+			FbxVector4 identityVR = FbxVector4(0, 0, 0, 0);
 			// Get bone matrix
 			Transform currBone;
-			FbxAMatrix wTransformMatrix = /*currentTransformOffset.Inverse() **/_inNode->EvaluateGlobalTransform(currTime);
-			FbxAMatrix lTransformMatrix = _inNode->EvaluateLocalTransform();
+			FbxAMatrix wTransformMatrix = _inNode->EvaluateGlobalTransform(currTime);
+			FbxAMatrix lTransformMatrix = _inNode->EvaluateLocalTransform(currTime);
 			currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
 			currBone.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
 
@@ -201,7 +190,6 @@ namespace FBXImporter
 	void LoadMeshSkeleton(FbxMesh *_inMesh, std::vector<Transform>& _transformHierarchy, Animation& _animation)
 	{
 		// Loads the bind pose bones
-		//int numDeformers = _inMesh->GetDeformerCount();
 		vector<FbxNode*> bonesVector;
 		FbxSkin* skin = (FbxSkin*)_inMesh->GetDeformer(0, FbxDeformer::eSkin);
 		if (skin != 0)
@@ -213,20 +201,35 @@ namespace FBXImporter
 				FbxCluster* cluster = skin->GetCluster(boneIndex);
 				FbxNode* bone = cluster->GetLink();
 				currBone.SetName(bone->GetName());
-				
+
+#if 0
+				// JYR
+				FbxVector4 translation = bone->GetGeometricTranslation(FbxNode::eSourcePivot);
+				FbxVector4 rotation = bone->GetGeometricRotation(FbxNode::eSourcePivot);
+				FbxVector4 scaling = bone->GetGeometricScaling(FbxNode::eSourcePivot);
+				FbxAMatrix boneMeshMatrix = FbxAMatrix(translation, rotation, scaling);
+				FbxAMatrix bindPoseMatrix;
+				cluster->GetTransformLinkMatrix(bindPoseMatrix);
+				FbxAMatrix boneMatrix;
+				cluster->GetTransformMatrix(boneMatrix);
+				FbxAMatrix result = boneMeshMatrix * boneMatrix.Inverse() * bindPoseMatrix;
+				currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(result.GetR(), result.GetT(), result.GetS());
+
+				// JYR
+#endif
 				// Get bone matrix
 				FbxAMatrix wTransformMatrix = bone->EvaluateGlobalTransform();
 				FbxAMatrix lTransformMatrix = bone->EvaluateLocalTransform();
 
 				currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
 				currBone.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
-			
+
 
 				GetAnimationData(fbxScene, bone, _animation);
 				bonesVector.push_back(bone);
 				_transformHierarchy.push_back(currBone);
 			}
-			
+
 			SetBoneConnection(bonesVector, _transformHierarchy);
 		}
 	}
@@ -245,25 +248,25 @@ namespace FBXImporter
 				for (unsigned int j = 0; j < 4; j++)
 				{
 					tempSkin[i].indices[j] = 0;
-					tempSkin[i].weights[j] = 0;
+					tempSkin[i].weights[j] = 0.0f;
 				}
 			}
 
 			int boneCount = skin->GetClusterCount();
 			for (int boneIndex = 0; boneIndex < boneCount; boneIndex++)
 			{
-				Transform currBone;
 				FbxCluster* cluster = skin->GetCluster(boneIndex);
-
 				//Skin stuff
 				int *boneVertexIndices = cluster->GetControlPointIndices();
 				double *boneVertexWeights = cluster->GetControlPointWeights();
+
 				// Iterate through all the vertices, which are affected by the bone
 				int numBoneVertexIndices = cluster->GetControlPointIndicesCount();
 				for (int boneVertexIndex = 0; boneVertexIndex < numBoneVertexIndices; boneVertexIndex++)
 				{
 					int boneVertIndex = boneVertexIndices[boneVertexIndex];
 					float boneWeight = (float)boneVertexWeights[boneVertexIndex];
+
 					// Safety check so we do not have more than four bones
 					if (tempSkin[boneVertIndex].bonesStored < 4)
 					{
@@ -331,7 +334,6 @@ namespace FBXImporter
 	}
 
 	// Exports fbx transform data 
-
 	void ExportBinaryFile(const string & _fileName, vector<Transform>& _bones)
 	{
 		ExporterHeader header(FileInfo::FILE_TYPES::BIND_POSE, _fileName.c_str());
@@ -611,4 +613,5 @@ namespace FBXImporter
 		// Return true if everything went right
 		return true;
 	}
+
 }// FBXImporter namespace

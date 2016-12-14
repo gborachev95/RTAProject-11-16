@@ -385,14 +385,10 @@ void Application::LoadObjects()
 	//}
 	
 	XMFLOAT3 fbxPos2{ 5.0f, 0.0f, 0.0f };
-	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Run.fbx", fbxPos2, 1);
+	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Run.fbx", fbXpos, 1);
 	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds", L"..\\RTAProject\\Assets\\Textures\\mageNormalMap.dds", L"..\\RTAProject\\Assets\\Textures\\mageSpecularMap.dds");
 	tempTransformBones.clear();
 	tempTransformBones = m_fbxMage.GetFBXBones();
-
-
-	//m_fbxMage.VerticesInBoneSpace();
-
 
 	for (unsigned int i = 0; i < tempTransformBones.size(); ++i)
 	{
@@ -400,7 +396,7 @@ void Application::LoadObjects()
 		//bonePos = XMFLOAT3(bonePos.x + fbxPos2.x, bonePos.y + fbxPos2.y, bonePos.z + fbxPos2.z);
 		Object* bone = new Object();
 		bone->InstantiateModel(m_device, "..\\RTAProject\\Assets\\boneSphere.obj", fbXpos,0);
-		bone->TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\groundTexture.dds");
+		bone->TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\TestCubeTexture.dds");
 		m_mageBonesVec.push_back(bone);
 	}
 
@@ -475,7 +471,6 @@ void Application::CreateConstBuffers()
 	constBufferDesc.StructureByteStride = sizeof(float);
 	constBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	m_device->CreateBuffer(&constBufferDesc, NULL, &m_spotLightConstBuffer.p);
-
 
 	ZeroMemory(&constBufferDesc, sizeof(D3D11_BUFFER_DESC));
 	constBufferDesc.ByteWidth = sizeof(BONES_TO_VRAM);
@@ -678,15 +673,14 @@ void Application::UpdateFrames(Object& _object, vector<Object*> _renderedBones)
 	{
 		// Data that goes to the shader
 		XMMATRIX bindPose = _object.GetFBXBones()[i].m_worldMatrix;
-		//_renderedBones[i]->SetWorldMatrix(bindPose); // For testing so I can see if this is the bind pose
 
 		XMMATRIX inverseBindpose = XMMatrixInverse(0, bindPose); // Getting inverse of bind pose
-		XMMATRIX currBoneAtFrame = currAnimation.m_keyFrame[i].m_bones[_object.GetCurrFrame()].m_worldMatrix; // Getting current frame that we are at
+		XMMATRIX currBoneAtFrame = currAnimation.m_keyFrame[i].m_bones[_object.GetCurrFrame()].m_worldMatrix; // Getting current frame
 		
-		m_bonesToShader.bones[i] = XMMatrixMultiply(inverseBindpose, currBoneAtFrame); // Sends the data to the shader
+		m_bonesToShader.bones[i] = XMMatrixMultiply(inverseBindpose,currBoneAtFrame); // Sends the data to the shader
 		_renderedBones[i]->SetWorldMatrix(currBoneAtFrame); // Updates the bones object to their new position
 
-		//m_bonesToShader.bones[i] = currAnimation.m_keyFrame[i].m_bones[_object.GetCurrFrame()].m_worldMatrix;
+		//m_bonesToShader.bones[i] = currBoneAtFrame;
 	}
 }
 

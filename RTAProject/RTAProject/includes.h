@@ -78,7 +78,7 @@ struct SCENE_TO_VRAM
 
 struct BONES_TO_VRAM
 {
-	XMMATRIX bones[38];
+	XMMATRIX bones[28];
 };
 
 struct LIGHT_TO_VRAM

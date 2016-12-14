@@ -34,7 +34,7 @@ cbuffer SCENE : register(b1)
 
 cbuffer BONES : register(b2)
 {
-	float4x4 boneOffset[38];
+	float4x4 boneOffset[28];
 }
 
 
@@ -44,10 +44,15 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	float4 localCoordinate = float4(fromVertexBuffer.coordinate.xyz, 1);
 
 	// Local coordinate with smooth skinning 
-	localCoordinate =  mul(boneOffset[fromVertexBuffer.indices[0]], float4(fromVertexBuffer.coordinate.xyz, 1) * fromVertexBuffer.weights[0]);
-	localCoordinate += mul(boneOffset[fromVertexBuffer.indices[1]], float4(fromVertexBuffer.coordinate.xyz, 1) * fromVertexBuffer.weights[1]);
-	localCoordinate += mul(boneOffset[fromVertexBuffer.indices[2]], float4(fromVertexBuffer.coordinate.xyz, 1) * fromVertexBuffer.weights[2]);
-	localCoordinate += mul(boneOffset[fromVertexBuffer.indices[3]], float4(fromVertexBuffer.coordinate.xyz, 1) * fromVertexBuffer.weights[3]);
+	localCoordinate =  mul(boneOffset[fromVertexBuffer.indices[0]], float4(fromVertexBuffer.coordinate.xyz, 1)* fromVertexBuffer.weights[0]).xyzw;
+	localCoordinate += mul(boneOffset[fromVertexBuffer.indices[1]], float4(fromVertexBuffer.coordinate.xyz, 1)* fromVertexBuffer.weights[1]).xyzw;
+	localCoordinate += mul(boneOffset[fromVertexBuffer.indices[2]], float4(fromVertexBuffer.coordinate.xyz, 1)* fromVertexBuffer.weights[2]).xyzw;
+	localCoordinate += mul(boneOffset[fromVertexBuffer.indices[3]], float4(fromVertexBuffer.coordinate.xyz, 1)* fromVertexBuffer.weights[3]).xyzw;
+
+	//localCoordinate =  mul(float4(fromVertexBuffer.coordinate.xyz, 1), boneOffset[fromVertexBuffer.indices[0]]* fromVertexBuffer.weights[0]);
+	//localCoordinate += mul(float4(fromVertexBuffer.coordinate.xyz, 1), boneOffset[fromVertexBuffer.indices[1]]* fromVertexBuffer.weights[1]);
+	//localCoordinate += mul(float4(fromVertexBuffer.coordinate.xyz, 1), boneOffset[fromVertexBuffer.indices[2]]* fromVertexBuffer.weights[2]);
+	//localCoordinate += mul(float4(fromVertexBuffer.coordinate.xyz, 1), boneOffset[fromVertexBuffer.indices[3]]* fromVertexBuffer.weights[3]);
 
 	//localCoordinate += float4(boneOffset[fromVertexBuffer.indices[0]]._41, boneOffset[fromVertexBuffer.indices[0]]._42, boneOffset[fromVertexBuffer.indices[0]]._43, 1) * fromVertexBuffer.weights[0];
 	//localCoordinate += float4(boneOffset[fromVertexBuffer.indices[1]]._41, boneOffset[fromVertexBuffer.indices[1]]._42, boneOffset[fromVertexBuffer.indices[1]]._43, 1) * fromVertexBuffer.weights[1];
