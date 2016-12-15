@@ -43,35 +43,26 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	OUTPUT_VERTEX sendToRasterizer = (OUTPUT_VERTEX)0;
 	float4 localCoordinate = float4(fromVertexBuffer.coordinate.xyz, 1);
 
-	// Local coordinate with smooth skinning 
-	localCoordinate =  mul(boneOffset[fromVertexBuffer.indices[0]], float4(fromVertexBuffer.coordinate.xyz, 1)* fromVertexBuffer.weights[0]).xyzw;
-	localCoordinate += mul(boneOffset[fromVertexBuffer.indices[1]], float4(fromVertexBuffer.coordinate.xyz, 1)* fromVertexBuffer.weights[1]).xyzw;
-	localCoordinate += mul(boneOffset[fromVertexBuffer.indices[2]], float4(fromVertexBuffer.coordinate.xyz, 1)* fromVertexBuffer.weights[2]).xyzw;
-	localCoordinate += mul(boneOffset[fromVertexBuffer.indices[3]], float4(fromVertexBuffer.coordinate.xyz, 1)* fromVertexBuffer.weights[3]).xyzw;
+	// Local coordinate with smooth skinning  
+	// The world position is animated at world origin
+	float4 animatedWorld = mul(localCoordinate, boneOffset[fromVertexBuffer.indices.x]) * fromVertexBuffer.weights.x;
+	animatedWorld += mul(localCoordinate, boneOffset[fromVertexBuffer.indices.y]) * fromVertexBuffer.weights.y;
+	animatedWorld += mul(localCoordinate, boneOffset[fromVertexBuffer.indices.z]) * fromVertexBuffer.weights.z;
+	animatedWorld += mul(localCoordinate, boneOffset[fromVertexBuffer.indices.w]) * fromVertexBuffer.weights.w;
 
-	//localCoordinate =  mul(float4(fromVertexBuffer.coordinate.xyz, 1), boneOffset[fromVertexBuffer.indices[0]]* fromVertexBuffer.weights[0]);
-	//localCoordinate += mul(float4(fromVertexBuffer.coordinate.xyz, 1), boneOffset[fromVertexBuffer.indices[1]]* fromVertexBuffer.weights[1]);
-	//localCoordinate += mul(float4(fromVertexBuffer.coordinate.xyz, 1), boneOffset[fromVertexBuffer.indices[2]]* fromVertexBuffer.weights[2]);
-	//localCoordinate += mul(float4(fromVertexBuffer.coordinate.xyz, 1), boneOffset[fromVertexBuffer.indices[3]]* fromVertexBuffer.weights[3]);
-
-	//localCoordinate += float4(boneOffset[fromVertexBuffer.indices[0]]._41, boneOffset[fromVertexBuffer.indices[0]]._42, boneOffset[fromVertexBuffer.indices[0]]._43, 1) * fromVertexBuffer.weights[0];
-	//localCoordinate += float4(boneOffset[fromVertexBuffer.indices[1]]._41, boneOffset[fromVertexBuffer.indices[1]]._42, boneOffset[fromVertexBuffer.indices[1]]._43, 1) * fromVertexBuffer.weights[1];
-	//localCoordinate += float4(boneOffset[fromVertexBuffer.indices[2]]._41, boneOffset[fromVertexBuffer.indices[2]]._42, boneOffset[fromVertexBuffer.indices[2]]._43, 1) * fromVertexBuffer.weights[2];
-	//localCoordinate += float4(boneOffset[fromVertexBuffer.indices[3]]._41, boneOffset[fromVertexBuffer.indices[3]]._42, boneOffset[fromVertexBuffer.indices[3]]._43, 1) * fromVertexBuffer.weights[3];
-
-
-	// same for normals
+	// Smooth skinning normals
+	//float4 animatedNormal = mul(float4(fromVertexBuffer.normals.xyz, 0), boneOffset[fromVertexBuffer.indices.x]) * fromVertexBuffer.weights.x;
 
 	// Local coordinate in world space
-	localCoordinate = mul(localCoordinate, worldMatrix);
-	sendToRasterizer.worldPosition = localCoordinate.xyz;
+	sendToRasterizer.worldPosition = mul(animatedWorld, worldMatrix).xyz;
+	//sendToRasterizer.worldPosition = localCoordinate.xyz;
 
 	// Local coodrinate in projection space
-	localCoordinate = mul(localCoordinate, viewMatrix);
-	localCoordinate = mul(localCoordinate, projectionMatrix);
+	sendToRasterizer.projectedCoordinate = mul(animatedWorld, viewMatrix);
+	sendToRasterizer.projectedCoordinate = mul(sendToRasterizer.projectedCoordinate, projectionMatrix);
 
 	// Final coordinate
-	sendToRasterizer.projectedCoordinate = localCoordinate;
+	//sendToRasterizer.projectedCoordinate = localCoordinate;
 
 	// Normals in world space
 	sendToRasterizer.normals = mul(float4(fromVertexBuffer.normals.xyz, 0), worldMatrix).xyz;

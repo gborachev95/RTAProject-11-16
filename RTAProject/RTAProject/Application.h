@@ -37,9 +37,10 @@
 		vector<Object*>                   m_mageBonesVec;
 		vector<Object*>                   m_bearBonesVec;
 		// Fbx files
-		//Object							  m_fbxTest;
+		Object							  m_fbxTest;
 		Object                            m_fbxMage;
-		//Object                            m_fbxBear;
+		Object                            m_fbxBear;
+
 		// Other
 		SCENE_TO_VRAM				      m_viewToShader;
 		LIGHT_TO_VRAM                     m_dirLightToShader;
@@ -74,7 +75,7 @@
 		void MapShaders();
 		void InitilizeLights();
 		void FrameInput(Object& _object);
-		void UpdateFrames(Object& _object, vector<Object*> _renderedBones);
+		void UpdateFrames(Object& _object, vector<Object*>& _renderedBones);
 		void LoopAnimation(Object& _object, unsigned int _speed);
 		
 

@@ -164,9 +164,11 @@ namespace FBXImporter
 		//FbxAMatrix boneBindPose = _inNode->EvaluateGlobalTransform();
 
 		KeyFrame currFrame;
+			int frame = 0; 
 		// Getting data for each frame
 		for (FbxLongLong iFrame = startTime.GetFrameCount(FbxTime::eFrames24); iFrame < endTime.GetFrameCount(FbxTime::eFrames24); ++iFrame)
 		{
+			++frame;
 			FbxTime currTime;
 			currTime.SetFrame(iFrame, FbxTime::eFrames24);
 			currFrame.SetFrameTime(float(currTime.GetFramedTime(false).GetMilliSeconds()));
@@ -179,11 +181,15 @@ namespace FBXImporter
 			Transform currBone;
 			FbxAMatrix wTransformMatrix = _inNode->EvaluateGlobalTransform(currTime);
 			FbxAMatrix lTransformMatrix = _inNode->EvaluateLocalTransform(currTime);
-			currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
-			currBone.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
+			//currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
+			//currBone.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
 
+			ConvertMatrix(wTransformMatrix, currBone.m_worldMatrix);
+			ConvertMatrix(wTransformMatrix, currBone.m_localMatrix);
+		
 			currFrame.m_bones.push_back(currBone);
 		}
+
 		_animation.m_keyFrame.push_back(currFrame);
 	}
 
@@ -202,28 +208,14 @@ namespace FBXImporter
 				FbxNode* bone = cluster->GetLink();
 				currBone.SetName(bone->GetName());
 
-#if 0
-				// JYR
-				FbxVector4 translation = bone->GetGeometricTranslation(FbxNode::eSourcePivot);
-				FbxVector4 rotation = bone->GetGeometricRotation(FbxNode::eSourcePivot);
-				FbxVector4 scaling = bone->GetGeometricScaling(FbxNode::eSourcePivot);
-				FbxAMatrix boneMeshMatrix = FbxAMatrix(translation, rotation, scaling);
-				FbxAMatrix bindPoseMatrix;
-				cluster->GetTransformLinkMatrix(bindPoseMatrix);
-				FbxAMatrix boneMatrix;
-				cluster->GetTransformMatrix(boneMatrix);
-				FbxAMatrix result = boneMeshMatrix * boneMatrix.Inverse() * bindPoseMatrix;
-				currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(result.GetR(), result.GetT(), result.GetS());
-
-				// JYR
-#endif
 				// Get bone matrix
 				FbxAMatrix wTransformMatrix = bone->EvaluateGlobalTransform();
 				FbxAMatrix lTransformMatrix = bone->EvaluateLocalTransform();
 
-				currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
-				currBone.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
-
+				//currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
+				//currBone.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
+				ConvertMatrix(wTransformMatrix, currBone.m_worldMatrix);
+				ConvertMatrix(wTransformMatrix, currBone.m_localMatrix);
 
 				GetAnimationData(fbxScene, bone, _animation);
 				bonesVector.push_back(bone);
@@ -404,6 +396,9 @@ namespace FBXImporter
 		returnMatrix = XMMatrixRotationRollPitchYawFromVector(rVec) * returnMatrix;
 		returnMatrix = XMMatrixScalingFromVector(sVec) * returnMatrix;
 
+
+		 
+
 		return returnMatrix;
 	}
 
@@ -471,8 +466,11 @@ namespace FBXImporter
 	{
 		FbxAMatrix wTransformMatrix = _theNode->EvaluateGlobalTransform();
 		FbxAMatrix lTransformMatrix = _theNode->EvaluateLocalTransform();
-		_transforms.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
-		_transforms.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
+		//_transforms.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
+		//_transforms.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
+		ConvertMatrix(wTransformMatrix, _transforms.m_worldMatrix);
+		ConvertMatrix(wTransformMatrix, _transforms.m_localMatrix);
+
 		_transforms.SetDirty(false);
 		_transforms.SetName(_theNode->GetName());
 	}
@@ -614,4 +612,25 @@ namespace FBXImporter
 		return true;
 	}
 
+
+	void ConvertMatrix(FbxAMatrix& _inputMatrix, XMMATRIX& _load)
+	{
+		XMFLOAT4X4 currmat;
+		for (unsigned int i = 0; i < 4; ++i)
+		{
+			currmat.m[i][0] = (float)_inputMatrix.Get(i,0);
+			currmat.m[i][1] = (float)_inputMatrix.Get(i,1);
+			currmat.m[i][2] = (float)_inputMatrix.Get(i,2);
+			currmat.m[i][3] = (float)_inputMatrix.Get(i,3);
+		}
+
+		//currmat._13 = -currmat._13;
+		//currmat._23 = -currmat._23;
+		//currmat._43 = -currmat._43;
+		//currmat._31 = -currmat._31;
+		//currmat._32 = -currmat._32;
+		//currmat._34 = -currmat._34;
+		
+		_load = XMLoadFloat4x4(&currmat);
+	}
 }// FBXImporter namespace

@@ -409,14 +409,14 @@ void Object::ForwardFrame()
 {
 	++m_currentFrameIndex;
 	if (unsigned int(m_currentFrameIndex) >= m_animation.GetKeyFramesNumber() - 1)
-		m_currentFrameIndex = 0;		
+		m_currentFrameIndex = 1;		
 }
 
 // Subtracts a frame form the animation
 void Object::BackwardFrame()
 {
 	--m_currentFrameIndex;
-	if (m_currentFrameIndex < 0)//<= 1)
+	if (m_currentFrameIndex < 1)//<= 1)
 		m_currentFrameIndex = m_animation.GetKeyFramesNumber() - 2;
 }
 
