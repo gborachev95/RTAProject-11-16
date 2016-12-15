@@ -18,7 +18,7 @@ __declspec(align(16)) class Object
 	unsigned int                       *m_indexList;
 	unsigned int                        m_numVerts;
 	unsigned int                        m_numIndicies;
-	unsigned int                        m_currentFrameIndex;
+	int                                 m_currentFrameIndex;
 	Animation                           m_animation;
 	vector<Transform>                   m_bones;
 
@@ -33,6 +33,7 @@ private:
 	void LoadBinaryFile(std::string _filePath, vector<VERTEX>& _vertecies, vector<unsigned int>& _indices);
 	void LoadBinaryFile(std::string _filePath, vector<Transform>& _bones);
 	void LoadBinaryFile(std::string _filePath, Animation& _animation);
+	void LoadBinaryFile(std::string _filePath);
 	// Public methods that are called outside of the class
 public:
 
@@ -54,8 +55,7 @@ public:
 	void SetPosition(float _x, float _y, float _z);
 	void ForwardFrame();
 	void BackwardFrame();
-	unsigned int GetCurrFrame();
-	void LoadBinaryFile(std::string _filePath);
+	int GetCurrFrame();
 
 	// Alligning by 16 bytes so we don't get a warning 
 	void* operator new(size_t i)

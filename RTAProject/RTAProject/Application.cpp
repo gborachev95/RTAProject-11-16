@@ -129,7 +129,7 @@ void Application::Input()
 	FPCamera(0.01f);
 	TPCamera(m_fbxMage,0.03f);
 	LightsControls(0.01f);
-	FrameInput();
+	FrameInput(m_fbxMage);
 
 	if (!GetAsyncKeyState('I') && !GetAsyncKeyState('O') && !GetAsyncKeyState('R') && 
 		!GetAsyncKeyState('T') && !GetAsyncKeyState('Y') && !GetAsyncKeyState('B') && m_keyPressed)
@@ -164,24 +164,21 @@ void Application::Render()
 	MapShaders();
 
 	// Rendering objects
-	m_groundObject.Render(m_deviceContext);
+    m_groundObject.Render(m_deviceContext);
 	for (unsigned int i = 0; i < m_mageBonesVec.size(); ++i)
 		m_mageBonesVec[i]->Render(m_deviceContext);
-	for (unsigned int i = 0; i < m_testbonesVec.size(); ++i)
-		m_testbonesVec[i]->Render(m_deviceContext);
+	//for (unsigned int i = 0; i < m_testbonesVec.size(); ++i)
+	//	m_testbonesVec[i]->Render(m_deviceContext);
 	//for (unsigned int i = 0; i < m_bearBonesVec.size(); ++i)
-		//m_bearBonesVec[i]->Render(m_deviceContext);
-	//m_fbxTest.Render(m_deviceContext);
-	m_fbxMage.Render(m_deviceContext);
+	//	m_bearBonesVec[i]->Render(m_deviceContext);
 
-	m_fbxBear.Render(m_deviceContext);
+	//m_fbxBear.Render(m_deviceContext);
+	//m_fbxTest.Render(m_deviceContext);
+
 	// Render animated objects
 	m_deviceContext->IASetInputLayout(m_inputLayoutAnimation);
 	m_deviceContext->VSSetShader(m_VS_ANIMATION.p, NULL, NULL);
-
-
-
-
+	m_fbxMage.Render(m_deviceContext);
 
 	// Presenting the screen
 	m_swapChain->Present(0, 0);
@@ -367,6 +364,7 @@ void Application::CreateSamplerState()
 // Loads objects
 void Application::LoadObjects()
 {
+	vector<Transform> tempTransformBones;
 	XMFLOAT3 groundPosition{ 0, 0, 0 };
 	m_groundObject.InstantiateModel(m_device, "..\\RTAProject\\Assets\\ground.obj", groundPosition,0);
 	m_groundObject.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\groundTexture.dds", L"..\\RTAProject\\Assets\\Textures\\groundNormalMap.dds");
@@ -375,43 +373,43 @@ void Application::LoadObjects()
 	m_fbxTest.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Testbox\\Box_Idle.fbx", fbXpos, 0);
 	m_fbxTest.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\TestCubeTexture.dds");
 	// Setiing the bones of the test object
-	m_testBones = m_fbxTest.GetFBXBones();
-	for (unsigned int i = 0; i < m_testBones.size(); ++i)
+	tempTransformBones = m_fbxTest.GetFBXBones();
+	for (unsigned int i = 0; i < tempTransformBones.size(); ++i)
 	{
-		XMFLOAT3 bonePos = XMFLOAT3(m_testBones[i].m_worldMatrix.r[3].m128_f32[0], m_testBones[i].m_worldMatrix.r[3].m128_f32[1], m_testBones[i].m_worldMatrix.r[3].m128_f32[2]);
+		XMFLOAT3 bonePos = XMFLOAT3(tempTransformBones[i].m_worldMatrix.r[3].m128_f32[0], tempTransformBones[i].m_worldMatrix.r[3].m128_f32[1], tempTransformBones[i].m_worldMatrix.r[3].m128_f32[2]);
 		bonePos = XMFLOAT3(bonePos.x + fbXpos.x, bonePos.y + fbXpos.y, bonePos.z + fbXpos.z);
 		Object* bone = new Object();
-		bone->InstantiateModel(m_device, "..\\RTAProject\\Assets\\boneSphere.obj", bonePos,0); // there was a third argument being passed that was 0
+		bone->InstantiateModel(m_device, "..\\RTAProject\\Assets\\boneSphere.obj", bonePos,0);
 		m_testbonesVec.push_back(bone);
 	}
-
+	
 	XMFLOAT3 fbxPos2{ 5.0f, 0.0f, 0.0f };
-	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Walk.fbx", fbxPos2, 1);
+	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Death.fbx", fbxPos2, 1);
 	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds", L"..\\RTAProject\\Assets\\Textures\\mageNormalMap.dds", L"..\\RTAProject\\Assets\\Textures\\mageSpecularMap.dds");
-	m_testBones.clear();
-	m_testBones = m_fbxMage.GetFBXBones();
-
-	for (unsigned int i = 0; i < m_testBones.size(); ++i)
+	tempTransformBones.clear();
+	tempTransformBones = m_fbxMage.GetFBXBones();
+	for (unsigned int i = 0; i < tempTransformBones.size(); ++i)
 	{
-		XMFLOAT3 bonePos = XMFLOAT3(m_testBones[i].m_worldMatrix.r[3].m128_f32[0], m_testBones[i].m_worldMatrix.r[3].m128_f32[1], m_testBones[i].m_worldMatrix.r[3].m128_f32[2]);
+		XMFLOAT3 bonePos = XMFLOAT3(tempTransformBones[i].m_worldMatrix.r[3].m128_f32[0], tempTransformBones[i].m_worldMatrix.r[3].m128_f32[1], tempTransformBones[i].m_worldMatrix.r[3].m128_f32[2]);
 		bonePos = XMFLOAT3(bonePos.x + fbxPos2.x, bonePos.y + fbxPos2.y, bonePos.z + fbxPos2.z);
 		Object* bone = new Object();
 		bone->InstantiateModel(m_device, "..\\RTAProject\\Assets\\boneSphere.obj", bonePos,0);
-		bone->TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\groundTexture.dds");
+		bone->TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\TestCubeTexture.dds");
 		m_mageBonesVec.push_back(bone);
 	}
 
 
-	m_fbxBear.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Teddy\\Teddy_Attack2.fbx", fbXpos, 1);
+	XMFLOAT3 fbxPos3{ -5.0f, 0.0f, 0.0f };
+	m_fbxBear.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Teddy\\Teddy_Attack2.fbx", fbxPos3, 1);
  	m_fbxBear.SetWorldMatrix(XMMatrixMultiply(m_fbxBear.GetWorldMatrix(),XMMatrixScaling(0.03f,0.03f,0.03f)));
 	m_fbxBear.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\bearTexture.dds");
-	m_fbxBear.SetPosition(-5.0f, 0, 0);
-	m_testBones.clear();
-	m_testBones = m_fbxBear.GetFBXBones();
-	for (unsigned int i = 0; i < m_testBones.size(); ++i)
+	m_fbxBear.SetPosition(fbxPos3.x, fbxPos3.y, fbxPos3.z);
+	tempTransformBones.clear();
+	tempTransformBones = m_fbxBear.GetFBXBones();
+	for (unsigned int i = 0; i < tempTransformBones.size(); ++i)
 	{
-		XMFLOAT3 bonePos = XMFLOAT3(m_testBones[i].m_worldMatrix.r[3].m128_f32[0], m_testBones[i].m_worldMatrix.r[3].m128_f32[1], m_testBones[i].m_worldMatrix.r[3].m128_f32[2]);
-		bonePos = XMFLOAT3(bonePos.x + fbxPos2.x, bonePos.y + fbxPos2.y, bonePos.z + fbxPos2.z);
+		XMFLOAT3 bonePos = XMFLOAT3(tempTransformBones[i].m_worldMatrix.r[3].m128_f32[0], tempTransformBones[i].m_worldMatrix.r[3].m128_f32[1], tempTransformBones[i].m_worldMatrix.r[3].m128_f32[2]);
+		bonePos = XMFLOAT3(bonePos.x + fbxPos3.x, bonePos.y + fbxPos3.y, fbxPos3.z + fbxPos3.z);
 		Object* bone = new Object();
 		bone->InstantiateModel(m_device, "..\\RTAProject\\Assets\\boneSphere.obj", bonePos,0);
 		m_bearBonesVec.push_back(bone);
@@ -439,7 +437,7 @@ void Application::InitializeToShader()
 	InitilizeLights();
 
 	// Initialize bones data for the shader
-	for (unsigned int i = 0; i < m_mageBonesVec.size(); i++)
+	for (unsigned int i = 0; i < m_mageBonesVec.size(); ++i)
 		m_bonesToShader.bones[i] = m_mageBonesVec[i]->GetWorldMatrix();
 
 }
@@ -472,7 +470,6 @@ void Application::CreateConstBuffers()
 	constBufferDesc.StructureByteStride = sizeof(float);
 	constBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	m_device->CreateBuffer(&constBufferDesc, NULL, &m_spotLightConstBuffer.p);
-
 
 	ZeroMemory(&constBufferDesc, sizeof(D3D11_BUFFER_DESC));
 	constBufferDesc.ByteWidth = sizeof(BONES_TO_VRAM);
@@ -648,17 +645,17 @@ void Application::InitilizeLights()
 }
 
 // Update animation frame data
-void Application::FrameInput()
+void Application::FrameInput(Object& _object)
 {
 	if (GetAsyncKeyState('R') && !m_keyPressed)
 	{
 		m_keyPressed = true;
-		m_fbxMage.BackwardFrame();
+		_object.BackwardFrame();
 	}
 	if (GetAsyncKeyState('T') && !m_keyPressed)
 	{
 		m_keyPressed = true;
-		m_fbxMage.ForwardFrame();
+		_object.ForwardFrame();
 	}
 
 	if (GetAsyncKeyState('Y') && !m_keyPressed)
@@ -668,15 +665,23 @@ void Application::FrameInput()
 	}
 }
 
-void Application::UpdateFrames(Object& _object, vector<Object*> _renderedBones)
+void Application::UpdateFrames(Object& _object, vector<Object*>& _renderedBones)
 {
 	Animation currAnimation = _object.GetAnimation();
 	for (unsigned int i = 0; i < currAnimation.m_keyFrame.size(); ++i)
 	{
-		currAnimation.m_keyFrame[i].m_bones[_object.GetCurrFrame()].m_worldMatrix.r[3];
-		_renderedBones[i]->SetWorldMatrix(currAnimation.m_keyFrame[i].m_bones[_object.GetCurrFrame()].m_worldMatrix);
 		// Data that goes to the shader
-		m_bonesToShader.bones[i] = currAnimation.m_keyFrame[i].m_bones[_object.GetCurrFrame()].m_worldMatrix;
+		XMMATRIX bindPose = _object.GetFBXBones()[i].m_worldMatrix;
+
+		XMMATRIX inverseBindpose = XMMatrixInverse(0, bindPose); // Getting inverse of bind pose
+		XMMATRIX currBoneAtFrame = currAnimation.m_keyFrame[i].m_bones[_object.GetCurrFrame()].m_worldMatrix; // Getting current frame
+		//XMMATRIX newVariable = currAnimation.m_keyFrame[i].m_bones[14].m_worldMatrix;
+		//XMMATRIX anotherOne = XMMatrixMultiply(inverseBindpose, newVariable);
+
+		m_bonesToShader.bones[i] = XMMatrixMultiply(inverseBindpose, currBoneAtFrame); // Sends the data to the shader
+		_renderedBones[i]->SetWorldMatrix(currBoneAtFrame); // Updates the bones object to their new position
+
+		//m_bonesToShader.bones[i] = currBoneAtFrame;
 	}
 }
 
@@ -688,7 +693,7 @@ void Application::LoopAnimation(Object& _object, unsigned int _speed)
 		if (m_temptimeer > _speed)
 		{
 			m_temptimeer = 0;
-			m_fbxMage.ForwardFrame();
+			_object.ForwardFrame();
 		}
 	}
 }

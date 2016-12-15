@@ -56,6 +56,9 @@ namespace FBXImporter
 	void SetBoneConnection(vector<FbxNode*> _boneVect, std::vector<Transform>& _transformHierarchy);
 	void SetTransformNode(Transform& _transforms, FbxNode* _theNode);
 	Transform& CheckTransform(std::vector<Transform>& _transformHierarchy, const char* _id);
+	void ConvertMatrix(FbxAMatrix& _inputMatrix, XMMATRIX& _load);
+
+
 
 
 }
