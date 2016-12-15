@@ -375,7 +375,8 @@ void Application::LoadObjects()
 	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Walk.fbx", magePos, 1);
 	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds", L"..\\RTAProject\\Assets\\Textures\\mageNormalMap.dds" , L"..\\RTAProject\\Assets\\Textures\\mageSpecularMap.dds");
 	InitializeBones(m_fbxMage, m_mageBonesVec);
-
+	m_bonesToShader.positionOffset = XMMatrixIdentity();
+	m_bonesToShader.positionOffset.r[3].m128_f32[0] += 5.0f;
 
 	XMFLOAT3 bearPos{ -5.0f, 0.0f, 0.0f };
 	m_fbxBear.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Teddy\\Teddy_Attack2.fbx", bearPos, 1);
@@ -410,8 +411,6 @@ void Application::InitializeToShader()
 
 	//for (unsigned int i = 0; i < 28; ++i)
 		//m_bonesToShader.bones[i] = m_bearBonesVec[i]->GetWorldMatrix();
-
-	m_bonesToShader.positionOffset = XMMatrixIdentity();
 }
 
 // Creates constant buffers
