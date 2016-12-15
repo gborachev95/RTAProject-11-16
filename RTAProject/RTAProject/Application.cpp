@@ -127,7 +127,6 @@ bool Application::Run()
 void Application::Input()
 {
 	FPCamera(0.01f);
-	TPCamera(m_fbxMage,0.03f);
 	LightsControls(0.01f);
 	FrameInput(m_fbxMage);
 
@@ -141,6 +140,7 @@ void Application::Update()
 {
 	LoopAnimation(m_fbxMage,30);
 	UpdateFrames(m_fbxMage, m_mageBonesVec);
+	TPCamera(m_fbxMage, 0.03f);
 }
 
 // Renders the scene
@@ -384,7 +384,7 @@ void Application::LoadObjects()
 	}
 	
 	XMFLOAT3 fbxPos2{ 5.0f, 0.0f, 0.0f };
-	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Death.fbx", fbxPos2, 1);
+	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Walk.fbx", fbxPos2, 1);
 	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds", L"..\\RTAProject\\Assets\\Textures\\mageNormalMap.dds", L"..\\RTAProject\\Assets\\Textures\\mageSpecularMap.dds");
 	tempTransformBones.clear();
 	tempTransformBones = m_fbxMage.GetFBXBones();
@@ -700,7 +700,7 @@ void Application::LoopAnimation(Object& _object, unsigned int _speed)
 
 void Application::TPCamera(Object& _object, float _speed)
 {
-	if (GetAsyncKeyState('B'))
+	if (GetAsyncKeyState('B') && !m_keyPressed)
 		m_thirdPersonCam = !m_thirdPersonCam;
 	if (m_thirdPersonCam)
 	{
@@ -733,13 +733,11 @@ void Application::TPCamera(Object& _object, float _speed)
 		{
 			newPos = XMMatrixMultiply(newPos, XMMatrixRotationY(-_speed));
 		}
-		_object.SetWorldMatrix(newPos);
+		m_bonesToShader.positionOffset = newPos;
+
 		m_viewToShader.viewMatrix = XMMatrixInverse(0, _object.GetWorldMatrix());
-
-
 		m_viewToShader.viewMatrix.r[3].m128_f32[1] = m_viewToShader.viewMatrix.r[3].m128_f32[1] - 10.0f;
 		m_viewToShader.viewMatrix.r[3].m128_f32[2] = m_viewToShader.viewMatrix.r[3].m128_f32[2] + 6.0f;
-
 		m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
 		m_viewToShader.viewMatrix = XMMatrixMultiply(XMMatrixRotationX(0.5853f), m_viewToShader.viewMatrix);
 		m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);

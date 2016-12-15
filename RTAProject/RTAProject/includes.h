@@ -79,6 +79,7 @@ struct SCENE_TO_VRAM
 struct BONES_TO_VRAM
 {
 	XMMATRIX bones[28];
+	XMMATRIX positionOffset;
 };
 
 struct LIGHT_TO_VRAM

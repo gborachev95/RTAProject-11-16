@@ -35,6 +35,7 @@ cbuffer SCENE : register(b1)
 cbuffer BONES : register(b2)
 {
 	float4x4 boneOffset[28];
+	float4x4 positionOffset;
 }
 
 
