@@ -127,20 +127,22 @@ bool Application::Run()
 void Application::Input()
 {
 	FPCamera(0.01f);
-	TPCamera(m_fbxTest,0.03f);
-	LightsControls(0.01f);
-	FrameInput(m_fbxTest);
 
-	if (!GetAsyncKeyState('I') && !GetAsyncKeyState('O') && !GetAsyncKeyState('R') && 
-		!GetAsyncKeyState('T') && !GetAsyncKeyState('Y') && !GetAsyncKeyState('B') && m_keyPressed)
+	TPCamera(m_fbxMage,0.01f);
+	LightsControls(0.01f);
+	FrameInput(m_fbxMage);
+
+	if (!GetAsyncKeyState('I') && !GetAsyncKeyState('O') && !GetAsyncKeyState('R') && !GetAsyncKeyState('T') && !GetAsyncKeyState('Y') && !GetAsyncKeyState('B') && m_keyPressed)
 		m_keyPressed = false;
 }
 
 // Updates the scene
 void Application::Update()
 {
-	LoopAnimation(m_fbxTest,30);
-	UpdateFrames(m_fbxTest, m_testbonesVec);
+
+	LoopAnimation(m_fbxMage,30);
+	UpdateFrames(m_fbxMage, m_mageBonesVec);
+	//TPCamera(m_fbxMage, 0.03f);
 }
 
 // Renders the scene
@@ -165,16 +167,17 @@ void Application::Render()
 
 	// Rendering objects
     m_groundObject.Render(m_deviceContext);
+
 	//RenderBones();
 	m_fbxBear.Render(m_deviceContext);
-	m_fbxMage.Render(m_deviceContext);
 
+	m_fbxTest.Render(m_deviceContext);
 	// Render animated objects
 	m_deviceContext->IASetInputLayout(m_inputLayoutAnimation);
 	m_deviceContext->VSSetShader(m_VS_ANIMATION.p, NULL, NULL);
-	m_fbxTest.Render(m_deviceContext);
-	//m_fbxMage.Render(m_deviceContext);
-	
+
+	m_fbxMage.Render(m_deviceContext);
+
 	// Presenting the screen
 	m_swapChain->Present(0, 0);
 }
@@ -360,7 +363,7 @@ void Application::CreateSamplerState()
 void Application::LoadObjects()
 {
 	XMFLOAT3 groundPosition{ 0, 0, 0 };
-	m_groundObject.InstantiateModel(m_device, "..\\RTAProject\\Assets\\ground.obj", groundPosition,1);
+	m_groundObject.InstantiateModel(m_device, "..\\RTAProject\\Assets\\ground.obj", groundPosition,0);
 	m_groundObject.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\groundTexture.dds", L"..\\RTAProject\\Assets\\Textures\\sss2NormalMap.dds");
 
 	XMFLOAT3 testBoxPos{ 0, 0, 0 };
@@ -373,10 +376,12 @@ void Application::LoadObjects()
 	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds", L"..\\RTAProject\\Assets\\Textures\\mageNormalMap.dds" , L"..\\RTAProject\\Assets\\Textures\\mageSpecularMap.dds");
 	InitializeBones(m_fbxMage, m_mageBonesVec);
 
+
 	XMFLOAT3 bearPos{ -5.0f, 0.0f, 0.0f };
 	m_fbxBear.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Teddy\\Teddy_Attack2.fbx", bearPos, 1);
  	m_fbxBear.SetWorldMatrix(XMMatrixMultiply(m_fbxBear.GetWorldMatrix(),XMMatrixScaling(0.03f,0.03f,0.03f)));
 	m_fbxBear.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\bearTexture.dds");
+
 	m_fbxBear.SetPosition(bearPos.x, bearPos.y, bearPos.z);
 	InitializeBones(m_fbxBear, m_bearBonesVec);
 }
@@ -402,9 +407,11 @@ void Application::InitializeToShader()
 	InitilizeLights();
 
 	// Initialize bones data for the shader
+
 	//for (unsigned int i = 0; i < 28; ++i)
 		//m_bonesToShader.bones[i] = m_bearBonesVec[i]->GetWorldMatrix();
 
+	m_bonesToShader.positionOffset = XMMatrixIdentity();
 }
 
 // Creates constant buffers
@@ -640,8 +647,10 @@ void Application::UpdateFrames(Object& _object, vector<Object*>& _renderedBones)
 
 		XMMATRIX inverseBindpose = XMMatrixInverse(0, bindPose); // Getting inverse of bind pose
 		XMMATRIX currBoneAtFrame = currAnimation.m_keyFrame[i].m_bones[_object.GetCurrFrame()].m_worldMatrix; // Getting current frame
+
 		m_bonesToShader.bones[i] = XMMatrixMultiply(inverseBindpose, currBoneAtFrame); // Sends the data to the shader
 		_renderedBones[i]->SetWorldMatrix(currBoneAtFrame); // Updates the bones object to their new position
+
 	}
 }
 
@@ -660,8 +669,12 @@ void Application::LoopAnimation(Object& _object, unsigned int _speed)
 
 void Application::TPCamera(Object& _object, float _speed)
 {
-	if (GetAsyncKeyState('B'))
+
+	if (GetAsyncKeyState('B') && !m_keyPressed)
+	{
 		m_thirdPersonCam = !m_thirdPersonCam;
+		m_keyPressed = true;
+	}
 
 	if (m_thirdPersonCam)
 	{
@@ -687,24 +700,28 @@ void Application::TPCamera(Object& _object, float _speed)
 			}
 		}
 		if (GetAsyncKeyState('D'))
-		{
-			newPos = XMMatrixMultiply(newPos, XMMatrixRotationY(_speed));
-		}
+			newPos = XMMatrixMultiply(XMMatrixRotationY(_speed * 0.5f), newPos);
 		else if (GetAsyncKeyState('A'))
-		{
-			newPos = XMMatrixMultiply(newPos, XMMatrixRotationY(-_speed));
-		}
+			newPos = XMMatrixMultiply(XMMatrixRotationY(-_speed * 0.5f), newPos);
+	
 		_object.SetWorldMatrix(newPos);
+		m_bonesToShader.positionOffset = newPos;
+
 		m_viewToShader.viewMatrix = XMMatrixInverse(0, _object.GetWorldMatrix());
-
-
 		m_viewToShader.viewMatrix.r[3].m128_f32[1] = m_viewToShader.viewMatrix.r[3].m128_f32[1] - 10.0f;
 		m_viewToShader.viewMatrix.r[3].m128_f32[2] = m_viewToShader.viewMatrix.r[3].m128_f32[2] + 6.0f;
-
 		m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
 		m_viewToShader.viewMatrix = XMMatrixMultiply(XMMatrixRotationX(0.5853f), m_viewToShader.viewMatrix);
-		m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
 
+		// Setting the spotlight
+		m_spotLightToShader.transform.m128_f32[0] = m_viewToShader.viewMatrix.r[3].m128_f32[0];
+		m_spotLightToShader.transform.m128_f32[1] = m_viewToShader.viewMatrix.r[3].m128_f32[1];
+		m_spotLightToShader.transform.m128_f32[2] = m_viewToShader.viewMatrix.r[3].m128_f32[2];
+		m_spotLightToShader.direction.x = m_viewToShader.viewMatrix.r[2].m128_f32[0];
+		m_spotLightToShader.direction.y = m_viewToShader.viewMatrix.r[2].m128_f32[1];
+		m_spotLightToShader.direction.z = m_viewToShader.viewMatrix.r[2].m128_f32[2];
+
+		m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
 	}
 }
 

@@ -35,6 +35,7 @@ cbuffer SCENE : register(b1)
 cbuffer BONES : register(b2)
 {
 	float4x4 boneOffset[38];
+	float4x4 positionOffset;
 }
 
 
@@ -44,10 +45,14 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 
 	// Local coordinate with smooth skinning  
 	float4 localCoordinate = float4(fromVertexBuffer.coordinate.xyz, 1);
+
 	float4 animatedWorld = mul(localCoordinate, boneOffset[fromVertexBuffer.indices.x]) * fromVertexBuffer.weights.x; // The world position is animated at world origin
 	animatedWorld += mul(localCoordinate, boneOffset[fromVertexBuffer.indices.y]) * fromVertexBuffer.weights.y;
 	animatedWorld += mul(localCoordinate, boneOffset[fromVertexBuffer.indices.z]) * fromVertexBuffer.weights.z;
 	animatedWorld += mul(localCoordinate, boneOffset[fromVertexBuffer.indices.w]) * fromVertexBuffer.weights.w;
+
+	// Moving the object
+	animatedWorld = mul(animatedWorld, positionOffset);
 
 	// Smooth skinning normals
 	float4 normal = float4(fromVertexBuffer.normals.xyz, 0);
@@ -67,7 +72,9 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	float3 animatedBitangent = cross(animatedNormal.xyz, animatedTangent.xyz).xyz;
 
 	// Coordinate in world space
-	sendToRasterizer.worldPosition = mul(animatedWorld, worldMatrix).xyz;
+	//float4 offsetPos =mul(animatedWorld, positionOffset); 
+	//sendToRasterizer.worldPosition = mul(animatedWorld, positionOffset);;
+	sendToRasterizer.worldPosition = mul(sendToRasterizer.worldPosition.xyz, (float3x3)worldMatrix).xyz;
 
 	// Coodrinate in projection space
 	sendToRasterizer.projectedCoordinate = mul(animatedWorld, viewMatrix);
