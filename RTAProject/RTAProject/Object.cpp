@@ -425,3 +425,4 @@ int Object::GetCurrFrame()
 {
 	return m_currentFrameIndex;
 }
+

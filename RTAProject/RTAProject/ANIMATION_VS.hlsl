@@ -34,43 +34,52 @@ cbuffer SCENE : register(b1)
 
 cbuffer BONES : register(b2)
 {
-	float4x4 boneOffset[28];
+	float4x4 boneOffset[38];
 }
 
 
 OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 {
 	OUTPUT_VERTEX sendToRasterizer = (OUTPUT_VERTEX)0;
-	float4 localCoordinate = float4(fromVertexBuffer.coordinate.xyz, 1);
 
 	// Local coordinate with smooth skinning  
-	// The world position is animated at world origin
-	float4 animatedWorld = mul(localCoordinate, boneOffset[fromVertexBuffer.indices.x]) * fromVertexBuffer.weights.x;
+	float4 localCoordinate = float4(fromVertexBuffer.coordinate.xyz, 1);
+	float4 animatedWorld = mul(localCoordinate, boneOffset[fromVertexBuffer.indices.x]) * fromVertexBuffer.weights.x; // The world position is animated at world origin
 	animatedWorld += mul(localCoordinate, boneOffset[fromVertexBuffer.indices.y]) * fromVertexBuffer.weights.y;
 	animatedWorld += mul(localCoordinate, boneOffset[fromVertexBuffer.indices.z]) * fromVertexBuffer.weights.z;
 	animatedWorld += mul(localCoordinate, boneOffset[fromVertexBuffer.indices.w]) * fromVertexBuffer.weights.w;
 
 	// Smooth skinning normals
-	//float4 animatedNormal = mul(float4(fromVertexBuffer.normals.xyz, 0), boneOffset[fromVertexBuffer.indices.x]) * fromVertexBuffer.weights.x;
+	float4 normal = float4(fromVertexBuffer.normals.xyz, 0);
+	float4 animatedNormal = mul(normal, boneOffset[fromVertexBuffer.indices.x]) * fromVertexBuffer.weights.x;
+	animatedNormal += mul(normal, boneOffset[fromVertexBuffer.indices.y]) * fromVertexBuffer.weights.y;
+	animatedNormal += mul(normal, boneOffset[fromVertexBuffer.indices.z]) * fromVertexBuffer.weights.z;
+	animatedNormal += mul(normal, boneOffset[fromVertexBuffer.indices.w]) * fromVertexBuffer.weights.w;
 
-	// Local coordinate in world space
+	// Smooth skinning tangents
+	float4 tangent = float4(fromVertexBuffer.tangents.xyz,0);
+	float4 animatedTangent = mul(tangent, boneOffset[fromVertexBuffer.indices.x]) * fromVertexBuffer.weights.x;
+	animatedTangent += mul(tangent, boneOffset[fromVertexBuffer.indices.y]) * fromVertexBuffer.weights.y;
+	animatedTangent += mul(tangent, boneOffset[fromVertexBuffer.indices.z]) * fromVertexBuffer.weights.z;
+	animatedTangent += mul(tangent, boneOffset[fromVertexBuffer.indices.w]) * fromVertexBuffer.weights.w;
+
+	// Smooth skinning tangents
+	float3 animatedBitangent = cross(animatedNormal.xyz, animatedTangent.xyz).xyz;
+
+	// Coordinate in world space
 	sendToRasterizer.worldPosition = mul(animatedWorld, worldMatrix).xyz;
-	//sendToRasterizer.worldPosition = localCoordinate.xyz;
 
-	// Local coodrinate in projection space
+	// Coodrinate in projection space
 	sendToRasterizer.projectedCoordinate = mul(animatedWorld, viewMatrix);
 	sendToRasterizer.projectedCoordinate = mul(sendToRasterizer.projectedCoordinate, projectionMatrix);
 
-	// Final coordinate
-	//sendToRasterizer.projectedCoordinate = localCoordinate;
-
 	// Normals in world space
-	sendToRasterizer.normals = mul(float4(fromVertexBuffer.normals.xyz, 0), worldMatrix).xyz;
+	sendToRasterizer.normals = mul(animatedNormal, worldMatrix).xyz;
 	sendToRasterizer.uv.xyz = fromVertexBuffer.uv.xyz;
 
 	// Tangends and bitangents in worldspace
-	sendToRasterizer.tangents = mul(fromVertexBuffer.tangents, worldMatrix).xyz;
-	sendToRasterizer.bitangents = mul(fromVertexBuffer.bitangents, worldMatrix).xyz;
+	sendToRasterizer.tangents = mul(animatedTangent,worldMatrix).xyz;
+	sendToRasterizer.bitangents = mul(animatedBitangent,(float3x3)worldMatrix).xyz;
 
 	// Sending data to Rasterizer
 	return sendToRasterizer;

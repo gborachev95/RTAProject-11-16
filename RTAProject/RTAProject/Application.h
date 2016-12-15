@@ -77,7 +77,9 @@
 		void FrameInput(Object& _object);
 		void UpdateFrames(Object& _object, vector<Object*>& _renderedBones);
 		void LoopAnimation(Object& _object, unsigned int _speed);
-		
+		void InitializeBones(Object& _object, vector<Object*>& _boneObject);
+		void Application::RenderBones();
+
 
 		// Public methods that are called outside of the class
 	public:

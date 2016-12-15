@@ -110,7 +110,7 @@ float4 main(INPUT_PIXEL _inputPixel) : SV_TARGET
 		float lightRatio = saturate(dot(lightDir.xyz, bumpNormal.xyz));
 		// Specular effect
 		float3 pixelToCamera = normalize(cameraPosition.xyz - _inputPixel.worldPosition.xyz);
-		float3 reflectionVec = normalize(reflect(lightDir.xyz, bumpNormal.xyz));
+		float3 reflectionVec = normalize(reflect(lightDir.xyz,  bumpNormal.xyz));
 		float specularFactor = dot(pixelToCamera, reflectionVec);
 	
 		if (specularFactor > 0.0f)

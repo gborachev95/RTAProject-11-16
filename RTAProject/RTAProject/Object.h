@@ -21,6 +21,7 @@ __declspec(align(16)) class Object
 	int                                 m_currentFrameIndex;
 	Animation                           m_animation;
 	vector<Transform>                   m_bones;
+	BONES_TO_VRAM                       m_FrameBones;
 
 	// Private methods that are called only inside of the class
 private:
