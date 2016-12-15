@@ -1,7 +1,9 @@
 #pragma once
 
-#include "Transform.h"
-#include "Animation.h"
+/*#include "Transform.h"
+#include "Animation.h"*/
+#include "includes.h"
+#include <vector>
 
 class Interpolator
 {
@@ -12,12 +14,10 @@ class Interpolator
 	Animation *animationPtr;
 	KeyFrame betweenKeyFrame;  // The result of the interpolation process
 
-	void Process(float _timeToAdd);
-	KeyFrame Interpolate(unsigned int previousFrame, unsigned int nextFrame, float delta);
-
 public:
 	Interpolator();
 	~Interpolator();
 
+	std::vector<Transform> Interpolate(std::vector<Transform> previousFrame, std::vector<Transform> nextFrame, float prevFrameTime, float nextFrameTime, float currTime);
 };
 

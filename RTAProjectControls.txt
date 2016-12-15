@@ -1,0 +1,10 @@
+WASD - First person Camera movement and Third person movement.
+Q - Move up on Y.
+E - Move down on Y.
+B    - Switch to Third person camera.
+R - Go forward in frame.
+T - Go backward in frame.
+Y - Loop animation.
+I - Toggle Directional light.
+O - Toggle Spotlight.
+

@@ -655,6 +655,29 @@ void Application::UpdateFrames(Object& _object, vector<Object*>& _renderedBones)
 
 void Application::LoopAnimation(Object& _object, unsigned int _speed)
 {
+	
+	//vector<Transform> currFrame;
+	//vector<Transform> nextFrame;
+	//float prevFrameTime;
+	//float nextFrameTime;
+	//
+	//Animation anim = _object.GetAnimation();
+	//
+	//for (size_t i = 2; i < anim.GetKeyFramesNumber(); i++)
+	//{
+	//if (anim.m_keyFrame[i].GetFrameTime() > myTimer.TotalTime()) {
+	//prevFrameTime = anim.m_keyFrame[i-1].GetFrameTime();
+	//nextFrameTime = anim.m_keyFrame[i].GetFrameTime();
+	//for (size_t j = 0; j < anim.m_keyFrame.size(); j++)
+	//{
+	//currFrame.push_back(anim.m_keyFrame[j].m_bones[i-1]);
+	//nextFrame.push_back(anim.m_keyFrame[j].m_bones[i]);
+	//}
+	//break;
+	//}
+	//}
+	//vector<Transform> newFrame = _object.GetInterpolator().Interpolate(currFrame,nextFrame,prevFrameTime, nextFrameTime, (float)myTimer.TotalTime());
+	
 	if (m_loopAnimation)
 	{
 		++m_temptimeer;

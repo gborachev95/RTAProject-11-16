@@ -212,8 +212,6 @@ namespace FBXImporter
 				FbxAMatrix wTransformMatrix = bone->EvaluateGlobalTransform();
 				FbxAMatrix lTransformMatrix = bone->EvaluateLocalTransform();
 
-				//currBone.m_worldMatrix = CreateXMMatrixFromFBXVectors(wTransformMatrix.GetR(), wTransformMatrix.GetT(), wTransformMatrix.GetS());
-				//currBone.m_localMatrix = CreateXMMatrixFromFBXVectors(lTransformMatrix.GetR(), lTransformMatrix.GetT(), lTransformMatrix.GetS());
 				ConvertMatrix(wTransformMatrix, currBone.m_worldMatrix);
 				ConvertMatrix(wTransformMatrix, currBone.m_localMatrix);
 
