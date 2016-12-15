@@ -72,14 +72,13 @@ OUTPUT_VERTEX main(INPUT_VERTEX fromVertexBuffer)
 	float3 animatedBitangent = cross(animatedNormal.xyz, animatedTangent.xyz).xyz;
 
 	// Coordinate in world space
-	//float4 offsetPos =mul(animatedWorld, positionOffset); 
-	//sendToRasterizer.worldPosition = mul(animatedWorld, positionOffset);;
 	sendToRasterizer.worldPosition = mul(sendToRasterizer.worldPosition.xyz, (float3x3)worldMatrix).xyz;
 
 	// Coodrinate in projection space
 	sendToRasterizer.projectedCoordinate = mul(animatedWorld, viewMatrix);
 	sendToRasterizer.projectedCoordinate = mul(sendToRasterizer.projectedCoordinate, projectionMatrix);
 
+	animatedNormal = mul(animatedNormal, positionOffset);
 	// Normals in world space
 	sendToRasterizer.normals = mul(animatedNormal, worldMatrix).xyz;
 	sendToRasterizer.uv.xyz = fromVertexBuffer.uv.xyz;

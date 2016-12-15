@@ -35,10 +35,12 @@
 		Object                            m_groundObject;
 		vector<Object*>                   m_testbonesVec;
 		vector<Object*>                   m_mageBonesVec;
+		vector<Object*>                   m_mageIdleBonesVec;
 		vector<Object*>                   m_bearBonesVec;
 		// Fbx files
 		Object							  m_fbxTest;
 		Object                            m_fbxMage;
+		Object                            m_fbxMageIdle;
 		Object                            m_fbxBear;
 
 		// Other
@@ -50,8 +52,9 @@
 		bool                              m_keyPressed;
 		bool                              m_loopAnimation;
 		bool                              m_thirdPersonCam;
+		bool                              m_moving;
 		unsigned int					  m_temptimeer;
-
+		
 		// Private methods that are called only inside of the class
 	private:
 		// Creates the window

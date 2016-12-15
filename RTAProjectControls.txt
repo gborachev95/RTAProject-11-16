@@ -1,3 +1,5 @@
+#defines turn on different animations - Top of Application.cpp.
+
 WASD - First person Camera movement and Third person movement.
 Q - Move up on Y.
 E - Move down on Y.

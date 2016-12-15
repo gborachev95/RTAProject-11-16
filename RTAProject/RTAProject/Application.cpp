@@ -4,14 +4,18 @@
 #include "ANIMATION_VS.csh"
 #include "Log.h"
 
+#define ANIMATE_BOX 0 
+#define ANIMATE_MAGE 1
+#define ANIMATE_BEAR 0
 // Constructor
 Application::Application(HINSTANCE _hinst, WNDPROC _proc)
 {
 	// Helps debugging
 	//LogSetUp(L"RTA Project Application");
 	m_temptimeer = 0;
-	m_loopAnimation = false;
+	m_loopAnimation = true;
 	m_thirdPersonCam = false;
+	m_moving = false;
 
 	// Creates the window
 	CreateAppWindow(_hinst, _proc);
@@ -58,6 +62,8 @@ Application::~Application()
 		delete m_mageBonesVec[i];
 	for (unsigned int i = 0; i < m_bearBonesVec.size(); ++i)
 		delete m_bearBonesVec[i];
+	for (unsigned int i = 0; i < m_mageIdleBonesVec.size(); ++i)
+		delete m_mageIdleBonesVec[i];
 	
 	//dll_loader.UnloadDLL();
 }
@@ -65,7 +71,6 @@ Application::~Application()
 // Resize Window
 void Application::ResizeWindow(unsigned int _width, unsigned int _height)
 {
-	
 	// Resizing the depth buffer
 	m_depthBuffer.Release();
 	m_depthView.Release();
@@ -127,10 +132,16 @@ bool Application::Run()
 void Application::Input()
 {
 	FPCamera(0.01f);
-
-	TPCamera(m_fbxMage,0.01f);
 	LightsControls(0.01f);
+
+#if ANIMATE_BOX
+	TPCamera(m_fbxTest, 0.01f);
+	FrameInput(m_fbxTest);
+#endif
+#if ANIMATE_MAGE
+	TPCamera(m_fbxMage, 0.01f);
 	FrameInput(m_fbxMage);
+#endif
 
 	if (!GetAsyncKeyState('I') && !GetAsyncKeyState('O') && !GetAsyncKeyState('R') && !GetAsyncKeyState('T') && !GetAsyncKeyState('Y') && !GetAsyncKeyState('B') && m_keyPressed)
 		m_keyPressed = false;
@@ -139,10 +150,18 @@ void Application::Input()
 // Updates the scene
 void Application::Update()
 {
+#if ANIMATE_BOX
+	LoopAnimation(m_fbxTest, 30);
+	UpdateFrames(m_fbxTest, m_testbonesVec);
+#endif
 
-	LoopAnimation(m_fbxMage,30);
-	UpdateFrames(m_fbxMage, m_mageBonesVec);
-	//TPCamera(m_fbxMage, 0.03f);
+#if ANIMATE_MAGE
+	LoopAnimation(m_fbxMageIdle, 30);
+	if (m_moving)
+		UpdateFrames(m_fbxMage, m_mageBonesVec);
+	else
+		UpdateFrames(m_fbxMageIdle, m_mageIdleBonesVec);
+#endif
 }
 
 // Renders the scene
@@ -168,15 +187,24 @@ void Application::Render()
 	// Rendering objects
     m_groundObject.Render(m_deviceContext);
 
-	//RenderBones();
+	RenderBones();
 	m_fbxBear.Render(m_deviceContext);
-
+#if ANIMATE_MAGE
 	m_fbxTest.Render(m_deviceContext);
+#endif
+#if ANIMATE_BOX
+	m_fbxMage.Render(m_deviceContext);
+#endif
 	// Render animated objects
 	m_deviceContext->IASetInputLayout(m_inputLayoutAnimation);
 	m_deviceContext->VSSetShader(m_VS_ANIMATION.p, NULL, NULL);
-
+	
+#if ANIMATE_MAGE
 	m_fbxMage.Render(m_deviceContext);
+#endif
+#if ANIMATE_BOX
+	m_fbxTest.Render(m_deviceContext);
+#endif
 
 	// Presenting the screen
 	m_swapChain->Present(0, 0);
@@ -375,11 +403,15 @@ void Application::LoadObjects()
 	m_fbxMage.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Walk.fbx", magePos, 1);
 	m_fbxMage.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds", L"..\\RTAProject\\Assets\\Textures\\mageNormalMap.dds" , L"..\\RTAProject\\Assets\\Textures\\mageSpecularMap.dds");
 	InitializeBones(m_fbxMage, m_mageBonesVec);
+
+	m_fbxMageIdle.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Mage\\Idle.fbx", magePos, 1);
+	m_fbxMageIdle.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\MageTexture.dds", L"..\\RTAProject\\Assets\\Textures\\mageNormalMap.dds", L"..\\RTAProject\\Assets\\Textures\\mageSpecularMap.dds");
+	InitializeBones(m_fbxMageIdle, m_mageIdleBonesVec);
 	m_bonesToShader.positionOffset = XMMatrixIdentity();
 	m_bonesToShader.positionOffset.r[3].m128_f32[0] += 5.0f;
 
 	XMFLOAT3 bearPos{ -5.0f, 0.0f, 0.0f };
-	m_fbxBear.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Teddy\\Teddy_Attack2.fbx", bearPos, 1);
+	m_fbxBear.InstantiateFBX(m_device, "..\\RTAProject\\Assets\\FBX Files\\Teddy\\Teddy_Attack2.fbx", bearPos, 0);
  	m_fbxBear.SetWorldMatrix(XMMatrixMultiply(m_fbxBear.GetWorldMatrix(),XMMatrixScaling(0.03f,0.03f,0.03f)));
 	m_fbxBear.TextureObject(m_device, L"..\\RTAProject\\Assets\\Textures\\bearTexture.dds");
 
@@ -409,8 +441,8 @@ void Application::InitializeToShader()
 
 	// Initialize bones data for the shader
 
-	//for (unsigned int i = 0; i < 28; ++i)
-		//m_bonesToShader.bones[i] = m_bearBonesVec[i]->GetWorldMatrix();
+	for (unsigned int i = 0; i < 28; ++i)
+		m_bonesToShader.bones[i] = m_bearBonesVec[i]->GetWorldMatrix();
 }
 
 // Creates constant buffers
@@ -710,6 +742,7 @@ void Application::TPCamera(Object& _object, float _speed)
 				m_temptimeer = 0;
 				_object.ForwardFrame();
 			}
+			m_moving = true;
 		}
 		else if (GetAsyncKeyState('S'))
 		{
@@ -720,6 +753,7 @@ void Application::TPCamera(Object& _object, float _speed)
 				m_temptimeer = 0;
 				_object.ForwardFrame();
 			}
+			m_moving = true;
 		}
 		if (GetAsyncKeyState('D'))
 			newPos = XMMatrixMultiply(XMMatrixRotationY(_speed * 0.5f), newPos);
@@ -744,6 +778,10 @@ void Application::TPCamera(Object& _object, float _speed)
 		m_spotLightToShader.direction.z = m_viewToShader.viewMatrix.r[2].m128_f32[2];
 
 		m_viewToShader.viewMatrix = XMMatrixInverse(0, m_viewToShader.viewMatrix);
+
+		// Setting that the object is not moving anymore
+		if (!GetAsyncKeyState('W') && !GetAsyncKeyState('S'))
+			m_moving = false;
 	}
 }
 
@@ -762,10 +800,10 @@ void Application::InitializeBones(Object& _object, vector<Object*>& _boneObject)
 
 void Application::RenderBones()
 {
-	for (unsigned int i = 0; i < m_mageBonesVec.size(); ++i)
-		m_mageBonesVec[i]->Render(m_deviceContext);
+	for (unsigned int i = 0; i < m_mageIdleBonesVec.size(); ++i)
+		m_mageIdleBonesVec[i]->Render(m_deviceContext);
 	for (unsigned int i = 0; i < m_testbonesVec.size(); ++i)
 		m_testbonesVec[i]->Render(m_deviceContext);
-	for (unsigned int i = 0; i < m_bearBonesVec.size(); ++i)
-		m_bearBonesVec[i]->Render(m_deviceContext);
+	//for (unsigned int i = 0; i < m_bearBonesVec.size(); ++i)
+	//	m_bearBonesVec[i]->Render(m_deviceContext);
 }
